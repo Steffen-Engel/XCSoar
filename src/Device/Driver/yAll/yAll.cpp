@@ -121,6 +121,7 @@ void cyAll::Open(Port &_port)
 {
 	port = &_port;
 
+	/*
 	TCHAR szFile[50];
 	LocalPath(szFile, _T("Deviation.par"));
 	FileLineReaderA reader(szFile);
@@ -128,6 +129,7 @@ void cyAll::Open(Port &_port)
      return;
 
    LogFormat(_T("Loading Deviation from %s"), szFile);
+*/
 }
 
 
@@ -223,21 +225,21 @@ void cyAll::StartLog(void)
   MaxValues.max_g = LoggerData.accel[2];
   MaxValues.min_g = LoggerData.accel[2];
 
-
   BrokenDateTime dt = BrokenDateTime::NowUTC();
-  StaticString<128> name;
-  name.Format(_T("%04u-%02u-%02u_%02u-%02u.dat"),
-              dt.year, dt.month, dt.day,
-              dt.hour, dt.minute);
+  assert(dt.IsPlausible());
 
-  TCHAR path[MAX_PATH];
-  LocalPath(path, _T("logs"));
-  Directory::Create(path);
+  StaticString<64> name;
+   name.Format(_T("%04u-%02u-%02u_%02u-%02u.dat"),
+               dt.year, dt.month, dt.day,
+               dt.hour, dt.minute);
 
-  LocalPath(path, _T("logs"), name);
-  LogFormat(_T("Logging flight to %s"), path);
+   const auto logs_path = MakeLocalPath(_T("logs"));
 
-  writer = new TextWriter(path, false);
+   const auto path = AllocatedPath::Build(logs_path, name);
+
+   LogFormat(_T("Logging flight to %s"), path.c_str());
+
+   writer = new TextWriter(path, false);
 
   if (writer->IsOpen())
   {
@@ -250,7 +252,7 @@ void cyAll::StartLog(void)
   }
   else
   {
-    LogFormat(_T("file %s not open"), path);
+    LogFormat(_T("file %s not open"), path.c_str());
   }
 
 }
