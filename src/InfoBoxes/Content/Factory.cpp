@@ -1014,7 +1014,6 @@ static constexpr MetaData meta_data[] = {
     N_("Instantaneous evaluation of the flown speed according to the configured On-Line Contest rule set."),
     IBFHelper<InfoBoxContentOLCSpeed>::Create,
   },
-
   {
     N_("Final MC0 altitude difference"),
     N_("Fin MC0 AltD"),
@@ -1033,6 +1032,74 @@ static constexpr MetaData meta_data[] = {
        "or the target within the AAT sector for AAT tasks."),
     IBFHelper<InfoBoxContentNextArrow>::Create,
   },
+
+  // e_eta_H
+  {
+    N_("eta HR"),
+    N_("eta_hr"),
+    NULL,
+    UpdateInfoBoxETAhr,
+  },
+  // e_eta_H
+  {
+    N_("eta SR"),
+    N_("eta_sr"),
+    NULL,
+    UpdateInfoBoxETAsr,
+  },
+  // e_eta_H
+  {
+    N_("eta QR"),
+    N_("eta_qr"),
+    NULL,
+    UpdateInfoBoxETAqr,
+  },
+
+  // e_Max_g
+  {
+    N_("Max g"),
+    N_("max_g"),
+    N_("Maximum recorded g-load since last takeoff"),
+    UpdateInfoBoxMaxg,
+  },
+
+  // e_Min_g
+  {
+    N_("Min g"),
+    N_("min_g"),
+    N_("Minimum recorded g-load since last takeoff"),
+    UpdateInfoBoxMing,
+  },
+  // e_MaxVIAS
+  {
+    N_("Max VIAS"),
+    N_("max_VIAS"),
+    N_("Maximum recorded VIAS since last takeoff"),
+    UpdateInfoBoxMaxVIAS,
+  },
+  // e_BankAngle
+  {
+    N_("bank angle"),
+    N_("bank"),
+    N_("bank angle of plane"),
+    UpdateInfoBoxBankAngle,
+  },
+  // e_PitchAngle
+  {
+    N_("pitch angle"),
+    N_("pitch"),
+    N_("pitch angle of plane"),
+    UpdateInfoBoxPitchAngle,
+  },
+  // e_Heading
+  {
+    N_("heading angle"),
+    N_("head"),
+    N_("heading angle of plane"),
+    UpdateInfoBoxHeading,
+  },
+
+
 };
 
 static_assert(ARRAY_SIZE(meta_data) == NUM_TYPES,
