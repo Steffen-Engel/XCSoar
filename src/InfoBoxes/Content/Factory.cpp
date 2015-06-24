@@ -1039,8 +1039,6 @@ static constexpr MetaData meta_data[] = {
     N_("eta_hr"),
     NULL,
     UpdateInfoBoxETAhr,
-    e_EtaHr, // Exp2
-    e_EtaHr, // Exp2
   },
   // e_eta_H
   {
@@ -1048,8 +1046,6 @@ static constexpr MetaData meta_data[] = {
     N_("eta_sr"),
     NULL,
     UpdateInfoBoxETAsr,
-    e_EtaSr, // Exp2
-    e_EtaSr, // Exp2
   },
   // e_eta_H
   {
@@ -1057,8 +1053,6 @@ static constexpr MetaData meta_data[] = {
     N_("eta_qr"),
     NULL,
     UpdateInfoBoxETAqr,
-    e_EtaQr, // Exp2
-    e_EtaQr, // Exp2
   },
 
   // e_Max_g
@@ -1067,8 +1061,6 @@ static constexpr MetaData meta_data[] = {
     N_("max_g"),
     N_("Maximum recorded g-load since last takeoff"),
     UpdateInfoBoxMaxg,
-    e_Maxg, // Exp2
-    e_Maxg, // Exp2
   },
 
   // e_Min_g
@@ -1077,8 +1069,6 @@ static constexpr MetaData meta_data[] = {
     N_("min_g"),
     N_("Minimum recorded g-load since last takeoff"),
     UpdateInfoBoxMing,
-    e_Ming, // Exp2
-    e_Ming, // Exp2
   },
   // e_MaxVIAS
   {
@@ -1086,8 +1076,6 @@ static constexpr MetaData meta_data[] = {
     N_("max_VIAS"),
     N_("Maximum recorded VIAS since last takeoff"),
     UpdateInfoBoxMaxVIAS,
-    e_Ming, // Exp2
-    e_Ming, // Exp2
   },
   // e_BankAngle
   {
@@ -1095,8 +1083,6 @@ static constexpr MetaData meta_data[] = {
     N_("bank"),
     N_("bank angle of plane"),
     UpdateInfoBoxBankAngle,
-    e_BankAngle,
-    e_BankAngle,
   },
   // e_PitchAngle
   {
@@ -1104,8 +1090,6 @@ static constexpr MetaData meta_data[] = {
     N_("pitch"),
     N_("pitch angle of plane"),
     UpdateInfoBoxPitchAngle,
-    e_PitchAngle,
-    e_PitchAngle,
   },
   // e_Heading
   {
@@ -1113,8 +1097,6 @@ static constexpr MetaData meta_data[] = {
     N_("head"),
     N_("heading angle of plane"),
     UpdateInfoBoxHeading,
-    e_HeadingAngle,
-    e_HeadingAngle,
   },
 
 

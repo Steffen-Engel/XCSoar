@@ -166,6 +166,7 @@ namespace InfoBoxFactory
     e_BankAngle,
     e_PitchAngle,
     e_HeadingAngle,
+
     e_NUM_TYPES /* Last item */
   };
 
