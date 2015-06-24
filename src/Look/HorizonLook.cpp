@@ -28,6 +28,7 @@ void
 HorizonLook::Initialise()
 {
   aircraft_pen.Create(Layout::Scale(2), COLOR_BLACK);
+  angle_pen.Create(Layout::Scale(1), COLOR_LIGHT_GRAY);
 
   sky_color = Color(0x0a, 0xb9, 0xf3);
   sky_brush.Create(sky_color);
