@@ -167,10 +167,7 @@ namespace InfoBoxFactory
     e_BankAngle,
     e_PitchAngle,
     e_HeadingAngle,
-
     e_Controls,
-=======
->>>>>>> Added yAll device driver and infoboxes with data of yAll Device
     e_NUM_TYPES /* Last item */
   };
 
