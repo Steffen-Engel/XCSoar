@@ -85,6 +85,11 @@ XCTRACER_SOURCES = \
 	$(DRIVER_SRC_DIR)/XCTracer/Parser.cpp \
 	$(DRIVER_SRC_DIR)/XCTracer/Register.cpp
 
+yall_SOURCES = \
+	$(DRIVER_SRC_DIR)/yAll/yAllDriver.cpp \
+	$(DRIVER_SRC_DIR)/yAll/yAll.cpp \
+	$(DRIVER_SRC_DIR)/yAll/CmdBuffer.cpp
+
 DRIVER_SOURCES = \
 	$(SRC)/Device/Driver.cpp \
 	$(SRC)/Device/Register.cpp \
@@ -95,6 +100,7 @@ DRIVER_SOURCES = \
 	$(FLARM_SOURCES) \
 	$(FLYTEC_SOURCES) \
 	$(VEGA_SOURCES) \
+	$(yall_SOURCES) \
 	$(BLUEFLY_SOURCES) \
 	$(XCTRACER_SOURCES) \
 	$(DRIVER_SRC_DIR)/AltairPro.cpp \

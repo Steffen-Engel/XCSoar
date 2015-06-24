@@ -158,6 +158,15 @@ namespace InfoBoxFactory
     NEXT_ARROW,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
 
+    e_EtaHr,
+    e_EtaSr,
+    e_EtaQr,
+    e_Maxg,
+    e_Ming,
+    e_MaxVIAS,
+    e_BankAngle,
+    e_PitchAngle,
+    e_HeadingAngle,
     e_NUM_TYPES /* Last item */
   };
 

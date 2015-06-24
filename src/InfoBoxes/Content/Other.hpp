@@ -51,4 +51,15 @@ public:
   virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
 };
 
+
+void UpdateInfoBoxETAhr(InfoBoxData &data);
+void UpdateInfoBoxETAsr(InfoBoxData &data);
+void UpdateInfoBoxETAqr(InfoBoxData &data);
+void UpdateInfoBoxMaxg(InfoBoxData &data);
+void UpdateInfoBoxMing(InfoBoxData &data);
+void UpdateInfoBoxMaxVIAS(InfoBoxData &data);
+void UpdateInfoBoxBankAngle(InfoBoxData &data);
+void UpdateInfoBoxPitchAngle(InfoBoxData &data);
+void UpdateInfoBoxHeading(InfoBoxData &data);
+
 #endif
