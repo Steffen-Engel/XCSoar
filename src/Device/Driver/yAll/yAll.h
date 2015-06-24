@@ -66,6 +66,7 @@ public:
 	void Open(Port &_port);
 
 	void sendRequest(uint8_t value);
+	void sendRequest(uint8_t value[]);
 
 	void sendRequest(uint8_t value, uint8_t parm);
 	void sendRequest(uint8_t value, uint16_t parm);

@@ -258,15 +258,16 @@ void cyAll::EndLog()
   writer = nullptr;
 }
 
-
+#if 0
 gcc_pure
 static inline
-fixed ComputeNoncompVario(const fixed pressure, const fixed d_pressure)
+double ComputeNoncompVario(const double pressure, const double d_pressure)
 {
-  static constexpr fixed FACTOR(-2260.389548275485);
-  static constexpr fixed EXPONENT(-0.8097374740609689);
-  return fixed(FACTOR * pow(pressure, EXPONENT) * d_pressure);
+  static constexpr double FACTOR(-2260.389548275485);
+  static constexpr double EXPONENT(-0.8097374740609689);
+  return double(FACTOR * pow(pressure, EXPONENT) * d_pressure);
 }
+#endif
 
 
 void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
@@ -367,8 +368,10 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
       info.attitude.pitch_angle_available.Update(info.clock);
       info.attitude.pitch_angle = Angle::Degrees(-0.1*LoggerData.angle[1]);
 
+#if 0
       info.attitude.heading_available.Update(info.clock);
       info.attitude.heading = Angle::Degrees((LoggerData.angle[2]+360)%360);
+#endif
 
       info.acceleration.ProvideGLoad(0.01*LoggerData.accel[2], true);
 
@@ -417,8 +420,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
       }
       else
       {
-        info.ProvideDynamicPressure(AtmosphericPressure::Pascal(fixed(0)));
-        info.dyn_pressure_available.Clear();
+        info.ProvideDynamicPressure(AtmosphericPressure::Pascal(double(0)));
       }
       if (LoggerData.pressure[2] > MaxValues.max_q)
       {
@@ -456,8 +458,8 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
 
       if (LoggerData.GPS_FIX)
       {
-        fixed this_time;
-        this_time = fixed( (LoggerData.GPS_time) % (24*60*60*1000))/1000.0;
+        double this_time;
+        this_time = double( (LoggerData.GPS_time) % (24*60*60*1000))/1000.0;
         info.date_time_utc.second = (LoggerData.GPS_time/1000) % 60;
         info.date_time_utc.minute = (LoggerData.GPS_time/1000)/60 % 60;
         info.date_time_utc.hour = (LoggerData.GPS_time/1000)/60/60 % 24;
@@ -471,22 +473,22 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
         if (NMEAParser::TimeHasAdvanced(this_time, last_time, info))
         {
           GeoPoint location;
-          location.latitude = Angle::Degrees(fixed(LoggerData.GPS_latitude)/10000000.0);
-          location.longitude = Angle::Degrees(fixed(LoggerData.GPS_longitude)/10000000.0);
+          location.latitude = Angle::Degrees(double(LoggerData.GPS_latitude)/10000000.0);
+          location.longitude = Angle::Degrees(double(LoggerData.GPS_longitude)/10000000.0);
           info.location_available.Update(info.clock);
           info.location = location;
 
           if (info.MovementDetected())
           {
-            info.track = Angle::Degrees(fixed(LoggerData.GPS_heading)/10.0);
+            info.track = Angle::Degrees(double(LoggerData.GPS_heading)/10.0);
             info.track_available.Update(info.clock);
           }
 
-          info.ground_speed = fixed(LoggerData.GPS_speed)/100.0;
+          info.ground_speed = double(LoggerData.GPS_speed)/100.0;
           info.ground_speed_available.Update(info.clock);
 
           info.gps_altitude_available.Update(info.clock);
-          info.gps_altitude = fixed(LoggerData.GPS_altitude);
+          info.gps_altitude = double(LoggerData.GPS_altitude);
 
           info.gps.real = true;
 
