@@ -154,6 +154,15 @@ namespace InfoBoxFactory
 
     FIN_MC0_ALTD,
 
+    e_EtaHr,
+    e_EtaSr,
+    e_EtaQr,
+    e_Maxg,
+    e_Ming,
+    e_MaxVIAS,
+    e_BankAngle,
+    e_PitchAngle,
+    e_HeadingAngle,
     e_NUM_TYPES /* Last item */
   };
 

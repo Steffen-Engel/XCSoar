@@ -59,6 +59,8 @@ Copyright_License {
 #include "Device/Driver/ATR833.hpp"
 #include "Util/Macros.hpp"
 #include "Util/StringAPI.hpp"
+#include "Device/Driver/yAll/yAllDriver.hpp"
+
 
 #include <assert.h>
 #include <string.h>
@@ -99,6 +101,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &open_vario_driver,
   &vaulter_driver,
   &krt2_driver,
+  &yall_driver,
   &atr833_driver,
   nullptr
 };

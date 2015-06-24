@@ -82,6 +82,12 @@ BLUEFLY_SOURCES = \
 	$(DRIVER_SRC_DIR)/BlueFly/Settings.cpp \
 	$(DRIVER_SRC_DIR)/BlueFly/Register.cpp
 
+yall_SOURCES = \
+	$(DRIVER_SRC_DIR)/yAll/yAllDriver.cpp \
+	$(DRIVER_SRC_DIR)/yAll/yAll.cpp \
+	$(DRIVER_SRC_DIR)/yAll/CmdBuffer.cpp
+
+	
 DRIVER_SOURCES = \
 	$(VOLKSLOGGER_SOURCES) \
 	$(IMI_SOURCES) \
@@ -89,6 +95,7 @@ DRIVER_SOURCES = \
 	$(FLARM_SOURCES) \
 	$(FLYTEC_SOURCES) \
 	$(VEGA_SOURCES) \
+	$(yall_SOURCES) \
 	$(BLUEFLY_SOURCES) \
 	$(DRIVER_SRC_DIR)/AltairPro.cpp \
 	$(DRIVER_SRC_DIR)/BorgeltB50.cpp \
