@@ -67,15 +67,25 @@ HorizonRenderer::Draw(Canvas &canvas, const PixelRect &rc,
   auto alpha1 = sphi - alpha;
   auto alpha2 = sphi + alpha;
 
+  phi = bank_degrees;
+
+  // steeper pitch to the ground: no sky to see...
+  if (pitch_degrees > fixed(-50.0))
+  {
   // draw sky part
   canvas.Select(look.sky_pen);
   canvas.Select(look.sky_brush);
   canvas.DrawSegment(center.x, center.y, radius, alpha2, alpha1, true);
+  }
 
+  // steeper pitch to the sky: no ground to see...
+  if (pitch_degrees < fixed(50.0))
+  {
   // draw ground part
   canvas.Select(look.terrain_pen);
   canvas.Select(look.terrain_brush);
   canvas.DrawSegment(center.x, center.y, radius, alpha1, alpha2, true);
+  }
 
   // draw aircraft symbol
   canvas.Select(look.aircraft_pen);
@@ -89,4 +99,22 @@ HorizonRenderer::Draw(Canvas &canvas, const PixelRect &rc,
               center.x + rr2n, center.y - rr2n);
   canvas.DrawLine(center.x - rr2p, center.y - rr2p,
               center.x - rr2n, center.y - rr2n);
+
+
+  // draw pitch-angle lines in horizon
+  canvas.Select(look.angle_pen);
+  int angle[] = {-45, -30, -20, -10, 10, 20, 30, 45, 0};
+  fixed len[] = {fixed(0.2), fixed(0.15), fixed(0.15), fixed(0.15), fixed(0.15), fixed(0.15), fixed(0.15), fixed(0.25)};
+  for (int count = 0; angle[count] != 0; count++)
+  {
+    fixed x_pos0 = fixed(center.x) + (pitch_degrees+fixed(angle[count]))*fixed(radius)/fixed(50.0) * sin(bank_degrees/180*fixed_pi);
+    fixed x_pos1 = x_pos0 - radius * fixed(len[count]) * cos(bank_degrees/180*fixed_pi);
+    fixed x_pos2 = x_pos0 + radius * fixed(len[count]) * cos(bank_degrees/180*fixed_pi);
+
+    fixed y_pos0 = fixed(center.y) + (pitch_degrees+fixed(angle[count]))*fixed(radius)/50 * cos(bank_degrees/180*fixed_pi);
+    fixed y_pos1 = y_pos0 + fixed(radius) * sin(bank_degrees/180*fixed_pi)*len[count];
+    fixed y_pos2 = y_pos0 - fixed(radius) * sin(bank_degrees/180*fixed_pi)*len[count];
+    canvas.DrawLine((int)x_pos1, (int)y_pos1, (int)x_pos2, (int)y_pos2);
+}
+
 }
