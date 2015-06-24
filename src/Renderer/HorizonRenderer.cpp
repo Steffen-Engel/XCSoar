@@ -61,6 +61,7 @@ HorizonRenderer::Draw(Canvas &canvas, const PixelRect &rc,
     : 0.;
 
   auto phi = Clamp(bank_degrees, -89., 89.);
+  phi = bank_degrees;
   auto alpha = Angle::acos(Clamp(pitch_degrees / 50,
                                  -1., 1.));
   auto sphi = Angle::HalfCircle() - Angle::Degrees(phi);
