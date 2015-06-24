@@ -30,6 +30,7 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "UIGlobals.hpp"
 #include "Look/Look.hpp"
+#include "Device/Driver/yAll/yAll.h"
 
 
 #include <tchar.h>
@@ -168,5 +169,71 @@ InfoBoxContentHorizon::Update(InfoBoxData &data)
   }
 
   data.SetCustom();
+}
+
+void
+UpdateInfoBoxETAhr(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%d"), LoggerData.eta[ETA_HR]);
+}
+
+void
+UpdateInfoBoxETAsr(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%d"), LoggerData.eta[ETA_SR]);
+}
+
+void
+UpdateInfoBoxETAqr(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%d"), LoggerData.eta[ETA_QR]);
+}
+
+void
+UpdateInfoBoxMaxg(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%.1f"), 0.01*MaxValues.max_g);
+}
+
+void
+UpdateInfoBoxMing(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%.1f"), 0.01*MaxValues.min_g);
+}
+
+void
+UpdateInfoBoxMaxVIAS(InfoBoxData &data)
+{
+  // Set Value
+  float speed;
+  speed = sqrt(2.0*MaxValues.max_q/1.225)*3.6;
+
+  data.UnsafeFormatValue(_T("%.0f"), speed);
+}
+
+void
+UpdateInfoBoxBankAngle(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%d"), LoggerData.angle[0]/10);
+}
+
+void
+UpdateInfoBoxPitchAngle(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%d"), LoggerData.angle[1]/10);
+}
+
+void
+UpdateInfoBoxHeading(InfoBoxData &data)
+{
+  // Set Value
+  data.UnsafeFormatValue(_T("%d"), (LoggerData.angle[2]+360)%360);
 }
 

@@ -157,6 +157,7 @@ namespace InfoBoxFactory
     /* 110..119 */
     NEXT_ARROW,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
+
     e_EtaHr,
     e_EtaSr,
     e_EtaQr,
@@ -166,7 +167,10 @@ namespace InfoBoxFactory
     e_BankAngle,
     e_PitchAngle,
     e_HeadingAngle,
+
     e_Controls,
+=======
+>>>>>>> Added yAll device driver and infoboxes with data of yAll Device
     e_NUM_TYPES /* Last item */
   };
 
