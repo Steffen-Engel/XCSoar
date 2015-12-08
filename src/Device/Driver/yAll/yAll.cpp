@@ -284,7 +284,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
 	uint8_t *data;
 	uint8_t datasize;
 
-	bool FlightLogger_flying = CommonInterface::Calculated().flight.flying;
+	bool FlightLogger_flying = FlightState;
 
 	switch(icmd) 
 	{

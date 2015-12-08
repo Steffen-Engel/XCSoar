@@ -27,6 +27,8 @@ public:
   virtual bool EnableNMEA(OperationEnvironment &env) override;
   virtual void OnSysTicker() override;
   virtual void LinkTimeout() override;
+  void OnCalculatedUpdate(const MoreData &basic,
+                          const DerivedInfo &calculated) override;
 
   void GetInfo(tIdent &Ident);
 
