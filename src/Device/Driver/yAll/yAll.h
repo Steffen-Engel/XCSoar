@@ -58,6 +58,8 @@ public:
 	tMSP MSPData;
 	tIdent Ident;
 
+	bool FlightState;  // copy from calculated data
+
 	cyAll();
 	~cyAll(){};
 

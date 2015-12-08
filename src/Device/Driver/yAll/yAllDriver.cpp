@@ -26,6 +26,7 @@ Copyright_License {
 #include "Device/Driver.hpp"
 #include "Device/Port/Port.hpp"
 #include "NMEA/Info.hpp"
+#include "NMEA/Derived.hpp"
 #include "NMEA/InputLine.hpp"
 #include "Atmosphere/Temperature.hpp"
 #include "LogFile.hpp"
@@ -59,7 +60,6 @@ yAllDevice::DataReceived(const void *_data, size_t length,
 
   return true;
 }
-
 
 
 bool
@@ -123,6 +123,15 @@ void
 yAllDevice::CalibrateMag()
 {
   yAll.sendRequest(MSP_MAG_CALIBRATION);
+}
+
+
+void
+yAllDevice::OnCalculatedUpdate(const MoreData &basic,
+                        const DerivedInfo &calculated)
+{
+  // we need a copy of the flightstate...
+  yAll.FlightState = calculated.flight.flying;
 }
 
 
