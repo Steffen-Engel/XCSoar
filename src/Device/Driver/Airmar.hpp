@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_DRIVER_AIRMAR_HPP
 #define XCSOAR_DEVICE_DRIVER_AIRMAR_HPP
 
-extern const struct DeviceRegister nmea_wx_driver;
+extern const struct DeviceRegister airmar_driver;
 
 #endif
 

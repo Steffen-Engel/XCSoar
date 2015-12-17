@@ -21,7 +21,7 @@ Copyright_License {
 }
 */
 
-#include "Device/Driver/NMEA_WX.hpp"
+#include "Device/Driver/Airmar.hpp"
 #include "Device/Driver.hpp"
 #include "Device/Port/Port.hpp"
 #include "NMEA/InputLine.hpp"
@@ -127,9 +127,9 @@ NMEA_WXCreateOnPort(const DeviceConfig &config, Port &com_port)
 }
 
 
-const DeviceRegister nmea_wx_driver = {
-  _T("NMEA WX"),
-  _T("NMEA Weatherdata"),
+const DeviceRegister airmar_driver = {
+  _T("Airmar"),
+  _T("Airmar Weatherdata"),
   0,
   NMEA_WXCreateOnPort,
 };
