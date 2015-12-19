@@ -1,0 +1,38 @@
+#!/bin/bash
+
+Target=ANDROID
+
+make TARGET=$Target libs DEBUG=n
+make -j4 TARGET=$Target DEBUG=n
+
+
+DEST_PATH=""
+
+# auf dem Mac unterwegs? Files in /Volumes
+if [ -d "/Volumes/ANDROID" ]
+then
+  DEST_PATH="/Volumes/ANDROID/"
+else 
+  if [ -d "/media/se/ANDROID" ]
+  then
+    DEST_PATH="/media/se/ANDROID/"
+  fi
+fi
+
+
+if [ ${DEST_PATH} ] 
+then
+  echo "to DEST_PATH" $DEST_PATH
+  cp output/$Target/bin/XCSoar-debug.apk ${DEST_PATH}XCSoar-$Target.apk
+  ls -l "${DEST_PATH}XCSoar-$Target.apk"
+else
+  echo $DEST_PATH "to gvfs" $DEST_PATH
+  # try it in the mount path by gvfs
+  export DEST_PATH=$(ls -1d /run/user/1000/gvfs/*/"Device storage")
+  echo $DEST_PATH
+  gvfs-copy output/$Target/bin/XCSoar-debug.apk "$DEST_PATH"/XCSoar-$Target.apk
+  ls -l "$DEST_PATH"/XCSoar-$Target.apk
+fi
+
+
+
