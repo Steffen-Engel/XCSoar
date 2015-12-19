@@ -2,7 +2,10 @@
 
 Target=ANDROID
 
-make TARGET=$Target libs DEBUG=n
+if [ ! -d output/$Target/lib ]
+then
+	make TARGET=$Target libs DEBUG=n
+fi
 make -j4 TARGET=$Target DEBUG=n
 
 
