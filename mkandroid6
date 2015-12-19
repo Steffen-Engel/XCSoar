@@ -19,6 +19,11 @@ else
   if [ -d "/media/se/ANDROID" ]
   then
     DEST_PATH="/media/se/ANDROID/"
+  else
+    if [ -d "/media/se/T7" ]
+    then
+      DEST_PATH="/media/se/T7/"
+    fi
   fi
 fi
 
