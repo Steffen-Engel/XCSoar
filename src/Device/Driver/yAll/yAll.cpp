@@ -176,14 +176,6 @@ void cyAll::sendRequest(uint8_t value)
 }
 
 
-void cyAll::sendRequest(uint8_t value[])
-{
-	for (unsigned int count = 0; count<sizeof(value); count++)
-	{
-		sendRequest(value[count]);
-	}
-}
-
 
 void cyAll::sendRequest(uint8_t value, uint8_t parm)
 {
