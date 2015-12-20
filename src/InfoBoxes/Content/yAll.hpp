@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2015 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -21,30 +21,12 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_INFOBOX_CONTENT_OTHER_HPP
-#define XCSOAR_INFOBOX_CONTENT_OTHER_HPP
+#ifndef XCSOAR_INFOBOX_CONTENT_YALL_HPP
+#define XCSOAR_INFOBOX_CONTENT_YALL_HPP
 
 #include "InfoBoxes/Content/Base.hpp"
 
-void
-UpdateInfoBoxGLoad(InfoBoxData &data);
-
-void
-UpdateInfoBoxBattery(InfoBoxData &data);
-
-void
-UpdateInfoBoxExperimental1(InfoBoxData &data);
-
-void
-UpdateInfoBoxExperimental2(InfoBoxData &data);
-
-void
-UpdateInfoBoxCPULoad(InfoBoxData &data);
-
-void
-UpdateInfoBoxFreeRAM(InfoBoxData &data);
-
-class InfoBoxContentHorizon : public InfoBoxContent
+class InfoBoxContentControls : public InfoBoxContent
 {
 public:
   virtual void Update(InfoBoxData &data) override;
@@ -52,5 +34,15 @@ public:
 };
 
 
+void UpdateInfoBoxETAhr(InfoBoxData &data);
+void UpdateInfoBoxETAsr(InfoBoxData &data);
+void UpdateInfoBoxETAqr(InfoBoxData &data);
+void UpdateInfoBoxMaxg(InfoBoxData &data);
+void UpdateInfoBoxMing(InfoBoxData &data);
+void UpdateInfoBoxMaxVIAS(InfoBoxData &data);
+void UpdateInfoBoxBankAngle(InfoBoxData &data);
+void UpdateInfoBoxPitchAngle(InfoBoxData &data);
+void UpdateInfoBoxHeading(InfoBoxData &data);
+void UpdateInfoBoxControls(InfoBoxData &data);
 
 #endif
