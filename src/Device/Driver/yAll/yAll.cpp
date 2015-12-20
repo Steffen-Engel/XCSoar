@@ -21,7 +21,7 @@
 #include "yAll.h"
 
 
-#define USE_KALMAN
+//#define USE_KALMAN
 
 tLoggerSetData LoggerData;
 
