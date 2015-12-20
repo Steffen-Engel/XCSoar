@@ -305,6 +305,21 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
         data[count] = CmdBuffer.read8();
       }
 
+      for (int8_t count = 0; count < 4; count++)
+        LoggerData.eta[count] = (LoggerData.eta[count]-1500)/5;
+
+#if 0
+      static int16_t dummy = 0;
+      static int8_t increment = 1;
+      if ((dummy>100) || (dummy < -100))
+      {
+        increment *= -1;
+      }
+      dummy += increment;
+      for (int8_t count = 0; count < 4; count++)
+        LoggerData.eta[count] = dummy;
+#endif
+
 // refine pressure value for differential pressure, offset 8 Pa
 //      LoggerData.pressure[2] -= 8;
 //      if (LoggerData.pressure[2] < 0)
