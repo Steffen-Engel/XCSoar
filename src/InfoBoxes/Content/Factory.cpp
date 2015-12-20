@@ -41,6 +41,7 @@ Copyright_License {
 #include "InfoBoxes/Content/Trace.hpp"
 #include "InfoBoxes/Content/Weather.hpp"
 #include "InfoBoxes/Content/Airspace.hpp"
+#include "InfoBoxes/Content/yAll.hpp"
 
 #include "Util/Macros.hpp"
 #include "Language/Language.hpp"
@@ -1097,6 +1098,13 @@ static constexpr MetaData meta_data[] = {
     N_("head"),
     N_("heading angle of plane"),
     UpdateInfoBoxHeading,
+  },
+  // e_Controls
+  {
+    N_("control position"),
+    N_("controls"),
+    N_("show position of controls"),
+    IBFHelper<InfoBoxContentControls>::Create,
   },
 
 
