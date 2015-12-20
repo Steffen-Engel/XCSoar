@@ -32,6 +32,10 @@ Copyright_License {
 #include "Look/Look.hpp"
 
 
+#ifdef HAVE_MEM_INFO
+#include "Formatter/ByteSizeFormatter.hpp"
+#endif
+
 #include <tchar.h>
 
 void
