@@ -27,6 +27,7 @@ Copyright_License {
 #include "Math/fixed.hpp"
 #include "Time/BrokenDateTime.hpp"
 #include "OS/Path.hpp"
+#include "Util/StaticString.hxx"
 
 struct MoreData;
 struct DerivedInfo;
@@ -77,6 +78,16 @@ private:
   void LogEvent(const BrokenDateTime &date_time, const char *type);
 
   void TickInternal(const MoreData &basic, const DerivedInfo &calculated);
+
+private: // additionals for summarized flightlogs with position information
+   void LogEvent2(const BrokenDateTime &date_time, const char *type);
+   StaticString<256> TakeoffInfo;
+   StaticString<256> LandingInfo;
+
+   void WriteSummary(const BrokenDateTime &date_time);
+
+   bool GetAirfield(bool takeoff);
+
 };
 
 #endif
