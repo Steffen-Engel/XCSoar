@@ -32,6 +32,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Device/Vega/VoiceSettingsDialog.cpp \
 	$(SRC)/Dialogs/Device/Vega/SwitchesDialog.cpp \
 	$(SRC)/Dialogs/Device/FLARM/ConfigWidget.cpp \
+	$(SRC)/Dialogs/Device/ManageyAllDialog.cpp \
 	$(SRC)/Dialogs/MapItemListDialog.cpp \
 	$(SRC)/Dialogs/MapItemListSettingsDialog.cpp \
 	$(SRC)/Dialogs/MapItemListSettingsPanel.cpp \
@@ -365,6 +366,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/InfoBoxes/Content/Glide.cpp \
 	$(SRC)/InfoBoxes/Content/MacCready.cpp \
 	$(SRC)/InfoBoxes/Content/Other.cpp \
+	$(SRC)/InfoBoxes/Content/yAll.cpp \
 	$(SRC)/InfoBoxes/Content/Speed.cpp \
 	$(SRC)/InfoBoxes/Content/Task.cpp \
 	$(SRC)/InfoBoxes/Content/Places.cpp \

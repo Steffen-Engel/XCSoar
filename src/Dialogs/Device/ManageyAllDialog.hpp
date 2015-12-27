@@ -21,36 +21,13 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_INFOBOX_CONTENT_OTHER_HPP
-#define XCSOAR_INFOBOX_CONTENT_OTHER_HPP
+#ifndef XCSOAR_MANAGE_YALL_DIALOG_HPP
+#define XCSOAR_MANAGE_YALL_DIALOG_HPP
 
-#include "InfoBoxes/Content/Base.hpp"
-
-void
-UpdateInfoBoxGLoad(InfoBoxData &data);
+class Device;
+struct DeviceInfo;
 
 void
-UpdateInfoBoxBattery(InfoBoxData &data);
-
-void
-UpdateInfoBoxExperimental1(InfoBoxData &data);
-
-void
-UpdateInfoBoxExperimental2(InfoBoxData &data);
-
-void
-UpdateInfoBoxCPULoad(InfoBoxData &data);
-
-void
-UpdateInfoBoxFreeRAM(InfoBoxData &data);
-
-class InfoBoxContentHorizon : public InfoBoxContent
-{
-public:
-  virtual void Update(InfoBoxData &data) override;
-  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
-};
-
-
+ManageyAllDialog(Device &device);
 
 #endif

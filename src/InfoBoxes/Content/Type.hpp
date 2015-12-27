@@ -157,6 +157,17 @@ namespace InfoBoxFactory
     /* 110..119 */
     NEXT_ARROW,
 
+    e_EtaHr,
+    e_EtaSr,
+    e_EtaQr,
+    e_Maxg,
+    e_Ming,
+    e_MaxVIAS,
+    e_BankAngle,
+    e_PitchAngle,
+    e_HeadingAngle,
+    e_Controls,
+
     e_NUM_TYPES /* Last item */
   };
 
