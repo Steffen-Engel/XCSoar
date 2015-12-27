@@ -234,9 +234,8 @@ Startup()
 #ifdef SIMULATOR_AVAILABLE
   // prompt for simulator if not set by command line argument "-simulator" or "-fly"
   if (!sim_set_in_cmd_line_flag) {
-    TCHAR startfile[MAX_PATH];
-    LocalPath(startfile, _T("autostart.fly"));
-    if (access((char*)startfile, F_OK) != -1){
+    const auto startfile = LocalPath(_T("autostart.fly"));
+    if (access((const char*)startfile.c_str(), F_OK) != -1){
       global_simulator_flag = false;
     }
     else{
