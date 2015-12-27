@@ -44,14 +44,10 @@ Copyright_License {
 #include "Util/Error.hxx"
 #include "IO/TextWriter.hpp"
 #include "Plane/Plane.hpp"
-//#include "IO/TextFile.hxx"
 #include "Interface.hpp"
 #include "LogFile.hpp"
-//#include "windef.h"
 #include "LocalPath.hpp"
-//#include "OS/FileUtil.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
-//#include "InfoBoxes/Panel/Panel.hpp"
 
 
 
@@ -97,6 +93,7 @@ FlightLogger::TickInternal(const MoreData &basic,
       /* start was confirmed (not on ground anymore): log it */
       seen_on_ground = false;
 
+      LogEvent(start_time, "start");
       LogEvent2(start_time, "start");
 
       start_time.Clear();
@@ -111,6 +108,7 @@ FlightLogger::TickInternal(const MoreData &basic,
       /* landing was confirmed (not on ground anymore): log it */
       seen_flying = false;
 
+      LogEvent(landing_time, "landing");
       LogEvent2(landing_time, "landing");
 
       landing_time.Clear();
@@ -157,11 +155,13 @@ void
 FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
 {
   assert(type != nullptr);
-  LogDebug(_T("logging event "));
+  LogDebug(_T("logging event %s"), type);
 
   static BrokenDateTime start_time;
 
-  TextWriter writer(path, true);
+  const auto logbookpath = LocalPath(_T("flightlog.txt"));
+
+  TextWriter writer(logbookpath, true);
   if (!writer.IsOpen())
   {
     /* Shall we log this error?  Not sure, because when this happens,
@@ -203,17 +203,14 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
                         date_time.hour, date_time.minute);
       writer.Write(temp.buffer());
       writer.Write("  ");
-      LogDebug(_T("debug 01"));
       int seconds = 0;
       if (start_time.IsPlausible())
       {
         seconds = date_time - start_time;
       }
-      LogDebug(_T("debug 02"));
       sprintf((char*)temp.buffer(), " %02u:%02u",
                         seconds / 3600, (seconds / 60) % 60);
       writer.Write(temp.buffer());
-      LogDebug(_T("debug 03"));
 
 #ifdef YALL
       if (MaxValues.max_q > 100)
@@ -247,7 +244,6 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
   }
 
 }
-
 
 bool
 FlightLogger::GetAirfield(bool takeoff)
@@ -301,7 +297,9 @@ FlightLogger::GetAirfield(bool takeoff)
 void
 FlightLogger::WriteSummary(const BrokenDateTime &date_time)
 {
-  FileLineReader FlightLog(path, IgnoreError(), Charset::AUTO);
+  // open logbook for parsing flights
+  const auto logbookpath = LocalPath(_T("flightlog.txt"));
+  FileLineReader FlightLog(logbookpath, IgnoreError(), Charset::AUTO);
 
   const auto out_path = MakeLocalPath(_T("out"));
 
