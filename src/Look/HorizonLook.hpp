@@ -29,6 +29,7 @@ Copyright_License {
 
 struct HorizonLook {
   Pen aircraft_pen;
+  Pen angle_pen;
 
   Color sky_color;
   Brush sky_brush;
