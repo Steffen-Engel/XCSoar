@@ -29,7 +29,7 @@ Copyright_License {
 // Extension stuff for summarized Flightlogs...
 
 // needed for max/min load and max VIAS
-//#define YALL
+#define YALL
 #ifdef YALL
   #include "Device/Driver/yAll/yAll.h"
 #endif
