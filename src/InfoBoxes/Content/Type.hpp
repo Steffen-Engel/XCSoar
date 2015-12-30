@@ -157,6 +157,9 @@ namespace InfoBoxFactory
     /* 110..119 */
     NEXT_ARROW,
 
+    e_ClimbInfo,
+
+
     e_NUM_TYPES /* Last item */
   };
 

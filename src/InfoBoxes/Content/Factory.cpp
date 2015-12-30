@@ -1033,6 +1033,14 @@ static constexpr MetaData meta_data[] = {
        "or the target within the AAT sector for AAT tasks."),
     IBFHelper<InfoBoxContentNextArrow>::Create,
   },
+
+  {
+    N_("expected altitude at goal"),
+    N_("ClimbAltitude"),
+    N_("Arrival altitude at the next waypoint with average climb speed of the last 30 seconds."),
+    UpdateInfoBoxClimbAltitude,
+  },
+
 };
 
 static_assert(ARRAY_SIZE(meta_data) == NUM_TYPES,
