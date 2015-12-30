@@ -168,6 +168,8 @@ namespace InfoBoxFactory
     e_HeadingAngle,
     e_Controls,
 
+    e_ClimbInfo,
+
     e_NUM_TYPES /* Last item */
   };
 
