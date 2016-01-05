@@ -122,6 +122,12 @@ contains the following names:
   \hline
   \verb|airspace| & Access to airspace data. \\
   \hline
+  \verb|wind| & Access to wind data and settings. \\
+  \hline
+  \verb|logger| & Access to logger settings. \\
+  \hline
+  \verb|tracking| & Access to tracking settings. \\
+  \hline
   \verb|timer| & Class for scheduling periodic callbacks. \\
 \end{tabularx}
 \end{maxipage}
@@ -241,6 +247,42 @@ Name & Description \\
 
 \verb|location| & The current reference location (may be aircraft location or
 pan location). \\
+
+\hline
+
+\verb|is_panning| & Gives back if the panning mode is active at the moment.\\
+
+\hline
+
+\verb|enterpan()| & Activates the panning mode.\\
+
+\hline
+
+\verb|disablepan()| & Disables the panning mode.\\
+
+\hline
+
+\verb|leavepan()| & Leaves the panning mode.\\
+
+\hline
+
+\verb|panto(float latitude, float longitude)| & Pans to the given location.\\
+
+\hline
+
+\verb|pancursor(int dx, int dy)| & Pans the cursor by dx and dy. \\
+
+\hline
+
+\verb|zoom(int factor)| & Zooms the map, factor -2 to 2.\\
+
+\hline
+
+\verb|next()| & Opens the next Page.\\
+
+\hline
+
+\verb|prev()| & Opens the previous Page.\\
 
 \hline
 
@@ -570,6 +612,235 @@ of the maximum \newline ballst the glider can carry.\\
 \verb|setmaxtemp(float value)| & Sets the maximum temperature $[{K}]$.\\
 
 \hline
+
+\end{tabularx}
+\end{maxipage}
+
+\subsection{Wind}
+
+The Settings provides access to xcsoar wind data and settings.
+
+The following attributes are provided by \verb|xcsoar.wind|:
+
+\begin{maxipage}
+\begin{tabularx}{1.9\textwidth}{l|X}
+Name & Description \\
+\hline\hline
+
+\verb|wind_mode| & Wind mode, 0: Manual, 1: Circling, 2: ZigZag, 3: Both.\\
+
+\hline
+
+\verb|setwindmode(int value)| & Sets wind mode $[0-3]$.\\
+
+\hline
+
+\verb|tail_drift| & Determines whether the snail trail is drifted with the 
+wind \newline when displayed in circling mode, 0: Off, 1: On. \\
+
+\hline
+
+\verb|settaildrift(bool value)| & Turns Taildrift Off / On $[{0,1}]$.\\
+
+\hline
+
+\verb|wind_source| & The Source of the current wind, 0: None, 1: Manual,
+\newline 2: Circling, 3: Both, 4: External.\\
+
+\hline
+
+\verb|wind_speed| & The current wind speed 
+$[{m/s}]$.\\
+
+\hline
+
+\verb|setwindspeed(float value)| & Sets manual the wind speed $[{m/s}]$.\\
+
+\hline
+
+\verb|wind_bearing| & The current wind bearing 
+$[{degrees}]$.\\
+
+\hline
+
+\verb|setwindbearing(float value)| & Sets manual the wind bearing $[{degrees}]$.\\
+
+\hline
+
+\verb|clear()| & Clears the wind settings and calculations.\\
+
+\hline
+
+\end{tabularx}
+\end{maxipage}
+
+\subsection{Logger}
+
+The Settings provides access to xcsoar Logger data and settings.
+
+The following attributes are provided by \verb|xcsoar.logger|:
+
+\begin{maxipage}
+\begin{tabularx}{1.9\textwidth}{l|X}
+Name & Description \\
+\hline\hline
+
+\verb|pilot_name| & Gives back the set pilot name.\\
+
+\hline
+
+\verb|set_pilot_name(char* name)| &  Sets the pilot name.\\
+
+\hline
+
+\verb|time_step_cruise| & The time interval between logged 
+points when not circling. $[s]$.\\
+
+\hline
+
+\verb|set_time_step_cruise(int time)| &  Sets time interval between logged 
+points when not circling $[s]$.\\
+
+\hline
+
+\verb|time_step_circling| &  The time interval between logged 
+points when circling $[s]$.\\
+
+\hline
+
+\verb|set_time_step_circling(int time)| &  Sets time interval between logged 
+points when circling $[s]$.\\
+
+\hline
+
+\verb|auto_logger| &  Status of the auto-logger, 0: On, 1: Take off only
+2: Off.\\
+
+\hline
+
+\verb|set_autologger(int mode)| &  Sets the Autologger mode, 0: On,
+1: Take off only, 2: Off.\\
+
+\hline
+
+\verb|nmea_logger| &  Status of the NMEA-Logger, 0: Off, 1: On.\\
+
+\hline
+
+\verb|enable_nmea()| &  Enables the NMEA-Logger.\\
+
+\hline
+
+\verb|disable_nmea()| &  Disables the NMEA-Logger.\\
+
+\hline
+
+\verb|log_book| &  Status of the log-book, 0: Off, 1: On.\\
+
+\hline
+
+\verb|enable_logbook()| &  Enables the logbook.\\
+
+\hline
+
+\verb|disable_logbook()| &  Disables the logbook.\\
+
+\hline
+
+\verb|logger_id| &  The current set logger-id.\\
+
+\hline
+
+\verb|set_logger_id(char* id)| &  Sets the logger-id.\\
+
+\end{tabularx}
+\end{maxipage}
+
+\subsection{Tracking}
+
+The Settings provides access to xcsoar Tracking settings.
+
+The following attributes are provided by \verb|xcsoar.tracking|:
+
+\begin{maxipage}
+\begin{tabularx}{1.9\textwidth}{l|X}
+Name & Description \\
+\hline\hline
+
+\verb|skylines_enabled| & States if skylines tracking is enabled.\\
+
+\hline
+
+\verb|enable_skylines()| & Enables skylines tracking.\\
+
+\hline
+
+\verb|disable_skylines()| & Disables skylines tracking.\\
+
+\hline
+
+\verb|skylines_roaming| & States if skylines roaming is enabled.\\
+
+\hline
+
+\verb|skylines_interval| & The skylines tracking interval $[s]$.\\
+
+\hline
+
+\verb|set_skylines_interval(int interval)| & Sets the tracking interval $[s]$.\\
+
+\hline
+
+\verb|skylines_traffic_enabled| & If enabled shows friends on the map,
+download the position \newline of your friends live from the SkyLines server.\\
+
+\hline
+
+\verb|enable_skylines_traffic()| & Enables the display of friends on the map.\\
+
+\hline
+
+\verb|disable_skylines_traffic()| & Disables the display of friends on the map.\\
+
+\hline
+
+\verb|skylines_near_traffic_enabled| & If enabled shows nearby traffic.\\
+
+\hline
+
+\verb|enable_skylines_near_traffic()| & Enables the display of nearby traffic on the map.\\
+
+\hline
+
+\verb|disable_skylines_near_traffic()| & Disables the display of nearby traffic on the map.\\
+
+\hline
+
+\verb|livetrack24_enabled| & States if livetrack24 is enabled.\\
+
+\hline
+
+\verb|enable_livetrack24()| & Enables livetrack24.\\
+
+\hline
+
+\verb|disable_livetrack24()| & Disables livetrack24.\\
+
+\hline
+
+\verb|livetrack24_interval| & Livetrack24 tracking interval $[s]$.\\
+
+\hline
+
+\verb|set_livetrack24_interval(int interval)| & Sets the tracking interval $[s]$.\\
+
+\hline
+
+\verb|livetrack24_vehicle_name| & Set current set vehicle name.\\
+
+\hline
+
+\verb|set_livetrack24_vehiclename(char* name)| & Sets the livetrack24 vehiclename.\\
 
 \end{tabularx}
 \end{maxipage}

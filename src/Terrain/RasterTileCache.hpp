@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2015 The XCSoar Project
+  Copyright (C) 2000-2016 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -61,6 +61,8 @@ class RasterTileCache {
    * number of bits to determine the overview size.
    */
   static constexpr unsigned OVERVIEW_BITS = 4;
+
+  static constexpr unsigned OVERVIEW_MASK = (~0u) << OVERVIEW_BITS;
 
   /**
    * Target number of steps in intersection searches; total distance
@@ -318,6 +320,20 @@ private:
 
   unsigned GetFineTileHeight() const {
     return tile_height << SUBPIXEL_BITS;
+  }
+
+  /**
+   * Convert a pixel size to an overview pixel size, rounding down.
+   */
+  static constexpr unsigned ToOverview(unsigned x) {
+    return x >> OVERVIEW_BITS;
+  }
+
+  /**
+   * Convert a pixel size to an overview pixel size, rounding up.
+   */
+  static constexpr unsigned ToOverviewCeil(unsigned x) {
+    return ToOverview(x + ~OVERVIEW_MASK);
   }
 };
 

@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2015 The XCSoar Project
+  Copyright (C) 2000-2016 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -28,6 +28,14 @@ Copyright_License {
 #include "UIGlobals.hpp"
 #include "PageActions.hpp"
 #include "MapWindow/GlueMapWindow.hpp"
+#include "Pan.hpp"
+#include "Language/Language.hpp"
+#include "Message.hpp"
+#include "Interface.hpp"
+#include "Profile/Profile.hpp"
+#include "Profile/ProfileKeys.hpp"
+#include "Util/Clamp.hpp"
+
 
 extern "C" {
 #include <lauxlib.h>
@@ -46,6 +54,8 @@ l_map_index(lua_State *L)
 
   if (StringIsEqual(name, "location"))
     Lua::Push(L, map->GetLocation());
+  else if (StringIsEqual(name, "is_panning"))
+    Lua::Push(L, IsPanning());
   else
     return 0;
 
@@ -62,8 +72,171 @@ l_map_show(lua_State *L)
   return 0;
 }
 
+static int
+l_map_enterpan(lua_State *L)
+{
+  if (lua_gettop(L) != 0)
+    return luaL_error(L, "Invalid parameters");
+
+  EnterPan();
+  return 0;
+}
+
+static int
+l_map_leavepan(lua_State *L)
+{
+  if (lua_gettop(L) != 0)
+    return luaL_error(L, "Invalid parameters");
+
+  LeavePan();
+  return 0;
+}
+
+static int
+l_map_disablepan(lua_State *L)
+{
+  if (lua_gettop(L) != 0)
+    return luaL_error(L, "Invalid parameters");
+  /**
+   * Low-level version of LeavePan().  It disables panning in the map
+   * and updates the input mode, but does not restore the page layout.
+   * Only to be used by the pages library.
+   */
+  DisablePan();
+  return 0;
+}
+
+static int
+l_map_panto(lua_State *L)
+{
+  if (lua_gettop(L) != 2)
+    return luaL_error(L, "Invalid parameters");
+
+  GeoPoint location = GeoPoint(Angle::Degrees(luaL_checknumber(L, 2)),
+                  Angle::Degrees(luaL_checknumber(L, 1)));
+ 
+  PanTo(location);
+  return 0;
+}
+
+static int
+l_map_pancursor(lua_State *L)
+{
+  if (lua_gettop(L) != 2)
+    return luaL_error(L, "Invalid parameters");
+
+  int dx = luaL_checknumber(L, 1);
+  int dy = luaL_checknumber(L, 2);
+  GlueMapWindow *map_window = UIGlobals::GetMapIfActive();
+  if (map_window == NULL || !map_window->IsPanning())
+    return 0;
+
+  const WindowProjection &projection = map_window->VisibleProjection();
+  if (!projection.IsValid())
+    return 0;
+
+  RasterPoint pt = projection.GetScreenOrigin();
+  pt.x -= dx * int(projection.GetScreenWidth()) / 4;
+  pt.y -= dy * int(projection.GetScreenHeight()) / 4;
+  map_window->SetLocation(projection.ScreenToGeo(pt));
+
+  map_window->QuickRedraw();
+  return 0;
+}
+
+static int
+l_map_zoom(lua_State *L)
+{
+  if (lua_gettop(L) != 1)
+    return luaL_error(L, "Invalid parameters");
+
+  int factor = luaL_checknumber(L, 1);
+  GlueMapWindow *map_window = PageActions::ShowMap();
+  if (map_window == NULL)
+    return 0;
+
+  const MapWindowProjection &projection =
+      map_window->VisibleProjection();
+  if (!projection.IsValid())
+    return 0;
+
+  auto value = projection.GetMapScale();
+
+  if (projection.HaveScaleList()) {
+    value = projection.StepMapScale(value, -factor);
+  } else {
+    if (factor == 1)
+      // zoom in a little
+      value /= M_SQRT2;
+    else if (factor == -1)
+      // zoom out a little
+      value *= M_SQRT2;
+    else if (factor == 2)
+      // zoom in a lot
+      value /= 2;
+    else if (factor == -2)
+      // zoom out a lot
+      value *= 2;
+  }
+
+  MapSettings &settings_map = CommonInterface::SetMapSettings();
+  if (map_window == NULL)
+    return 0;
+
+  const DisplayMode displayMode = CommonInterface::GetUIState().display_mode;
+  if (settings_map.auto_zoom_enabled &&
+      !(displayMode == DisplayMode::CIRCLING && settings_map.circle_zoom_enabled) &&
+      !IsPanning()) {
+    settings_map.auto_zoom_enabled = false;  // disable autozoom if user manually changes zoom
+    Profile::Set(ProfileKeys::AutoZoom, false);
+    Message::AddMessage(_("Auto. zoom off"));
+  }
+ 
+  auto vmin = CommonInterface::GetComputerSettings().polar.glide_polar_task.GetVMin();
+  auto scale_2min_distance = vmin * 12;
+  const fixed scale_100m = fixed(10);
+  const fixed scale_1600km = fixed(1600*100);
+  auto minreasonable = displayMode == DisplayMode::CIRCLING
+    ? scale_100m
+    : std::max(scale_100m, scale_2min_distance);
+
+  value = Clamp(value, minreasonable, scale_1600km);
+  map_window->SetMapScale(value);
+  map_window->QuickRedraw();
+
+  return 0;
+}
+
+static int
+l_map_next(lua_State *L)
+{
+  if (lua_gettop(L) != 0)
+    return luaL_error(L, "Invalid parameters");
+
+  PageActions::Next();
+  return 0;
+}
+
+static int
+l_map_prev(lua_State *L)
+{
+  if (lua_gettop(L) != 0)
+    return luaL_error(L, "Invalid parameters");
+
+  PageActions::Prev();
+  return 0;
+}
+
 static constexpr struct luaL_Reg map_funcs[] = {
   {"show", l_map_show},
+  {"enterpan", l_map_enterpan},
+  {"leavepan", l_map_leavepan},
+  {"disablepan", l_map_disablepan},
+  {"panto", l_map_panto},
+  {"pancursor", l_map_pancursor},
+  {"zoom", l_map_zoom},
+  {"next", l_map_next},
+  {"prev", l_map_prev},
   {nullptr, nullptr}
 };
 

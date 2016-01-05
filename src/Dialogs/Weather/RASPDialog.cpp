@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2015 The XCSoar Project
+  Copyright (C) 2000-2016 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -21,9 +21,9 @@ Copyright_License {
 }
 */
 
-#include "WeatherDialogs.hpp"
-#include "Dialogs/WidgetDialog.hpp"
+#include "RASPDialog.hpp"
 #include "Widget/RowFormWidget.hpp"
+#include "Widget/LargeTextWidget.hpp"
 #include "Terrain/RasterWeatherCache.hpp"
 #include "Terrain/RasterWeatherStore.hpp"
 #include "Form/Edit.hpp"
@@ -146,18 +146,14 @@ RASPSettingsPanel::Save(bool &_changed)
   return true;
 }
 
-void
-dlgWeatherShowModal()
+Widget *
+CreateRaspWidget()
 {
   if (rasp == nullptr || rasp->GetItemCount() == 0)
-    return;
+    return new LargeTextWidget(UIGlobals::GetDialogLook(),
+                               _T("No RASP data"));
 
-  RASPSettingsPanel *widget = new RASPSettingsPanel(*rasp);
-
-  WidgetDialog dialog(UIGlobals::GetDialogLook());
-  dialog.CreateAuto(UIGlobals::GetMainWindow(), _("Weather Forecast"), widget);
-  dialog.AddButton(_("OK"), mrOK);
-  dialog.ShowModal();
+  return new RASPSettingsPanel(*rasp);
 }
 
 /*

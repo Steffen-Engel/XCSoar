@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2015 The XCSoar Project
+  Copyright (C) 2000-2016 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -112,11 +112,13 @@ RasterWeatherCache::Reload(BrokenTime time_local, OperationEnvironment &operatio
                               effective_weather_time);
 
   RasterMap *new_map = new RasterMap();
-  if (!LoadTerrainOverview(dir, new_name, nullptr, new_map->GetTileCache(),
+  if (!LoadTerrainOverview(new_dir, new_name, nullptr, new_map->GetTileCache(),
                            operation)) {
     delete new_map;
     return;
   }
+
+  new_map->UpdateProjection();
 
   dir = new_dir;
   name = new_name;

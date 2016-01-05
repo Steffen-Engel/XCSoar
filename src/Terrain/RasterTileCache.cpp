@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2015 The XCSoar Project
+  Copyright (C) 2000-2016 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -39,8 +39,8 @@ static void
 CopyOverviewRow(short *gcc_restrict dest, const jas_seqent_t *gcc_restrict src,
                 unsigned width, unsigned skip)
 {
-  for (unsigned x = 0; x < width; x += skip)
-    *dest++ = src[x];
+  for (unsigned x = 0; x < width; ++x, src += skip)
+    *dest++ = *src;
 }
 
 void
@@ -53,24 +53,25 @@ RasterTileCache::PutOverviewTile(unsigned index,
 
   const unsigned dest_pitch = overview.GetWidth();
 
-  start_x >>= OVERVIEW_BITS;
-  start_y >>= OVERVIEW_BITS;
+  start_x = ToOverview(start_x);
+  start_y = ToOverview(start_y);
 
   if (start_x >= overview.GetWidth() || start_y >= overview.GetHeight())
     return;
 
-  unsigned width = m.numcols_, height = m.numrows_;
-  if (start_x + (width >> OVERVIEW_BITS) > overview.GetWidth())
-    width = (overview.GetWidth() - start_x) << OVERVIEW_BITS;
-  if (start_y + (height >> OVERVIEW_BITS) > overview.GetHeight())
-    height = (overview.GetHeight() - start_y) << OVERVIEW_BITS;
+  unsigned width = ToOverviewCeil(m.numcols_);
+  if (start_x + width > overview.GetWidth())
+    width = overview.GetWidth() - start_x;
+  unsigned height = ToOverviewCeil(m.numrows_);
+  if (start_y + height > overview.GetHeight())
+    height = overview.GetHeight() - start_y;
 
   const unsigned skip = 1 << OVERVIEW_BITS;
 
   short *gcc_restrict dest = overview.GetData()
     + start_y * dest_pitch + start_x;
 
-  for (unsigned y = 0; y < height; y += skip, dest += dest_pitch)
+  for (unsigned i = 0, y = 0; i < height; ++i, y += skip, dest += dest_pitch)
     CopyOverviewRow(dest, m.rows_[y], width, skip);
 }
 
@@ -192,8 +193,7 @@ RasterTileCache::GetInterpolatedHeight(unsigned int lx, unsigned int ly) const
     return tile.GetInterpolatedHeight(px, py, ix, iy);
 
   // still not found, so go to overview
-  return overview.GetInterpolated(lx >> OVERVIEW_BITS,
-                                   ly >> OVERVIEW_BITS);
+  return overview.GetInterpolated(ToOverview(lx), ToOverview(ly));
 }
 
 void
@@ -206,7 +206,7 @@ RasterTileCache::SetSize(unsigned _width, unsigned _height,
   tile_width = _tile_width;
   tile_height = _tile_height;
 
-  overview.Resize(width >> OVERVIEW_BITS, height >> OVERVIEW_BITS);
+  overview.Resize(ToOverview(width), ToOverview(height));
   overview_width_fine = width << SUBPIXEL_BITS;
   overview_height_fine = height << SUBPIXEL_BITS;
 
