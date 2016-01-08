@@ -10,7 +10,6 @@ EGL ?= y
 else ifneq ($(HAVE_WIN32)$(TARGET_IS_DARWIN)$(TARGET_IS_KOBO),nnn)
 # Windows uses GDI
 # Mac OS X and iOS use SDL
-# Android uses Java-EGL
 # Kobo uses software renderer on /dev/fb0
 EGL = n
 else ifeq ($(OPENGL),n)
@@ -22,6 +21,15 @@ EGL = n
 else ifeq ($(USE_SDL2),y)
 # no EGL if SDL was enabled explicitly
 EGL = n
+else ifeq ($(TARGET),ANDROID)
+# Android uses Java-EGL
+EGL ?= n
+else ifeq ($(GLES),y)
+# use EGL if GLES1 was chosen explicitly
+EGL = y
+else ifeq ($(GLES2),y)
+# use EGL if GLES2 was chosen explicitly
+EGL = y
 else
 # default to GLX/X11
 EGL ?= n
@@ -39,35 +47,38 @@ endif
 
 ENABLE_SDL = n
 
-EGL_CPPFLAGS = -DUSE_EGL
+EGL_CPPFLAGS =
+EGL_FEATURE_CPPFLAGS = -DUSE_EGL
 EGL_LDLIBS = -lEGL
 
 ifeq ($(TARGET_IS_PI),y)
 # Raspberry Pi detected
-EGL_CPPFLAGS += -DUSE_VIDEOCORE
+EGL_FEATURE_CPPFLAGS += -DUSE_VIDEOCORE
 EGL_CPPFLAGS += -isystem $(PI)/opt/vc/include -isystem $(PI)/opt/vc/include/interface/vcos/pthreads
 EGL_CPPFLAGS += -isystem $(PI)/opt/vc/include/interface/vmcs_host/linux
 EGL_LDLIBS += -L$(PI)/opt/vc/lib -lvchostif -lvchiq_arm -lvcos -lbcm_host
 USE_CONSOLE = y
 else ifeq ($(TARGET_HAS_MALI),y)
-EGL_CPPFLAGS += -DHAVE_MALI
+EGL_FEATURE_CPPFLAGS += -DHAVE_MALI
 USE_CONSOLE = y
 else ifeq ($(ENABLE_MESA_KMS),y)
 $(eval $(call pkg-config-library,DRM,libdrm))
 $(eval $(call pkg-config-library,GBM,gbm))
 DRM_CPPFLAGS := $(patsubst -I%,-isystem %,$(DRM_CPPFLAGS))
 GBM_CPPFLAGS := $(patsubst -I%,-isystem %,$(GBM_CPPFLAGS))
-EGL_CPPFLAGS += -DMESA_KMS $(DRM_CPPFLAGS) $(GBM_CPPFLAGS)
+EGL_FEATURE_CPPFLAGS += -DMESA_KMS
+EGL_CPPFLAGS += $(DRM_CPPFLAGS) $(GBM_CPPFLAGS)
 EGL_LDLIBS += $(DRM_LDLIBS) $(GBM_LDLIBS)
 USE_CONSOLE = y
 else ifeq ($(USE_WAYLAND),y)
 EGL_CPPFLAGS += $(WAYLAND_CPPFLAGS)
+EGL_FEATURE_CPPFLAGS += $(WAYLAND_FEATURE_CPPFLAGS)
 EGL_LDLIBS += $(WAYLAND_LDLIBS)
 USE_CONSOLE = n
 else ifeq ($(TARGET),ANDROID)
 else
 USE_X11 = y
-EGL_CPPFLAGS += -DUSE_X11
+EGL_FEATURE_CPPFLAGS += -DUSE_X11
 EGL_LDLIBS += -lX11
 USE_CONSOLE = n
 endif

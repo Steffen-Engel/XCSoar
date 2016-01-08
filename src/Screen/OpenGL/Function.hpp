@@ -1,5 +1,5 @@
 /*
-  Copyright_License {
+Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
   Copyright (C) 2000-2016 The XCSoar Project
@@ -21,32 +21,45 @@
 }
 */
 
-#ifndef TERRAIN_CROSS_SECTION_RENDERER_HPP
-#define TERRAIN_CROSS_SECTION_RENDERER_HPP
+#ifndef XCSOAR_SCREEN_OPENGL_FUNCTION_HPP
+#define XCSOAR_SCREEN_OPENGL_FUNCTION_HPP
 
-#include "Terrain/Height.hpp"
+#include "Compiler.h"
 
-class Canvas;
-class ChartRenderer;
-struct CrossSectionLook;
-struct RasterPoint;
+#ifdef USE_EGL
+#include "Screen/EGL/System.hpp"
+#elif defined(USE_GLX)
 
-/**
- * A Window which renders a terrain and airspace cross-section
- */
-class TerrainXSRenderer
-{
-  const CrossSectionLook &look;
+/* kludges to work around namespace collisions with X11 headers */
 
-public:
-  TerrainXSRenderer(const CrossSectionLook &_look): look(_look) {}
+#define Font X11Font
+#define Window X11Window
+#define Display X11Display
 
-  void Draw(Canvas &canvas, const ChartRenderer &chart,
-            const TerrainHeight *elevations) const;
+#include <GL/glx.h>
 
-private:
-  void DrawPolygon(Canvas &canvas, TerrainType type,
-                   const RasterPoint *points, unsigned num_points) const;
-};
+#undef Font
+#undef Window
+#undef Display
+
+#else
+#include <dlfcn.h>
+#endif
+
+namespace OpenGL {
+  typedef void (*Function)();
+
+  static inline Function
+  GetProcAddress(const char *name)
+  {
+#ifdef USE_EGL
+    return eglGetProcAddress(name);
+#elif defined(USE_GLX)
+    return glXGetProcAddressARB((const GLubyte *)name);
+#else
+    return (Function)dlsym(RTLD_DEFAULT, name);
+#endif
+  }
+}
 
 #endif

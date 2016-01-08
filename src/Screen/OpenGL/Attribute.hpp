@@ -1,7 +1,7 @@
 /*
-  Copyright_License {
+Copyright_License {
 
-  XCSoar Glide Computer - http://www.xcsoar.org/
+  XCSoar Glide Compute5r - http://www.xcsoar.org/
   Copyright (C) 2000-2016 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
@@ -21,32 +21,21 @@
 }
 */
 
-#ifndef TERRAIN_CROSS_SECTION_RENDERER_HPP
-#define TERRAIN_CROSS_SECTION_RENDERER_HPP
+#ifndef XCSOAR_SCREEN_OPENGL_ATTRIBUTE_HPP
+#define XCSOAR_SCREEN_OPENGL_ATTRIBUTE_HPP
 
-#include "Terrain/Height.hpp"
+#include "System.hpp"
 
-class Canvas;
-class ChartRenderer;
-struct CrossSectionLook;
-struct RasterPoint;
-
-/**
- * A Window which renders a terrain and airspace cross-section
- */
-class TerrainXSRenderer
-{
-  const CrossSectionLook &look;
-
-public:
-  TerrainXSRenderer(const CrossSectionLook &_look): look(_look) {}
-
-  void Draw(Canvas &canvas, const ChartRenderer &chart,
-            const TerrainHeight *elevations) const;
-
-private:
-  void DrawPolygon(Canvas &canvas, TerrainType type,
-                   const RasterPoint *points, unsigned num_points) const;
+namespace OpenGL {
+  /**
+   * GLSL attributes.
+   */
+  namespace Attribute {
+    static constexpr GLuint TRANSLATE = 0;
+    static constexpr GLuint POSITION = 1;
+    static constexpr GLuint TEXCOORD = 2;
+    static constexpr GLuint COLOR = 3;
+  };
 };
 
 #endif

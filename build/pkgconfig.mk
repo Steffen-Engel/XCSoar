@@ -18,7 +18,7 @@ endif
 
 # Generates a pkg-config lookup for a library.
 #
-# Example: $(eval $(call CURL,libcurl >= 2.21))
+# Example: $(eval $(call pkg-config-library,CURL,libcurl >= 2.21))
 #
 # Arguments: PREFIX, SPEC
 #
@@ -37,5 +37,13 @@ endif
 $(1)_CPPFLAGS := $$(shell $$(PKG_CONFIG) --cflags $(2))
 $(1)_LDLIBS := $$(shell $$(PKG_CONFIG) --libs $(2))
 $(1)_MODVERSION := $$(shell $$(PKG_CONFIG) --modversion $(2))
+
+ifeq ($$(TARGET)$$(ARMV7),ANDROIDy)
+# Android-ARMv7 requires "-lm_hard" instead of "-lm"; some libraries
+# such as libtiff however hard-code "-lm" in their pkg-config file,
+# which causes serious math breakage; therefore, filter out all "-lm"
+# flags.
+$(1)_LDLIBS := $$(filter-out -lm,$$($(1)_LDLIBS))
+endif
 
 endef

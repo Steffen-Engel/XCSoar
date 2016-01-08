@@ -24,7 +24,6 @@ Copyright_License {
 #ifndef XCSOAR_WAYPOINT_LABEL_LIST_HPP
 #define XCSOAR_WAYPOINT_LABEL_LIST_HPP
 
-#include "Rough/RoughAltitude.hpp"
 #include "Renderer/TextInBox.hpp"
 #include "Screen/Point.hpp"
 #include "Util/NonCopyable.hpp"
@@ -39,7 +38,7 @@ public:
     TCHAR Name[NAME_SIZE+1];
     RasterPoint Pos;
     TextInBoxMode Mode;
-    RoughAltitude AltArivalAGL;
+    int AltArivalAGL;
     bool inTask;
     bool isLandable;
     bool isAirport;
@@ -48,18 +47,17 @@ public:
   };
 
 protected:
-  UPixelScalar width, height;
-  PixelRect bounds;
+  const unsigned width, height;
 
   StaticArray<Label, 128u> labels;
 
 public:
-  WaypointLabelList(UPixelScalar _width, UPixelScalar _height)
+  WaypointLabelList(unsigned _width, unsigned _height)
     :width(_width), height(_height) {}
 
-  void Add(const TCHAR *Name, PixelScalar X, PixelScalar Y,
+  void Add(const TCHAR *name, int x, int y,
            TextInBoxMode Mode, bool bold,
-           RoughAltitude AltArivalAGL,
+           int AltArivalAGL,
            bool inTask, bool isLandable, bool isAirport,
            bool isWatchedWaypoint);
   void Sort();
@@ -70,10 +68,6 @@ public:
 
   const Label *end() const {
     return labels.end();
-  }
-
-  const Label &operator[](unsigned i) const {
-    return labels[i];
   }
 };
 
