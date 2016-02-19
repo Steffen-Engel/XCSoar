@@ -50,8 +50,7 @@ InfoBoxContentControls::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
     Brush marker_brush, stick_brush;
     Pen frame_pen, stick_pen;
 
-
-    const RasterPoint center = rc.GetCenter();
+    const BulkPixelPoint center = rc.GetCenter();
 
     const int radius = std::min(rc.right - rc.left, rc.bottom - rc.top) / 2
       - Layout::Scale(2);
@@ -73,14 +72,14 @@ InfoBoxContentControls::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
     canvas.Select(stick_pen);
     canvas.Select(stick_brush);
     // paint stick
-    canvas.DrawSegment(center.x + LoggerData.eta[ETA_QR] * radius / 100, center.y + LoggerData.eta[ETA_HR] * radius / 100, Layout::Scale(3), Angle::Degrees(0), Angle::Degrees(360), true);
+    canvas.DrawCircle(center.x + LoggerData.eta[ETA_QR] * radius / 100, center.y + LoggerData.eta[ETA_HR] * radius / 100, Layout::Scale(3));
 
     marker_brush.Create(COLOR_GRAY);
     canvas.Select(marker_brush);
     // paint rudder
-    canvas.DrawSegment(center.x + LoggerData.eta[ETA_SR] * radius / 100, center.y + radius, Layout::Scale(2), Angle::Degrees(0), Angle::Degrees(360), true);
+    canvas.DrawCircle(center.x + LoggerData.eta[ETA_SR] * radius / 100, center.y + radius, Layout::Scale(2));
     // paint flap
-    canvas.DrawSegment(center.x-radius, center.y+ LoggerData.eta[ETA_FLAP] * radius / 100, Layout::Scale(2), Angle::Degrees(0), Angle::Degrees(360), true);
+    canvas.DrawCircle(center.x-radius, center.y+ LoggerData.eta[ETA_FLAP] * radius / 100, Layout::Scale(2));
 }
 
 void

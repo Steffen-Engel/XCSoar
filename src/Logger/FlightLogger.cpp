@@ -37,6 +37,7 @@ Copyright_License {
 // needed for nearest airport
 #include "Engine/Task/Unordered/AlternateList.hpp"
 #include "Components.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Task/ProtectedTaskManager.hpp"
 
 #include "IO/LineReader.hpp"
@@ -48,6 +49,8 @@ Copyright_License {
 #include "LogFile.hpp"
 #include "LocalPath.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
+
+
 
 
 
@@ -187,7 +190,7 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
     start_time = date_time;
     start_time.second = 0;    // no seconds needed in logbook
 
-    if (flight.flight_time>=fixed(0)) {
+    if (flight.flight_time>=double(0)) {
       sprintf((char*)temp.buffer(), "%02u.%02u.%04u  %02u:%02u ",
                         date_time.day, date_time.month, date_time.year,
                         date_time.hour, date_time.minute);
@@ -198,7 +201,7 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
   else if (strcmp(type, "landing") == 0)
   {
     GetAirfield(false);
-    if (!flight.flying && positive(flight.flight_time)) {
+    if (!flight.flying && (flight.flight_time > 0)) {
       sprintf((char*)temp.buffer(), "  %02u:%02u ",
                         date_time.hour, date_time.minute);
       writer.Write(temp.buffer());
@@ -215,7 +218,7 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
 #ifdef YALL
       if (MaxValues.max_q > 100)
       {
-        float speed;
+        double speed;
         speed = sqrt(2.0*MaxValues.max_q/1.225)*3.6;
         sprintf((char*)temp.buffer(), " | %4.1fg %4.1fg %4.0fkm/h", 0.01*MaxValues.min_g, 0.01*MaxValues.max_g, speed
                           );
