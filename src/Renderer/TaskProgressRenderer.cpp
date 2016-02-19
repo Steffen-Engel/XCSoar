@@ -34,9 +34,9 @@ void
 TaskProgressRenderer::Draw(const TaskSummary& summary, Canvas &canvas,
                            const PixelRect &rc, bool inverse)
 {
-  const int radius = std::min(rc.right - rc.left, rc.bottom - rc.top) / 2 - 
+  const int radius = std::min(rc.GetWidth(), rc.GetHeight()) / 2 -
                      Layout::Scale(3);
-  RasterPoint center;
+  PixelPoint center;
   center.x = (rc.left + rc.right) / 2;
   center.y = (rc.bottom + rc.top) / 2;
 
@@ -45,7 +45,7 @@ TaskProgressRenderer::Draw(const TaskSummary& summary, Canvas &canvas,
   if (summary.p_remaining < 0.99) {
     canvas.Select(look.hbGray);
     canvas.SelectNullPen();
-    canvas.DrawSegment(center.x, center.y, radius, Angle::Zero(),
+    canvas.DrawSegment(center, radius, Angle::Zero(),
                        sweep * (1 -  summary.p_remaining));
   }
 

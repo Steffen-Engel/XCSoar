@@ -24,8 +24,7 @@ Copyright_License {
 #include "RASPDialog.hpp"
 #include "Widget/RowFormWidget.hpp"
 #include "Widget/LargeTextWidget.hpp"
-#include "Terrain/RasterWeatherCache.hpp"
-#include "Terrain/RasterWeatherStore.hpp"
+#include "Weather/Rasp/RaspStore.hpp"
 #include "Form/Edit.hpp"
 #include "Form/DataField/Enum.hpp"
 #include "Form/DataField/Listener.hpp"
@@ -43,12 +42,12 @@ class RASPSettingsPanel final : public RowFormWidget, DataFieldListener {
     TIME,
   };
 
-  RasterWeatherStore &rasp;
+  RaspStore &rasp;
 
   BrokenTime time;
 
 public:
-  RASPSettingsPanel(RasterWeatherStore &_rasp)
+  explicit RASPSettingsPanel(RaspStore &_rasp)
     :RowFormWidget(UIGlobals::GetDialogLook()), rasp(_rasp) {}
 
 private:
@@ -73,10 +72,10 @@ RASPSettingsPanel::UpdateTimeControl()
 {
   const DataFieldEnum &item = (const DataFieldEnum &)GetDataField(ITEM);
 
-  const unsigned item_index = item.GetValue();
-  SetRowEnabled(TIME, item_index > 0);
+  const int item_index = item.GetValue();
+  SetRowEnabled(TIME, item_index >= 0);
 
-  if (item_index > 0) {
+  if (item_index >= 0) {
     DataFieldEnum &time_df = (DataFieldEnum &)GetDataField(TIME);
     time_df.ClearChoices();
     time_df.addEnumText(_("Now"));
@@ -96,10 +95,10 @@ RASPSettingsPanel::UpdateTimeControl()
 inline void
 RASPSettingsPanel::OnTimeModified(const DataFieldEnum &df)
 {
-  const unsigned value = df.GetValue();
-  time = value == 0
-    ? BrokenTime::Invalid()
-    : BrokenTime::FromMinuteOfDay(value);
+  const int value = df.GetValue();
+  time = value >= 0
+    ? BrokenTime::FromMinuteOfDay(value)
+    : BrokenTime::Invalid();
 }
 
 void
@@ -113,6 +112,7 @@ RASPSettingsPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
   wp = AddEnum(_("Field"), nullptr, this);
   DataFieldEnum *dfe = (DataFieldEnum *)wp->GetDataField();
   dfe->EnableItemHelp(true);
+  dfe->AddChoice(-1, _T("none"), _T("none"), nullptr);
   for (unsigned i = 0; i < rasp.GetItemCount(); i++) {
     const auto &mi = rasp.GetItemInfo(i);
     const TCHAR *label = mi.label;

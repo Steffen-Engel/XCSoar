@@ -26,7 +26,6 @@ Copyright_License {
 
 #include "Screen/SingleWindow.hpp"
 #include "Screen/Timer.hpp"
-#include "InfoBoxes/InfoBoxLayout.hpp"
 #include "BatteryTimer.hpp"
 #include "Widget/ManagedWidget.hpp"
 #include "UIUtil/GestureManager.hpp"
@@ -49,6 +48,7 @@ class RasterTerrain;
 class TopographyStore;
 class MapWindowProjection;
 class PopupMessage;
+namespace InfoBoxLayout { struct Layout; }
 
 /**
  * The XCSoar main window.
@@ -363,11 +363,10 @@ protected:
   virtual void OnResize(PixelSize new_size) override;
   virtual void OnSetFocus() override;
   virtual void OnCancelMode() override;
-  virtual bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseUp(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseMove(PixelScalar x, PixelScalar y,
-                           unsigned keys) override;
-  virtual bool OnMouseDouble(PixelScalar x, PixelScalar y) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseUp(PixelPoint p) override;
+  bool OnMouseMove(PixelPoint p, unsigned keys) override;
+  bool OnMouseDouble(PixelPoint p) override;
   virtual bool OnKeyDown(unsigned key_code) override;
   virtual bool OnUser(unsigned id) override;
   virtual bool OnTimer(WindowTimer &timer) override;

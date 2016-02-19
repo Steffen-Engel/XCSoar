@@ -235,13 +235,16 @@ public:
     return config.safety_height_terrain;
   }
 
-  FlatGeoPoint ReachIntercept(const int index, const AGeoPoint& p,
+  gcc_pure
+  FlatGeoPoint ReachIntercept(int index, const AFlatGeoPoint &flat_origin,
+                              const GeoPoint &origin,
                               const RasterMap* map,
                               const FlatProjection &proj) const;
 
 private:
   gcc_pure
-  FlatGeoPoint MSLIntercept(const int index, const AGeoPoint &p,
+  FlatGeoPoint MSLIntercept(const int index, const FlatGeoPoint &p,
+                            double altitude,
                             const FlatProjection &proj) const;
 };
 

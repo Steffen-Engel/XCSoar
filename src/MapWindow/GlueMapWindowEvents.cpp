@@ -32,7 +32,6 @@ Copyright_License {
 #include "Interface.hpp"
 #include "Pan.hpp"
 #include "Util/Clamp.hpp"
-#include "Event/Idle.hpp"
 #include "Topography/Thread.hpp"
 
 #ifdef USE_X11
@@ -45,21 +44,25 @@ Copyright_License {
 #endif
 
 void
+GlueMapWindow::OnCreate()
+{
+  MapWindow::OnCreate();
+
+  visible_projection.SetScale(CommonInterface::GetMapSettings().cruise_scale);
+}
+
+void
 GlueMapWindow::OnDestroy()
 {
   /* stop the TopographyThread and the TerrainThread */
   SetTopography(nullptr);
   SetTerrain(nullptr);
 
-#ifdef ENABLE_OPENGL
-  data_timer.Cancel();
-#endif
-
   MapWindow::OnDestroy();
 }
 
 bool
-GlueMapWindow::OnMouseDouble(PixelScalar x, PixelScalar y)
+GlueMapWindow::OnMouseDouble(PixelPoint p)
 {
   map_item_timer.Cancel();
 
@@ -71,12 +74,12 @@ GlueMapWindow::OnMouseDouble(PixelScalar x, PixelScalar y)
 }
 
 bool
-GlueMapWindow::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+GlueMapWindow::OnMouseMove(PixelPoint p, unsigned keys)
 {
   /* allow a bigger threshold on touch screens */
   const unsigned threshold = Layout::Scale(IsEmbedded() ? 50 : 10);
   if (drag_mode != DRAG_NONE && arm_mapitem_list &&
-      (manhattan_distance(drag_start, RasterPoint{x, y}) > threshold ||
+      ((unsigned)ManhattanDistance(drag_start, p) > threshold ||
        mouse_down_clock.Elapsed() > 200))
     arm_mapitem_list = false;
 
@@ -90,17 +93,17 @@ GlueMapWindow::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
   case DRAG_PAN:
     SetLocation(drag_projection.GetGeoLocation()
                 + drag_start_geopoint
-                - drag_projection.ScreenToGeo(x, y));
+                - drag_projection.ScreenToGeo(p));
     QuickRedraw();
 
 #ifdef ENABLE_OPENGL
-    kinetic_x.MouseMove(x);
-    kinetic_y.MouseMove(y);
+    kinetic_x.MouseMove(p.x);
+    kinetic_y.MouseMove(p.y);
 #endif
     return true;
 
   case DRAG_GESTURE:
-    gestures.Update(x, y);
+    gestures.Update(p);
 
     /* invoke PaintWindow's Invalidate() implementation instead of
        DoubleBufferWindow's in order to reuse the buffered map */
@@ -111,7 +114,7 @@ GlueMapWindow::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
     return true;
   }
 
-  return MapWindow::OnMouseMove(x, y, keys);
+  return MapWindow::OnMouseMove(p, keys);
 }
 
 gcc_pure
@@ -130,7 +133,7 @@ IsCtrlKeyPressed()
 }
 
 bool
-GlueMapWindow::OnMouseDown(PixelScalar x, PixelScalar y)
+GlueMapWindow::OnMouseDown(PixelPoint p)
 {
   map_item_timer.Cancel();
 
@@ -145,7 +148,7 @@ GlueMapWindow::OnMouseDown(PixelScalar x, PixelScalar y)
   if (is_simulator() && IsCtrlKeyPressed() && visible_projection.IsValid()) {
     /* clicking with Ctrl key held moves the simulator to the click
        location instantly */
-    const GeoPoint location = visible_projection.ScreenToGeo(x, y);
+    const GeoPoint location = visible_projection.ScreenToGeo(p);
     device_blackboard->SetSimulatorLocation(location);
     return true;
   }
@@ -155,17 +158,16 @@ GlueMapWindow::OnMouseDown(PixelScalar x, PixelScalar y)
 
   SetFocus();
 
-  drag_start.x = x;
-  drag_start.y = y;
+  drag_start = p;
 
   if (!visible_projection.IsValid()) {
-    gestures.Start(x, y, Layout::Scale(20));
+    gestures.Start(p, Layout::Scale(20));
     drag_mode = DRAG_GESTURE;
     SetCapture();
     return true;
   }
 
-  drag_start_geopoint = visible_projection.ScreenToGeo(x, y);
+  drag_start_geopoint = visible_projection.ScreenToGeo(p);
 
   switch (follow_mode) {
   case FOLLOW_SELF:
@@ -176,20 +178,20 @@ GlueMapWindow::OnMouseDown(PixelScalar x, PixelScalar y)
     drag_projection = visible_projection;
 
 #ifdef ENABLE_OPENGL
-    kinetic_x.MouseDown(x);
-    kinetic_y.MouseDown(y);
+    kinetic_x.MouseDown(p.x);
+    kinetic_y.MouseDown(p.y);
 #endif
 
     break;
   }
 
   if (CommonInterface::Basic().gps.simulator && drag_mode == DRAG_NONE)
-    if (compare_squared(visible_projection.GetScreenOrigin().x - x,
-                        visible_projection.GetScreenOrigin().y - y,
+    if (compare_squared(visible_projection.GetScreenOrigin().x - p.x,
+                        visible_projection.GetScreenOrigin().y - p.y,
                         Layout::Scale(30)) != 1)
         drag_mode = DRAG_SIMULATOR;
   if (drag_mode == DRAG_NONE ) {
-    gestures.Start(x, y, Layout::Scale(20));
+    gestures.Start(p, Layout::Scale(20));
     drag_mode = DRAG_GESTURE;
   }
 
@@ -200,7 +202,7 @@ GlueMapWindow::OnMouseDown(PixelScalar x, PixelScalar y)
 }
 
 bool
-GlueMapWindow::OnMouseUp(PixelScalar x, PixelScalar y)
+GlueMapWindow::OnMouseUp(PixelPoint p)
 {
   if (drag_mode != DRAG_NONE)
     ReleaseCapture();
@@ -237,19 +239,19 @@ GlueMapWindow::OnMouseUp(PixelScalar x, PixelScalar y)
 #endif
 
 #ifdef ENABLE_OPENGL
-    kinetic_x.MouseUp(x);
-    kinetic_y.MouseUp(y);
+    kinetic_x.MouseUp(p.x);
+    kinetic_y.MouseUp(p.y);
     kinetic_timer.Schedule(30);
 #endif
     break;
 
   case DRAG_SIMULATOR:
     if (click_time > 50 &&
-        compare_squared(drag_start.x - x, drag_start.y - y,
+        compare_squared(drag_start.x - p.x, drag_start.y - p.y,
                         Layout::Scale(36)) == 1) {
-      GeoPoint location = visible_projection.ScreenToGeo(x, y);
+      GeoPoint location = visible_projection.ScreenToGeo(p);
 
-      double distance = hypot(drag_start.x - x, drag_start.y - y);
+      double distance = hypot(drag_start.x - p.x, drag_start.y - p.y);
 
       // This drag moves the aircraft (changes speed and direction)
       const Angle old_bearing = CommonInterface::Basic().track;
@@ -287,7 +289,7 @@ GlueMapWindow::OnMouseUp(PixelScalar x, PixelScalar y)
 }
 
 bool
-GlueMapWindow::OnMouseWheel(PixelScalar x, PixelScalar y, int delta)
+GlueMapWindow::OnMouseWheel(PixelPoint p, int delta)
 {
   map_item_timer.Cancel();
 
@@ -397,13 +399,6 @@ GlueMapWindow::OnPaintBuffer(Canvas &canvas)
   ExchangeBlackboard();
 
   EnterDrawThread();
-
-  /* update terrain, topography, ... */
-  if (Idle())
-    /* still dirty: schedule a redraw to load more data */
-    data_timer.Schedule(500);
-  else
-    data_timer.Cancel();
 #endif
 
   MapWindow::OnPaintBuffer(canvas);
@@ -443,13 +438,6 @@ GlueMapWindow::OnTimer(WindowTimer &timer)
     }
 
     return true;
-  } else if (timer == data_timer) {
-    if (!IsUserIdle(2500))
-      /* user is still active; try again later */
-      return true;
-
-    Invalidate();
-    return false;
 #endif
   } else
     return MapWindow::OnTimer(timer);

@@ -25,6 +25,7 @@ Copyright_License {
 #define XCSOAR_SCREEN_BITMAP_HPP
 
 #include "Screen/Point.hpp"
+#include "Compiler.h"
 
 #ifdef USE_MEMORY_CANVAS
 #include "Screen/Memory/Buffer.hpp"
@@ -32,6 +33,7 @@ Copyright_License {
 #endif
 
 #ifdef ANDROID
+#include "Screen/Custom/UncompressedImage.hpp"
 #include "Screen/OpenGL/Surface.hpp"
 #include <jni.h>
 #endif
@@ -84,6 +86,8 @@ protected:
 #ifdef ANDROID
   jobject bmp = nullptr;
 
+  UncompressedImage uncompressed;
+
   Type type;
 #endif
 
@@ -127,7 +131,7 @@ public:
 public:
   bool IsDefined() const {
 #ifdef ANDROID
-    return bmp != nullptr;
+    return bmp != nullptr || uncompressed.IsDefined();
 #elif defined(ENABLE_OPENGL)
     return texture != nullptr;
 #elif defined(USE_MEMORY_CANVAS)
@@ -138,6 +142,10 @@ public:
   }
 
 #ifdef ENABLE_OPENGL
+  const PixelSize &GetSize() const {
+    return size;
+  }
+
   unsigned GetWidth() const {
     return size.cx;
   }
@@ -150,6 +158,10 @@ public:
     return flipped;
   }
 #elif defined(USE_MEMORY_CANVAS)
+  PixelSize GetSize() const {
+    return { buffer.width, buffer.height };
+  }
+
   unsigned GetWidth() const {
     return buffer.width;
   }
@@ -158,6 +170,9 @@ public:
     return buffer.height;
   }
 #else
+  gcc_pure
+  PixelSize GetSize() const;
+
   unsigned GetWidth() const {
     return GetSize().cx;
   }
@@ -174,7 +189,7 @@ public:
 #endif
 
 #ifndef USE_GDI
-  bool Load(const UncompressedImage &uncompressed, Type type=Type::STANDARD);
+  bool Load(UncompressedImage &&uncompressed, Type type=Type::STANDARD);
 #ifndef ANDROID
   bool Load(ConstBuffer<void> buffer, Type type=Type::STANDARD);
 #endif
@@ -182,10 +197,12 @@ public:
 
   bool Load(ResourceId id, Type type=Type::STANDARD);
 
+#ifndef ENABLE_OPENGL
   /**
    * Load a bitmap and stretch it by the specified zoom factor.
    */
   bool LoadStretch(ResourceId id, unsigned zoom);
+#endif
 
   bool LoadFile(Path path);
 
@@ -196,9 +213,6 @@ public:
   GeoQuadrilateral LoadGeoFile(Path path);
 
   void Reset();
-
-  gcc_pure
-  const PixelSize GetSize() const;
 
 #ifdef ENABLE_OPENGL
   GLTexture *GetNative() const {
@@ -216,14 +230,18 @@ public:
   }
 #endif
 
-#ifdef ANDROID
+#ifdef ENABLE_OPENGL
 private:
+  bool MakeTexture(const UncompressedImage &uncompressed, Type type);
+
+#ifdef ANDROID
   bool Set(JNIEnv *env, jobject _bmp, Type _type);
-  bool MakeTexture();
+  bool MakeTexture(jobject _bmp, Type _type);
 
   /* from GLSurfaceListener */
   virtual void SurfaceCreated() override;
   virtual void SurfaceDestroyed() override;
+#endif
 #endif
 };
 

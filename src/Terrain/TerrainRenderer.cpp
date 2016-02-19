@@ -32,6 +32,7 @@ Copyright_License {
 #include "Screen/OpenGL/Texture.hpp"
 #include "Screen/OpenGL/Scope.hpp"
 #include "Screen/OpenGL/VertexPointer.hpp"
+#include "Screen/OpenGL/BulkPoint.hpp"
 
 #ifdef USE_GLSL
 #include "Screen/OpenGL/Shaders.hpp"
@@ -289,19 +290,9 @@ static_assert(ARRAY_SIZE(terrain_colors) == TerrainRendererSettings::NUM_RAMPS,
 //
 // this is for TerrainInfo.StepSize = 0.0025;
 TerrainRenderer::TerrainRenderer(const RasterTerrain &_terrain)
-  :terrain(_terrain),
-   last_sun_azimuth(Angle::Zero()),
-   last_color_ramp(nullptr)
+  :terrain(_terrain)
 {
   settings.SetDefaults();
-}
-
-void
-TerrainRenderer::CopyTo(Canvas &canvas, unsigned width, unsigned height) const
-{
-  raster_renderer.GetImage().StretchTo(raster_renderer.GetWidth(),
-                                        raster_renderer.GetHeight(), canvas,
-                                        width, height);
 }
 
 #ifdef ENABLE_OPENGL
@@ -321,14 +312,21 @@ IsLargeSizeDifference(const GeoBounds &a, const GeoBounds &b)
 }
 #endif
 
-void
+bool
 TerrainRenderer::Generate(const WindowProjection &map_projection,
                           const Angle sunazimuth)
 {
 #ifdef ENABLE_OPENGL
   const GeoBounds &old_bounds = raster_renderer.GetBounds();
-  const GeoBounds &new_bounds = map_projection.GetScreenBounds();
+  GeoBounds new_bounds = map_projection.GetScreenBounds();
   assert(new_bounds.IsValid());
+
+  {
+    RasterTerrain::Lease map(terrain);
+    if (!new_bounds.IntersectWith(map->GetBounds()))
+      /* map is outside of visible screen area */
+      return false;
+  }
 
   if (old_bounds.IsValid() && old_bounds.IsInside(new_bounds) &&
       !IsLargeSizeDifference(old_bounds, new_bounds) &&
@@ -336,14 +334,14 @@ TerrainRenderer::Generate(const WindowProjection &map_projection,
       sunazimuth.CompareRoughly(last_sun_azimuth) &&
       !raster_renderer.UpdateQuantisation())
     /* no change since previous frame */
-    return;
+    return true;
 
 #else
   if (compare_projection.Compare(map_projection) &&
       terrain_serial == terrain.GetSerial() &&
       sunazimuth.CompareRoughly(last_sun_azimuth))
     /* no change since previous frame */
-    return;
+    return true;
 
   compare_projection = CompareProjection(map_projection);
 #endif
@@ -377,73 +375,5 @@ TerrainRenderer::Generate(const WindowProjection &map_projection,
                                 settings.contrast, settings.brightness,
                                 sunazimuth,
                                 do_contour);
-}
-
-/**
- * Draws the terrain to the given canvas
- * @param canvas The drawing canvas
- * @param map_projection The Projection
- * @param sunazimuth Azimuth of the sun (for terrain shading)
- */
-void
-TerrainRenderer::Draw(Canvas &canvas,
-                      const WindowProjection &map_projection) const
-{
-#ifdef ENABLE_OPENGL
-  const GeoBounds &bounds = raster_renderer.GetBounds();
-  assert(bounds.IsValid());
-
-  const RasterPoint vertices[] = {
-    map_projection.GeoToScreen(bounds.GetNorthWest()),
-    map_projection.GeoToScreen(bounds.GetNorthEast()),
-    map_projection.GeoToScreen(bounds.GetSouthWest()),
-    map_projection.GeoToScreen(bounds.GetSouthEast()),
-  };
-
-  const ScopeVertexPointer vp(vertices);
-
-  const GLTexture &texture = raster_renderer.BindAndGetTexture();
-  const PixelSize allocated = texture.GetAllocatedSize();
-
-  const int src_x = 0, src_y = 0, src_width = raster_renderer.GetWidth(),
-    src_height = raster_renderer.GetHeight();
-
-  GLfloat x0 = (GLfloat)src_x / allocated.cx;
-  GLfloat y0 = (GLfloat)src_y / allocated.cy;
-  GLfloat x1 = (GLfloat)(src_x + src_width) / allocated.cx;
-  GLfloat y1 = (GLfloat)(src_y + src_height) / allocated.cy;
-
-  const GLfloat coord[] = {
-    x0, y0,
-    x1, y0,
-    x0, y1,
-    x1, y1,
-  };
-
-#ifdef USE_GLSL
-  OpenGL::texture_shader->Use();
-  glEnableVertexAttribArray(OpenGL::Attribute::TEXCOORD);
-  glVertexAttribPointer(OpenGL::Attribute::TEXCOORD, 2, GL_FLOAT, GL_FALSE,
-                        0, coord);
-#else
-  const GLEnable<GL_TEXTURE_2D> scope;
-  OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glTexCoordPointer(2, GL_FLOAT, 0, coord);
-#endif
-
-  glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-#ifdef USE_GLSL
-  glDisableVertexAttribArray(OpenGL::Attribute::TEXCOORD);
-  OpenGL::solid_shader->Use();
-#else
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-
-#else
-  CopyTo(canvas, map_projection.GetScreenWidth(),
-         map_projection.GetScreenHeight());
-#endif
+  return true;
 }

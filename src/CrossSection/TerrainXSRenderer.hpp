@@ -29,7 +29,7 @@
 class Canvas;
 class ChartRenderer;
 struct CrossSectionLook;
-struct RasterPoint;
+struct BulkPixelPoint;
 
 /**
  * A Window which renders a terrain and airspace cross-section
@@ -46,7 +46,7 @@ public:
 
 private:
   void DrawPolygon(Canvas &canvas, TerrainType type,
-                   const RasterPoint *points, unsigned num_points) const;
+                   const BulkPixelPoint *points, unsigned num_points) const;
 };
 
 #endif

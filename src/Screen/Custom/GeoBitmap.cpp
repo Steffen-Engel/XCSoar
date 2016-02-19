@@ -45,8 +45,10 @@ Bitmap::LoadGeoFile(Path path)
   if (path.MatchesExtension(_T(".tif")) ||
       path.MatchesExtension(_T(".tiff"))) {
     auto result = LoadGeoTiff(path);
-    if (!Load(result.first))
+    if (!Load(std::move(result.first)))
       throw std::runtime_error("Failed to use geo image file");
+
+    assert(IsDefined());
 
     return result.second;
   }

@@ -32,13 +32,13 @@ Copyright_License {
 #include "android_drawable.h"
 
 Bitmap::Bitmap(ResourceId id)
-  :bmp(nullptr), texture(nullptr), interpolation(false)
 {
   Load(id);
 }
 
 Bitmap::Bitmap(Bitmap &&src)
   :bmp(src.bmp),
+   uncompressed(std::move(src.uncompressed)),
    type(src.type),
    texture(src.texture),
    size(src.size),
@@ -90,7 +90,7 @@ Bitmap::Set(JNIEnv *env, jobject _bmp, Type _type)
 
   AddSurfaceListener(*this);
 
-  if (surface_valid && !MakeTexture()) {
+  if (surface_valid && !MakeTexture(bmp, type)) {
     Reset();
     return false;
   }
@@ -99,15 +99,16 @@ Bitmap::Set(JNIEnv *env, jobject _bmp, Type _type)
 }
 
 bool
-Bitmap::MakeTexture()
+Bitmap::MakeTexture(jobject _bmp, Type _type)
 {
-  assert(bmp != nullptr);
+  assert(_bmp != nullptr);
 
   jint result[5];
-  if (!native_view->bitmapToTexture(bmp, type == Bitmap::Type::MONO, result))
+  if (!native_view->bitmapToTexture(_bmp, _type == Bitmap::Type::MONO, result))
     return false;
 
-  texture = new GLTexture(result[0], result[1], result[2], result[3], result[4]);
+  texture = new GLTexture(result[0], PixelSize(result[1], result[2]),
+                          PixelSize(result[3], result[4]));
   if (interpolation) {
     texture->Bind();
     texture->EnableInterpolation();
@@ -128,15 +129,6 @@ Bitmap::Load(ResourceId id, Type _type)
     return false;
 
   return Set(Java::GetEnv(), new_bmp, _type);
-}
-
-bool
-Bitmap::LoadStretch(ResourceId id, unsigned zoom)
-{
-  assert(zoom > 0);
-
-  // XXX
-  return Load(id);
 }
 
 bool
@@ -163,6 +155,9 @@ Bitmap::Reset()
     bmp = nullptr;
 
     RemoveSurfaceListener(*this);
+  } else if (uncompressed.IsDefined()) {
+    uncompressed = UncompressedImage();
+    RemoveSurfaceListener(*this);
   }
 
   delete texture;
@@ -172,15 +167,18 @@ Bitmap::Reset()
 void
 Bitmap::SurfaceCreated()
 {
-  assert(bmp != nullptr);
+  assert(bmp != nullptr || uncompressed.IsDefined());
 
-  MakeTexture();
+  if (bmp != nullptr)
+    MakeTexture(bmp, type);
+  else if (uncompressed.IsDefined())
+    MakeTexture(uncompressed, type);
 }
 
 void
 Bitmap::SurfaceDestroyed()
 {
-  assert(bmp != nullptr);
+  assert(bmp != nullptr || uncompressed.IsDefined());
 
   delete texture;
   texture = nullptr;

@@ -156,17 +156,17 @@ WndForm::OnDestroy()
 }
 
 bool
-WndForm::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+WndForm::OnMouseMove(PixelPoint p, unsigned keys)
 {
-  if (ContainerWindow::OnMouseMove(x, y, keys))
+  if (ContainerWindow::OnMouseMove(p, keys))
     return true;
 
   if (dragging) {
     const PixelRect position = GetPosition();
-    const int dx = position.left + x - last_drag.x;
-    const int dy = position.top + y - last_drag.y;
-    last_drag.x = position.left + x;
-    last_drag.y = position.top + y;
+    const int dx = position.left + p.x - last_drag.x;
+    const int dy = position.top + p.y - last_drag.y;
+    last_drag.x = position.left + p.x;
+    last_drag.y = position.top + p.y;
 
     PixelRect parent = GetParentClientRect();
     parent.Grow(-client_rect.top);
@@ -205,9 +205,9 @@ WndForm::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
 }
 
 bool
-WndForm::OnMouseDown(PixelScalar x, PixelScalar y)
+WndForm::OnMouseDown(PixelPoint p)
 {
-  if (ContainerWindow::OnMouseDown(x, y))
+  if (ContainerWindow::OnMouseDown(p))
     return true;
 
   if (!dragging && !IsMaximised()) {
@@ -215,8 +215,8 @@ WndForm::OnMouseDown(PixelScalar x, PixelScalar y)
     Invalidate();
 
     const PixelRect position = GetPosition();
-    last_drag.x = position.left + x;
-    last_drag.y = position.top + y;
+    last_drag.x = position.left + p.x;
+    last_drag.y = position.top + p.y;
     SetCapture();
     return true;
   }
@@ -225,9 +225,9 @@ WndForm::OnMouseDown(PixelScalar x, PixelScalar y)
 }
 
 bool
-WndForm::OnMouseUp(PixelScalar x, PixelScalar y)
+WndForm::OnMouseUp(PixelPoint p)
 {
-  if (ContainerWindow::OnMouseUp(x, y))
+  if (ContainerWindow::OnMouseUp(p))
     return true;
 
   if (dragging) {
@@ -358,17 +358,10 @@ WndForm::ShowModal()
 #ifdef ENABLE_SDL
       if (event.GetKeyCode() == SDLK_TAB) {
         /* the Tab key moves the keyboard focus */
-#if SDL_MAJOR_VERSION >= 2
         const Uint8 *keystate = ::SDL_GetKeyboardState(nullptr);
         event.event.key.keysym.sym =
             keystate[SDL_SCANCODE_LSHIFT] || keystate[SDL_SCANCODE_RSHIFT]
           ? SDLK_UP : SDLK_DOWN;
-#else
-        const Uint8 *keystate = ::SDL_GetKeyState(nullptr);
-        event.event.key.keysym.sym =
-          keystate[SDLK_LSHIFT] || keystate[SDLK_RSHIFT]
-          ? SDLK_UP : SDLK_DOWN;
-#endif
       }
 #endif
 
@@ -445,9 +438,9 @@ WndForm::OnPaint(Canvas &canvas)
     const ScopeAlphaBlend alpha_blend;
 
     const PixelRect rc = GetClientRect();
-    const PixelScalar size = Layout::VptScale(4);
+    const int size = Layout::VptScale(4);
 
-    const RasterPoint vertices[8] = {
+    const BulkPixelPoint vertices[8] = {
       { rc.left, rc.top },
       { rc.right, rc.top },
       { rc.right, rc.bottom },
@@ -517,8 +510,8 @@ WndForm::OnPaint(Canvas &canvas)
     if (!IsDithered() && is_active) {
       canvas.SetBackgroundTransparent();
       canvas.Stretch(title_rect.left, title_rect.top,
-                     title_rect.right - title_rect.left,
-                     title_rect.bottom - title_rect.top,
+                     title_rect.GetWidth(),
+                     title_rect.GetHeight(),
                      look.caption.background_bitmap);
 
       // Draw titlebar text
@@ -566,18 +559,18 @@ WndForm::SetCaption(const TCHAR *_caption)
 void
 WndForm::ReinitialiseLayout(const PixelRect &parent_rc)
 {
-  const unsigned parent_width = parent_rc.right - parent_rc.left;
-  const unsigned parent_height = parent_rc.bottom - parent_rc.top;
+  const unsigned parent_width = parent_rc.GetWidth();
+  const unsigned parent_height = parent_rc.GetHeight();
 
   if (parent_width < GetWidth() || parent_height < GetHeight()) {
   } else {
     // reposition dialog to fit into TopWindow
     PixelRect rc = GetPosition();
 
-    if (rc.right > (PixelScalar)parent_width)
-      rc.left = parent_width - (rc.right - rc.left);
-    if (rc.bottom > (PixelScalar)parent_height)
-      rc.top = parent_height - (rc.bottom - rc.top);
+    if (rc.right > (int)parent_width)
+      rc.left = parent_width - rc.GetWidth();
+    if (rc.bottom > (int)parent_height)
+      rc.top = parent_height - rc.GetHeight();
 
 #ifdef USE_MEMORY_CANVAS
     /* the RasterCanvas class doesn't clip negative window positions

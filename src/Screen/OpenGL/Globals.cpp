@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "Screen/OpenGL/Globals.hpp"
 #include "Screen/OpenGL/Debug.hpp"
-#include "Point.hpp"
+#include "Screen/Point.hpp"
 
 namespace OpenGL {
   bool texture_non_power_of_two;
@@ -50,7 +50,7 @@ namespace OpenGL {
   DisplayOrientation display_orientation;
 #endif
 
-  RasterPoint translate;
+  PixelPoint translate;
 
 #ifdef USE_GLSL
   glm::mat4 projection_matrix;

@@ -26,6 +26,17 @@
 #include "Point2D.hpp"
 #include "Compiler.h"
 
+gcc_const
+static double
+CalcQuadrilateralU(const DoublePoint2D h, DoublePoint2D f,
+                   DoublePoint2D e, DoublePoint2D g,
+                   double v)
+{
+  return e.x + g.x * v == 0
+          ? (h.y - f.y * v) / (e.y + g.y * v)
+          : (h.x - f.x * v) / (e.x + g.x * v);
+}
+
 /**
  * Map a "global" point to a point inside the quadrilateral's frame of
  * reference.
@@ -33,7 +44,7 @@
  * Formula from
  * http://www.iquilezles.org/www/articles/ibilinear/ibilinear.htm
  */
-gcc_pure
+gcc_const
 static DoublePoint2D
 MapInQuadrilateral(const DoublePoint2D a, const DoublePoint2D b,
                    const DoublePoint2D c, const DoublePoint2D d,
@@ -41,7 +52,7 @@ MapInQuadrilateral(const DoublePoint2D a, const DoublePoint2D b,
 {
   const DoublePoint2D e = b - a;
   const DoublePoint2D f = d - a;
-  const DoublePoint2D g = a - b + c - d;
+  const DoublePoint2D g = (a - b) + (c - d);
   const DoublePoint2D h = p - a;
 
   const double k2 = CrossProduct(g, f);
@@ -54,17 +65,17 @@ MapInQuadrilateral(const DoublePoint2D a, const DoublePoint2D b,
 
   if (k2 == 0) {
     const double v = -k0 / k1;
-    const double u = (h.x - f.x * v) / (e.x + g.x * v);
+    const double u = CalcQuadrilateralU(h, f, e, g, v);
     return {u, v};
   }
 
   w = sqrt(w);
 
   const double v1 = (-k1 - w) / (2 * k2);
-  const double u1 = (h.x - f.x * v1) / (e.x + g.x * v1);
+  const double u1 = CalcQuadrilateralU(h, f, e, g, v1);
 
   const double v2 = (-k1 + w) / (2 * k2);
-  const double u2 = (h.x - f.x * v2) / (e.x + g.x * v2);
+  const double u2 = CalcQuadrilateralU(h, f, e, g, v2);
 
   double u = u1;
   double v = v1;

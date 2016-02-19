@@ -32,7 +32,6 @@ Copyright_License {
 #include "Screen/LargeTextWindow.hpp"
 #include "Screen/Font.hpp"
 
-#include <windef.h> /* for MAX_PATH */
 #include <assert.h>
 
 gcc_pure
@@ -346,8 +345,8 @@ void
 RowFormWidget::UpdateLayout()
 {
   PixelRect current_rect = GetWindow().GetClientRect();
-  const unsigned total_width = current_rect.right - current_rect.left;
-  const unsigned total_height = current_rect.bottom - current_rect.top;
+  const unsigned total_width = current_rect.GetWidth();
+  const unsigned total_height = current_rect.GetHeight();
   current_rect.bottom = current_rect.top;
 
   const bool expert = UIGlobals::GetDialogSettings().expert;

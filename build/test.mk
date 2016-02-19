@@ -90,6 +90,7 @@ TEST_NAMES = \
 	TestDateTime TestRoughTime TestWrapClock \
 	TestMathTables \
 	TestAngle TestARange \
+	TestQuadrilateral \
 	TestUnits TestEarth TestSunEphemeris \
 	TestValidity TestUTM TestProfile \
 	TestAllocatedGrid \
@@ -352,6 +353,12 @@ TEST_ARANGE_SOURCES = \
 	$(TEST_SRC_DIR)/TestARange.cpp
 TEST_ARANGE_DEPENDS = MATH
 $(eval $(call link-program,TestARange,TEST_ARANGE))
+
+TEST_QUADRILATERAL_SOURCES = \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestQuadrilateral.cpp
+QUADRILATERAL_ARANGE_DEPENDS = MATH
+$(eval $(call link-program,TestQuadrilateral,TEST_QUADRILATERAL))
 
 TEST_CSV_LINE_SOURCES = \
 	$(SRC)/IO/CSVLine.cpp \
@@ -790,7 +797,7 @@ RUN_LUA_SOURCES = \
 	$(SRC)/Version.cpp \
 	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/RunLua.cpp
-RUN_LUA_DEPENDS = LUA IO OS UTIL
+RUN_LUA_DEPENDS = LUA LIBLUA IO OS UTIL
 $(eval $(call link-program,RunLua,RUN_LUA))
 endif
 
@@ -1731,6 +1738,7 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Airspace/AirspaceParser.cpp \
 	$(SRC)/Airspace/AirspaceVisibility.cpp \
 	$(SRC)/Airspace/AirspaceComputerSettings.cpp \
+	$(SRC)/Renderer/GeoBitmapRenderer.cpp \
 	$(SRC)/Renderer/TransparentRendererCache.cpp \
 	$(SRC)/Renderer/AirspaceRendererSettings.cpp \
 	$(SRC)/Renderer/BackgroundRenderer.cpp \
@@ -1738,6 +1746,10 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Projection/Projection.cpp \
 	$(SRC)/Projection/WindowProjection.cpp \
 	$(SRC)/Projection/CompareProjection.cpp \
+	$(SRC)/Weather/Rasp/RaspStore.cpp \
+	$(SRC)/Weather/Rasp/RaspCache.cpp \
+	$(SRC)/Weather/Rasp/RaspRenderer.cpp \
+	$(SRC)/Weather/Rasp/RaspStyle.cpp \
 	$(SRC)/MapWindow/MapWindow.cpp \
 	$(SRC)/MapWindow/MapWindowBlackboard.cpp \
 	$(SRC)/MapWindow/MapWindowEvents.cpp \
@@ -1780,7 +1792,6 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Renderer/LabelBlock.cpp \
 	$(SRC)/Renderer/TextInBox.cpp \
 	$(SRC)/Screen/Ramp.cpp \
-	$(SRC)/Screen/UnitSymbol.cpp \
 	$(SRC)/UISettings.cpp \
 	$(SRC)/Audio/Settings.cpp \
 	$(SRC)/Audio/VarioSettings.cpp \
@@ -1793,7 +1804,6 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/MapSettings.cpp \
 	$(SRC)/Computer/Settings.cpp \
 	$(SRC)/Computer/Wind/Settings.cpp \
-	$(SRC)/Audio/VegaVoiceSettings.cpp \
 	$(SRC)/TeamCode/Settings.cpp \
 	$(SRC)/Logger/Settings.cpp \
 	$(SRC)/Tracking/TrackingSettings.cpp \
@@ -2210,7 +2220,6 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/LocalPath.cpp \
 	$(MORE_SCREEN_SOURCES) \
 	$(SRC)/Screen/Ramp.cpp \
-	$(SRC)/Screen/UnitSymbol.cpp \
 	$(SRC)/Profile/Profile.cpp \
 	$(SRC)/XML/Node.cpp \
 	$(SRC)/XML/Parser.cpp \
@@ -2258,7 +2267,6 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/Computer/CuComputer.cpp \
 	$(SRC)/Audio/Settings.cpp \
 	$(SRC)/Audio/VarioSettings.cpp \
-	$(SRC)/Audio/VegaVoiceSettings.cpp \
 	$(SRC)/UISettings.cpp \
 	$(SRC)/DisplaySettings.cpp \
 	$(SRC)/PageSettings.cpp \
@@ -2273,7 +2281,6 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/IGC/IGCParser.cpp \
 	$(SRC)/MapSettings.cpp \
 	$(SRC)/Blackboard/InterfaceBlackboard.cpp \
-	$(SRC)/Audio/VegaVoice.cpp \
 	$(SRC)/Engine/Navigation/TraceHistory.cpp \
 	$(SRC)/Airspace/ActivePredicate.cpp \
 	$(SRC)/Airspace/ProtectedAirspaceWarningManager.cpp \

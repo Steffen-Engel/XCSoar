@@ -72,7 +72,7 @@ Update(const MoreData &basic, const FlyingState &state,
     result.landing_location = state.landing_location;
   }
 
-  if (!negative(state.release_time) && !result.release_time.IsPlausible()) {
+  if (state.release_time >= 0 && !result.release_time.IsPlausible()) {
     result.release_time = basic.GetDateTimeAt(state.release_time);
     result.release_location = state.release_location;
   }
@@ -148,7 +148,7 @@ Run(DebugReplay &replay, Result &result,
 
     last_location = basic.location;
 
-    if (!released && !negative(replay.Calculated().flight.release_time)) {
+    if (!released && replay.Calculated().flight.release_time >= 0) {
       released = true;
 
       full_trace.EraseEarlierThan(replay.Calculated().flight.release_time);
@@ -242,7 +242,7 @@ WritePoint(TextWriter &writer, const ContestTracePoint &point,
 
     if (duration > 0) {
       auto speed = distance / duration;
-      object.WriteElement("speed", JSON::WriteFixed, speed);
+      object.WriteElement("speed", JSON::WriteDouble, speed);
     }
   }
 }
@@ -265,10 +265,10 @@ WriteContest(TextWriter &writer,
 {
   JSON::ObjectWriter object(writer);
 
-  object.WriteElement("score", JSON::WriteFixed, result.score);
-  object.WriteElement("distance", JSON::WriteFixed, result.distance);
+  object.WriteElement("score", JSON::WriteDouble, result.score);
+  object.WriteElement("distance", JSON::WriteDouble, result.distance);
   object.WriteElement("duration", JSON::WriteUnsigned, (unsigned)result.time);
-  object.WriteElement("speed", JSON::WriteFixed, result.GetSpeed());
+  object.WriteElement("speed", JSON::WriteDouble, result.GetSpeed());
 
   object.WriteElement("turnpoints", WriteTrace, trace);
 }

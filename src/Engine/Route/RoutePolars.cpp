@@ -29,12 +29,12 @@
 #define MC_CEILING_PENALTY_FACTOR 5.0
 
 inline FlatGeoPoint
-RoutePolars::MSLIntercept(const int index, const AGeoPoint& p,
+RoutePolars::MSLIntercept(const int index, const FlatGeoPoint &fp,
+                          double altitude,
                           const FlatProjection &proj) const
 {
   const unsigned safe_index = ((unsigned)index) % ROUTEPOLAR_POINTS;
-  const FlatGeoPoint fp = proj.ProjectInteger(p);
-  const auto d = p.altitude * polar_glide.GetPoint(safe_index).inv_gradient;
+  const auto d = altitude * polar_glide.GetPoint(safe_index).inv_gradient;
   const auto scale = proj.GetApproximateScale();
   const int steps = int(d / scale) + 1;
   FlatGeoPoint dp = RoutePolar::IndexToDXDY(safe_index);
@@ -238,22 +238,40 @@ RoutePolars::CalcGlideArrival(const AFlatGeoPoint& origin,
 }
 
 FlatGeoPoint
-RoutePolars::ReachIntercept(const int index, const AGeoPoint& origin,
+RoutePolars::ReachIntercept(const int index, const AFlatGeoPoint &flat_origin,
+                            const GeoPoint &origin,
                              const RasterMap* map,
                             const FlatProjection &proj) const
 {
   const bool valid = map && map->IsDefined();
-  const int altitude = origin.altitude - GetSafetyHeight();
-  const AGeoPoint m_origin((GeoPoint)origin, altitude);
-  const FlatGeoPoint flat_dest = MSLIntercept(index, m_origin, proj);
+  const int altitude = flat_origin.altitude - GetSafetyHeight();
+  const FlatGeoPoint flat_dest = MSLIntercept(index, flat_origin,
+                                              altitude, proj);
   if (!valid)
     return flat_dest;
 
   const GeoPoint dest = proj.Unproject(flat_dest);
-  const GeoPoint p = map->Intersection(m_origin, altitude,
+  const GeoPoint p = map->Intersection(origin, altitude,
                                        altitude, dest);
   if (!p.IsValid())
     return flat_dest;
 
-  return proj.ProjectInteger(p);
+  FlatGeoPoint fp = proj.ProjectInteger(p);
+
+  /* when there's an obstacle very nearby and our intersection is
+     right next to our origin, the intersection may be deformed due to
+     terrain raster rounding errors; the following code applies
+     clipping to avoid degenerate polygons */
+  FlatGeoPoint delta1 = flat_dest - (FlatGeoPoint)flat_origin;
+  FlatGeoPoint delta2 = fp - (FlatGeoPoint)flat_origin;
+
+  if (delta1.x * delta2.x < 0)
+    /* intersection is on the wrong horizontal side */
+    fp.x = flat_origin.x;
+
+  if (delta1.y * delta2.y < 0)
+    /* intersection is on the wrong vertical side */
+    fp.x = flat_origin.y;
+
+  return fp;
 }

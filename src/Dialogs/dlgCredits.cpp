@@ -32,7 +32,6 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Screen/Bitmap.hpp"
 #include "Screen/Font.hpp"
-#include "Event/KeyCode.hpp"
 #include "Version.hpp"
 #include "Inflate.hpp"
 #include "Util/ConvertString.hpp"
@@ -51,7 +50,7 @@ LogoPageWindow::OnPaint(Canvas &canvas)
 {
   const PixelRect rc = GetClientRect();
 
-  const unsigned width = rc.right - rc.left;
+  const unsigned width = rc.GetWidth();
   int x = rc.left + Layout::FastScale(10);
   int y = rc.top + Layout::FastScale(10);
 

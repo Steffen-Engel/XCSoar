@@ -29,10 +29,10 @@ Copyright_License {
 #include <assert.h>
 
 bool
-Bitmap::Load(const UncompressedImage &uncompressed, Type type)
+Bitmap::Load(UncompressedImage &&uncompressed, gcc_unused Type type)
 {
   assert(IsScreenInitialized());
-  assert(uncompressed.IsVisible());
+  assert(uncompressed.IsDefined());
 
   Reset();
 
@@ -46,12 +46,4 @@ Bitmap::Reset()
   assert(!IsDefined() || IsScreenInitialized());
 
   buffer.Free();
-}
-
-const PixelSize
-Bitmap::GetSize() const
-{
-  assert(IsDefined());
-
-  return { buffer.width, buffer.height };
 }

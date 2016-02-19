@@ -35,7 +35,7 @@ Copyright_License {
 #include <stdio.h>
 #include "Util/StaticArray.hxx"
 
-typedef std::vector<RasterPoint> RasterPointVector;
+typedef std::vector<BulkPixelPoint> BulkPixelPointVector;
 
 struct ProjectedFan {
   /**
@@ -51,7 +51,7 @@ struct ProjectedFan {
   }
 
 #ifdef ENABLE_OPENGL
-  void DrawFill(const RasterPoint *points, unsigned start) const {
+  void DrawFill(const BulkPixelPoint *points, unsigned start) const {
     /* triangulate the polygon */
     AllocatedArray<GLushort> triangle_buffer;
 
@@ -72,11 +72,11 @@ struct ProjectedFan {
     glDrawArrays(GL_LINE_LOOP, start, size);
   }
 #else
-  void DrawFill(Canvas &canvas, const RasterPoint *points) const {
+  void DrawFill(Canvas &canvas, const BulkPixelPoint *points) const {
     canvas.DrawPolygon(&points[0], size);
   }
 
-  void DrawOutline(Canvas &canvas, const RasterPoint *points) const {
+  void DrawOutline(Canvas &canvas, const BulkPixelPoint *points) const {
     canvas.DrawPolygon(&points[0], size);
   }
 #endif
@@ -92,7 +92,7 @@ struct ProjectedFans {
    * points[0], followed by the second one at points[fans[0].size],
    * etc.
    */
-  RasterPointVector points;
+  BulkPixelPointVector points;
 
 #ifndef NDEBUG
   unsigned remaining;
@@ -131,7 +131,7 @@ struct ProjectedFans {
     return fans.back();
   }
 
-  void Append(const RasterPoint &pt) {
+  void Append(const PixelPoint &pt) {
 #ifndef NDEBUG
     assert(remaining > 0);
     --remaining;
@@ -145,13 +145,13 @@ struct ProjectedFans {
 
 #ifdef ENABLE_OPENGL
     unsigned start = 0;
-    const RasterPoint *points = &this->points[0];
+    const auto *points = &this->points[0];
     for (auto i = fans.begin(), end = fans.end(); i != end; ++i) {
       i->DrawFill(points, start);
       start += i->size;
     }
 #else
-    const RasterPoint *points = &this->points[0];
+    const auto *points = &this->points[0];
     for (auto i = fans.begin(), end = fans.end(); i != end; ++i) {
       i->DrawFill(canvas, points);
       points += i->size;
@@ -169,7 +169,7 @@ struct ProjectedFans {
       start += i->size;
     }
 #else
-    const RasterPoint *points = &this->points[0];
+    const auto *points = &this->points[0];
     for (auto i = fans.begin(), end = fans.end(); i != end; ++i) {
       i->DrawOutline(canvas, points);
       points += i->size;
@@ -185,7 +185,7 @@ class TriangleCompound: public TriangleFanVisitor {
   StaticArray<GeoPoint, ROUTEPOLAR_POINTS+2> g;
   /** Temporary container for TriangleFan clipping */
   GeoPoint clipped[(ROUTEPOLAR_POINTS+2) * 3];
-  /** Projection to use for GeoPoint -> RasterPoint conversion */
+  /** Projection to use for GeoPoint -> PixelPoint conversion */
   const MapWindowProjection &proj;
   /** GeoClip instance used for TriangleFan clipping */
   const GeoClip clip;
@@ -231,10 +231,10 @@ public:
     if (size < 3)
       return;
 
-    // Work directly on the RasterPoints in the fans vector
+    // Work directly on the PixelPoints in the fans vector
     fans.Append(size);
 
-    // Convert GeoPoints to RasterPoints
+    // Convert GeoPoints to PixelPoints
     for (unsigned i = 0; i < size; ++i)
       fans.Append(proj.GeoToScreen(clipped[i]));
   }
@@ -442,9 +442,9 @@ MapWindow::DrawGlideThroughTerrain(Canvas &canvas) const
       Calculated().terrain_warning_location.DistanceS(Basic().location) < 500)
     return;
 
-  RasterPoint sc;
+  PixelPoint sc;
   if (render_projection.GeoToScreenIfVisible(Calculated().terrain_warning_location,
                                              sc))
-    look.terrain_warning_icon.Draw(canvas, sc.x, sc.y);
+    look.terrain_warning_icon.Draw(canvas, sc);
 }
 

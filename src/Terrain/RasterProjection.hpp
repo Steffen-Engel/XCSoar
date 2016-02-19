@@ -24,7 +24,8 @@ Copyright_License {
 #ifndef XCSOAR_TERRAIN_RASTER_PROJECTION_HPP
 #define XCSOAR_TERRAIN_RASTER_PROJECTION_HPP
 
-#include "Terrain/RasterLocation.hpp"
+#include "RasterTraits.hpp"
+#include "RasterLocation.hpp"
 #include "Geo/GeoPoint.hpp"
 #include "Compiler.h"
 
@@ -48,51 +49,42 @@ public:
    */
   void Set(const GeoBounds &bounds, unsigned width, unsigned height);
 
-  gcc_pure
-  Angle WidthToAngle(double pixels) const {
+  constexpr Angle WidthToAngle(double pixels) const {
     return Angle::Native(pixels / x_scale);
   }
 
-  gcc_pure
-  Angle HeightToAngle(double pixels) const {
+  constexpr Angle HeightToAngle(double pixels) const {
     return Angle::Native(pixels / y_scale);
   }
 
-  gcc_pure
-  int AngleToWidth(Angle angle) const {
+  constexpr int AngleToWidth(Angle angle) const {
     return (int)(angle.Native() * x_scale);
   }
 
-  gcc_pure
-  int AngleToHeight(Angle angle) const {
+  constexpr int AngleToHeight(Angle angle) const {
     return (int)(angle.Native() * y_scale);
   }
 
-  gcc_pure SignedRasterLocation
-  ProjectFine(const GeoPoint &location) const {
-    const int x = AngleToWidth(location.longitude) - left;
-    const int y = top - AngleToHeight(location.latitude);
-
-    return {x, y};
+  constexpr SignedRasterLocation ProjectFine(GeoPoint location) const {
+    return SignedRasterLocation(AngleToWidth(location.longitude) - left,
+                                top - AngleToHeight(location.latitude));
   }
 
-  gcc_pure
-  GeoPoint
-  UnprojectFine(SignedRasterLocation coords) const {
-    const Angle x = WidthToAngle((int)coords.x + left);
-    const Angle y = HeightToAngle(top - (int)coords.y);
-    return GeoPoint(x, y);
+  constexpr GeoPoint UnprojectFine(SignedRasterLocation coords) const {
+    return GeoPoint(WidthToAngle((int)coords.x + left),
+                    HeightToAngle(top - (int)coords.y));
   }
 
-  gcc_pure SignedRasterLocation
-  ProjectCoarse(const GeoPoint &location) const {
-    return ProjectFine(location) >> 8;
+  constexpr SignedRasterLocation ProjectCoarse(GeoPoint location) const {
+    return ProjectFine(location) >> RasterTraits::SUBPIXEL_BITS;
   }
 
-  gcc_pure
-  GeoPoint
-  UnprojectCoarse(SignedRasterLocation coords) const {
-    return UnprojectFine(coords << 8);
+  constexpr GeoPoint UnprojectCoarse(SignedRasterLocation coords) const {
+    return UnprojectFine(coords << RasterTraits::SUBPIXEL_BITS);
+  }
+
+  constexpr SignedRasterLocation ProjectCoarseRound(GeoPoint location) const {
+    return ProjectFine(location).RoundingRightShift(RasterTraits::SUBPIXEL_BITS);
   }
 
   /**
@@ -107,7 +99,7 @@ public:
   double CoarsePixelDistance(const GeoPoint &location, unsigned pixels) const {
     /* factor 256 because the caller should pass a physical pixel
        number, not interpolated */
-    return FinePixelDistance(location, pixels << 8);
+    return FinePixelDistance(location, pixels << RasterTraits::SUBPIXEL_BITS);
   }
 
   /**
@@ -119,7 +111,7 @@ public:
   DistancePixelsFine(double distance) const;
 
   gcc_pure unsigned DistancePixelsCoarse(double distance) const {
-    return DistancePixelsFine(distance) >> 8;
+    return DistancePixelsFine(distance) >> RasterTraits::SUBPIXEL_BITS;
   }
 };
 

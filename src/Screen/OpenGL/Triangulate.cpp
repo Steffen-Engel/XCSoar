@@ -23,8 +23,9 @@ Copyright_License {
 
 #include "Screen/OpenGL/Triangulate.hpp"
 #include "Screen/Point.hpp"
+#include "Screen/BulkPoint.hpp"
 #include "Math/Line2D.hpp"
-#include "Util/AllocatedArray.hpp"
+#include "Util/AllocatedArray.hxx"
 
 #include <algorithm>
 #include <math.h>
@@ -100,11 +101,11 @@ TriangleEmpty(const PT &a, const PT &b, const PT &c)
  * Scale vector v to a given length.
  */
 static inline void
-Normalize(RasterPoint *v, float length)
+Normalize(PixelPoint *v, float length)
 {
   // TODO: optimize!
-  double squared_length = v->x * (RasterPoint::product_type)v->x +
-                          v->y * (RasterPoint::product_type)v->y;
+  double squared_length = v->x * (PixelPoint::product_type)v->x +
+                          v->y * (PixelPoint::product_type)v->y;
   float scale = length / sqrt(squared_length);
   v->x = lround(v->x * scale);
   v->y = lround(v->y * scale);
@@ -260,7 +261,7 @@ _PolygonToTriangles(const PT *points, unsigned num_points,
 }
 
 unsigned
-PolygonToTriangles(const RasterPoint *points, unsigned num_points,
+PolygonToTriangles(const BulkPixelPoint *points, unsigned num_points,
                    AllocatedArray<GLushort> &triangles, unsigned min_distance)
 {
   triangles.GrowDiscard(3 * (num_points - 2));
@@ -451,10 +452,10 @@ TriangleToStrip(GLushort *triangles, unsigned index_count,
 }
 
 /**
- * Append a RasterPoint to the end of an array and advance the array pointer
+ * Append a BulkPixelPoint to the end of an array and advance the array pointer
  */
 static void
-AppendPoint(RasterPoint* &strip, PixelScalar x, PixelScalar y)
+AppendPoint(BulkPixelPoint *&strip, int x, int y)
 {
   strip->x = x;
   strip->y = y;
@@ -462,8 +463,8 @@ AppendPoint(RasterPoint* &strip, PixelScalar x, PixelScalar y)
 }
 
 unsigned
-LineToTriangles(const RasterPoint *points, unsigned num_points,
-                AllocatedArray<RasterPoint> &strip,
+LineToTriangles(const BulkPixelPoint *points, unsigned num_points,
+                AllocatedArray<BulkPixelPoint> &strip,
                 unsigned line_width, bool loop, bool tcap)
 {
   // A line has to have at least two points
@@ -483,12 +484,12 @@ LineToTriangles(const RasterPoint *points, unsigned num_points,
 
   // strip will point to the start of the output array
   // s is the working pointer
-  RasterPoint *s = strip.begin();
+  auto *s = strip.begin();
 
   // a, b and c point to three consecutive points which are used to iterate
   // through the line given in 'points'. Where b is the current position,
   // a the previous point and c the next point.
-  const RasterPoint *a, *b, *c;
+  const BulkPixelPoint *a, *b, *c;
 
   // pointer to the end of the original points array
   // used for faster loop conditions
@@ -529,7 +530,7 @@ LineToTriangles(const RasterPoint *points, unsigned num_points,
 
   if (!loop) {
     // add flat or triangle cap at beginning of line
-    RasterPoint ba = *a - *b;
+    PixelPoint ba = *a - *b;
     Normalize(&ba, half_line_width);
 
     if (tcap)
@@ -537,7 +538,7 @@ LineToTriangles(const RasterPoint *points, unsigned num_points,
       AppendPoint(s, a->x + ba.x, a->y + ba.y);
 
     // add flat cap coordinates to the output array
-    RasterPoint p;
+    PixelPoint p;
     p.x = ba.y;
     p.y = -ba.x;
     AppendPoint(s, a->x - p.x, a->y - p.y);
@@ -551,7 +552,7 @@ LineToTriangles(const RasterPoint *points, unsigned num_points,
       // skip zero or 180 degree bends
       // TODO: support 180 degree bends!
       if (!TriangleEmpty(*a, *b, *c)) {
-        RasterPoint g = *b - *a, h = *c - *b;
+        PixelPoint g = *b - *a, h = *c - *b;
         Normalize(&g, 1000.);
         Normalize(&h, 1000.);
         int bisector_x = -g.y - h.y;
@@ -598,10 +599,10 @@ LineToTriangles(const RasterPoint *points, unsigned num_points,
     }
   } else {
     // add flat or triangle cap at end of line
-    RasterPoint ab = *b - *a;
+    PixelPoint ab = *b - *a;
     Normalize(&ab, half_line_width);
 
-    RasterPoint p;
+    PixelPoint p;
     p.x = sign * -ab.y;
     p.y = sign * ab.x;
     AppendPoint(s, b->x - p.x, b->y - p.y);

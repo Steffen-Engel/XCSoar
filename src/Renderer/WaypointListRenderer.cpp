@@ -25,7 +25,6 @@ Copyright_License {
 #include "TwoTextRowsRenderer.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Look/DialogLook.hpp"
 #include "Renderer/WaypointIconRenderer.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "Geo/GeoVector.hpp"
@@ -34,8 +33,6 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "Util/StaticString.hxx"
 #include "Util/Macros.hpp"
-
-#include <cstdio>
 
 typedef StaticString<256u> Buffer;
 
@@ -64,10 +61,10 @@ Draw(Canvas &canvas, PixelRect rc,
      const WaypointRendererSettings &settings)
 {
   const unsigned padding = Layout::GetTextPadding();
-  const unsigned line_height = rc.bottom - rc.top;
+  const unsigned line_height = rc.GetHeight();
 
   // Draw icon
-  const RasterPoint pt(rc.left + line_height / 2, rc.top + line_height / 2);
+  const PixelPoint pt(rc.left + line_height / 2, rc.top + line_height / 2);
   WaypointIconRenderer wir(settings, look, canvas);
   wir.Draw(waypoint, pt);
 
@@ -124,11 +121,11 @@ WaypointListRenderer::Draw(Canvas &canvas, PixelRect rc,
                            const WaypointRendererSettings &settings)
 {
   const unsigned padding = Layout::GetTextPadding();
-  const unsigned line_height = rc.bottom - rc.top;
+  const unsigned line_height = rc.GetHeight();
 
   // Draw icon
-  const RasterPoint pt(rc.left + line_height / 2,
-                       rc.top + line_height / 2);
+  const PixelPoint pt(rc.left + line_height / 2,
+                      rc.top + line_height / 2);
 
   WaypointIconRenderer::Reachability reachable = arrival_altitude > 0
     ? WaypointIconRenderer::ReachableTerrain

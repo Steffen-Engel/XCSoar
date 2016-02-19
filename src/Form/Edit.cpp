@@ -198,7 +198,7 @@ WndProperty::OnResize(PixelSize new_size)
 }
 
 bool
-WndProperty::OnMouseDown(PixelScalar x, PixelScalar y)
+WndProperty::OnMouseDown(PixelPoint p)
 {
   if (!IsReadOnly() || HasHelp()) {
     dragging = true;
@@ -212,7 +212,7 @@ WndProperty::OnMouseDown(PixelScalar x, PixelScalar y)
 }
 
 bool
-WndProperty::OnMouseUp(PixelScalar x, PixelScalar y)
+WndProperty::OnMouseUp(PixelPoint p)
 {
   if (dragging) {
     dragging = false;
@@ -231,10 +231,10 @@ WndProperty::OnMouseUp(PixelScalar x, PixelScalar y)
 }
 
 bool
-WndProperty::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+WndProperty::OnMouseMove(PixelPoint p, unsigned keys)
 {
   if (dragging) {
-    const bool inside = IsInside(x, y);
+    const bool inside = IsInside(p);
     if (inside != pressed) {
       pressed = inside;
       Invalidate();
@@ -305,7 +305,7 @@ WndProperty::OnPaint(Canvas &canvas)
 
     PixelSize tsize = canvas.CalcTextSize(caption.c_str());
 
-    RasterPoint org;
+    PixelPoint org;
     if (caption_width < 0) {
       org.x = edit_rc.left;
       org.y = edit_rc.top - tsize.cy;
@@ -352,7 +352,7 @@ WndProperty::OnPaint(Canvas &canvas)
     canvas.Select(look.text_font);
 
     const int x = edit_rc.left + Layout::GetTextPadding();
-    const int canvas_height = edit_rc.bottom - edit_rc.top;
+    const int canvas_height = edit_rc.GetHeight();
     const int text_height = canvas.GetFontHeight();
     const int y = edit_rc.top + (canvas_height - text_height) / 2;
 

@@ -3,10 +3,10 @@ LUA = y
 ifeq ($(LUA),y)
 
 ifeq ($(USE_THIRDARTY_LIBS),y)
-LUA_LDLIBS = -llua
-LUA_CPPFLAGS =
+LIBLUA_LDLIBS = -llua
+LIBLUA_CPPFLAGS =
 else
-$(eval $(call pkg-config-library,LUA,lua5.2))
+$(eval $(call pkg-config-library,LIBLUA,lua5.2))
 endif
 
 LUA_SOURCES = \
@@ -33,10 +33,9 @@ LUA_SOURCES = \
         $(SRC)/Lua/Logger.cpp \
         $(SRC)/Lua/Tracking.cpp
 
-LUA_CPPFLAGS_INTERNAL = $(SCREEN_CPPFLAGS)
+LUA_CPPFLAGS_INTERNAL = $(LIBLUA_CPPFLAGS) $(SCREEN_CPPFLAGS)
+LUA_LDLIBS = $(LIBLUA_LDLIBS)
 
 $(eval $(call link-library,liblua,LUA))
-
-LUA_CPPFLAGS += -DUSE_LUA
 
 endif

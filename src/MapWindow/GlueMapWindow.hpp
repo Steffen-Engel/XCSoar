@@ -44,7 +44,7 @@ class TerrainThread;
 class OffsetHistory
 {
   unsigned int pos;
-  std::array<RasterPoint, 30> offsets;
+  std::array<PixelPoint, 30> offsets;
 
 public:
   OffsetHistory():pos(0) {
@@ -52,8 +52,8 @@ public:
   }
 
   void Reset();
-  void Add(RasterPoint p);
-  RasterPoint GetAverage() const;
+  void Add(PixelPoint p);
+  PixelPoint GetAverage() const;
 };
 
 
@@ -65,17 +65,6 @@ class GlueMapWindow : public MapWindow {
   TopographyThread *topography_thread = nullptr;
 
   TerrainThread *terrain_thread = nullptr;
-
-#ifdef ENABLE_OPENGL
-  /**
-   * A timer that triggers a redraw periodically until all data files
-   * (terrain, topography, ...) have been loaded / updated.  This is
-   * necessary if there is no valid GPS input, and no other reason to
-   * redraw is present.  This timer will cease automatically once all
-   * data is loaded, i.e. Idle() returned false.
-   */
-  WindowTimer data_timer;
-#endif
 
   PeriodClock mouse_down_clock;
 
@@ -96,7 +85,7 @@ class GlueMapWindow : public MapWindow {
   } drag_mode = DRAG_NONE;
 
   GeoPoint drag_start_geopoint;
-  RasterPoint drag_start;
+  PixelPoint drag_start;
   TrackingGestureManager gestures;
   bool ignore_single_click = false;
 
@@ -182,10 +171,6 @@ public:
 
   void QuickRedraw();
 
-  bool Idle();
-
-  void Create(ContainerWindow &parent, const PixelRect &rc);
-
   void SetPan(bool enable);
   void TogglePan();
   void PanTo(const GeoPoint &location);
@@ -198,17 +183,18 @@ protected:
   virtual void Render(Canvas &canvas, const PixelRect &rc) override;
   virtual void DrawThermalEstimate(Canvas &canvas) const override;
   virtual void RenderTrail(Canvas &canvas,
-                           const RasterPoint aircraft_pos) override;
+                           const PixelPoint aircraft_pos) override;
   virtual void RenderTrackBearing(Canvas &canvas,
-                                  const RasterPoint aircraft_pos) override;
+                                  const PixelPoint aircraft_pos) override;
 
   /* virtual methods from class Window */
+  virtual void OnCreate() override;
   virtual void OnDestroy() override;
-  virtual bool OnMouseDouble(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys) override;
-  virtual bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseUp(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseWheel(PixelScalar x, PixelScalar y, int delta) override;
+  bool OnMouseDouble(PixelPoint p) override;
+  bool OnMouseMove(PixelPoint p, unsigned keys) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseUp(PixelPoint p) override;
+  bool OnMouseWheel(PixelPoint p, int delta) override;
 
 #ifdef HAVE_MULTI_TOUCH
   virtual bool OnMultiTouchDown() override;

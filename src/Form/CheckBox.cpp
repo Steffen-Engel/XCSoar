@@ -103,17 +103,17 @@ CheckBoxControl::OnKeyDown(unsigned key_code)
 }
 
 bool
-CheckBoxControl::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+CheckBoxControl::OnMouseMove(PixelPoint p, unsigned keys)
 {
   if (dragging) {
-    SetPressed(IsInside(x, y));
+    SetPressed(IsInside(p));
     return true;
   } else
-    return PaintWindow::OnMouseMove(x, y, keys);
+    return PaintWindow::OnMouseMove(p, keys);
 }
 
 bool
-CheckBoxControl::OnMouseDown(PixelScalar x, PixelScalar y)
+CheckBoxControl::OnMouseDown(PixelPoint p)
 {
   if (IsTabStop())
     SetFocus();
@@ -125,7 +125,7 @@ CheckBoxControl::OnMouseDown(PixelScalar x, PixelScalar y)
 }
 
 bool
-CheckBoxControl::OnMouseUp(PixelScalar x, PixelScalar y)
+CheckBoxControl::OnMouseUp(PixelPoint p)
 {
   if (!dragging)
     return true;
@@ -195,7 +195,7 @@ CheckBoxControl::OnPaint(Canvas &canvas)
     canvas.Select(state_look.check_brush);
     canvas.SelectNullPen();
 
-    RasterPoint check_mark[] = {
+    BulkPixelPoint check_mark[] = {
       {-8, -2},
       {-3, 6},
       {7, -9},

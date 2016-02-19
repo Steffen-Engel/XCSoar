@@ -27,6 +27,7 @@ Copyright_License {
 #include "Optimised.hpp"
 #include "RasterCanvas.hpp"
 #include "Screen/Custom/Cache.hpp"
+#include "Math/Angle.hpp"
 
 #ifdef __ARM_NEON__
 #include "NEON.hpp"
@@ -80,32 +81,30 @@ Canvas::DrawFilledRectangle(int left, int top, int right, int bottom,
 }
 
 void
-Canvas::InvertRectangle(int left, int top, int right, int bottom)
+Canvas::InvertRectangle(PixelRect r)
 {
-  if (left >= right || top >= bottom)
+  if (r.IsEmpty())
     return;
 
-  CopyNot(left, top, right - left, bottom - top,
-          buffer, left, top);
+  CopyNot(r.left, r.top, r.GetWidth(), r.GetHeight(),
+          buffer, r.left, r.top);
 }
 
 template<typename Canvas, typename PixelOperations>
 static void
 DrawPolyline(Canvas &canvas, PixelOperations operations, const Pen &pen,
-             const RasterPoint *lppt, unsigned n_points,
+             const BulkPixelPoint *lppt, unsigned n_points,
              bool loop)
 {
   const unsigned thickness = pen.GetWidth();
   const unsigned mask = pen.GetMask();
   const auto color = canvas.Import(pen.GetColor());
 
-  const SDLRasterCanvas::Point *points =
-    reinterpret_cast<const SDLRasterCanvas::Point *>(lppt);
-  canvas.DrawPolyline(points, n_points, loop, color, thickness, mask);
+  canvas.DrawPolyline(lppt, n_points, loop, color, thickness, mask);
 }
 
 void
-Canvas::DrawPolyline(const RasterPoint *p, unsigned cPoints)
+Canvas::DrawPolyline(const BulkPixelPoint *p, unsigned cPoints)
 {
   SDLRasterCanvas canvas(buffer);
   ::DrawPolyline(canvas, ActivePixelTraits(), pen,
@@ -113,24 +112,19 @@ Canvas::DrawPolyline(const RasterPoint *p, unsigned cPoints)
 }
 
 void
-Canvas::DrawPolygon(const RasterPoint *lppt, unsigned cPoints)
+Canvas::DrawPolygon(const BulkPixelPoint *lppt, unsigned cPoints)
 {
   if (brush.IsHollow() && !pen.IsDefined())
     return;
 
   SDLRasterCanvas canvas(buffer);
 
-  static_assert(sizeof(RasterPoint) == sizeof(SDLRasterCanvas::Point),
-                "Incompatible point types");
-  const SDLRasterCanvas::Point *points =
-    reinterpret_cast<const SDLRasterCanvas::Point *>(lppt);
-
   if (!brush.IsHollow()) {
     const auto color = canvas.Import(brush.GetColor());
     if (brush.GetColor().IsOpaque())
-      canvas.FillPolygon(points, cPoints, color);
+      canvas.FillPolygon(lppt, cPoints, color);
     else
-      canvas.FillPolygon(points, cPoints, color,
+      canvas.FillPolygon(lppt, cPoints, color,
                          AlphaPixelOperations<ActivePixelTraits>(brush.GetColor().Alpha()));
   }
 
@@ -154,8 +148,10 @@ Canvas::DrawLine(int ax, int ay, int bx, int by)
 
   SDLRasterCanvas canvas(buffer);
   const auto color = canvas.Import(pen.GetColor());
+  unsigned mask_position = 0;
   if (thickness > 1)
-    canvas.DrawThickLine(ax, ay, bx, by, thickness, color, mask);
+    canvas.DrawThickLine(ax, ay, bx, by, thickness, color,
+                         mask, mask_position);
   else
     canvas.DrawLine(ax, ay, bx, by, color, mask);
 }
@@ -189,30 +185,30 @@ Canvas::DrawCircle(int x, int y, unsigned radius)
 }
 
 void
-Canvas::DrawSegment(int x, int y, unsigned radius,
+Canvas::DrawSegment(PixelPoint center, unsigned radius,
                     Angle start, Angle end, bool horizon)
 {
-  Segment(*this, x, y, radius, start, end, horizon);
+  Segment(*this, center, radius, start, end, horizon);
 }
 
 void
-Canvas::DrawAnnulus(int x, int y,
+Canvas::DrawAnnulus(PixelPoint center,
                     unsigned small_radius, unsigned big_radius,
                     Angle start, Angle end)
 {
   assert(IsDefined());
 
-  ::Annulus(*this, x, y, big_radius, start, end, small_radius);
+  ::Annulus(*this, center, big_radius, start, end, small_radius);
 }
 
 void
-Canvas::DrawKeyhole(int x, int y,
+Canvas::DrawKeyhole(PixelPoint center,
                     unsigned small_radius, unsigned big_radius,
                     Angle start, Angle end)
 {
   assert(IsDefined());
 
-  ::KeyHole(*this, x, y, big_radius, start, end, small_radius);
+  ::KeyHole(*this, center, big_radius, start, end, small_radius);
 }
 
 const PixelSize
@@ -431,6 +427,23 @@ Canvas::CopyTransparentWhite(int dest_x, int dest_y,
   canvas.CopyRectangle(dest_x, dest_y, dest_width, dest_height,
                        src.buffer.At(src_x, src_y), src.buffer.pitch,
                        operations);
+}
+
+void
+Canvas::StretchTransparentWhite(int dest_x, int dest_y,
+                                unsigned dest_width, unsigned dest_height,
+                                ConstImageBuffer src, int src_x, int src_y,
+                                unsigned src_width, unsigned src_height)
+{
+  if (!Clip(dest_x, dest_width, GetWidth(), src_x) ||
+      !Clip(dest_y, dest_height, GetHeight(), src_y))
+    return;
+
+  SDLRasterCanvas canvas(buffer);
+  TransparentPixelOperations<ActivePixelTraits> operations(canvas.Import(COLOR_WHITE));
+  canvas.ScaleRectangle(dest_x, dest_y, dest_width, dest_height,
+                        src.At(src_x, src_y), src.pitch, src.width, src.height,
+                        operations);
 }
 
 void

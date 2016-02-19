@@ -29,10 +29,7 @@ Copyright_License {
 #include "Airspace/Airspaces.hpp"
 #include "Airspace/AirspaceComputerSettings.hpp"
 #include "Airspace/AirspaceVisibility.hpp"
-#include "Airspace/AirspaceWarning.hpp"
-#include "Airspace/ProtectedAirspaceWarningManager.hpp"
 #include "Airspace/AirspaceWarningCopy.hpp"
-#include "Engine/Airspace/AirspaceWarningManager.hpp"
 #include "Formatter/AirspaceFormatter.hpp"
 #include "NMEA/Aircraft.hpp"
 #include "Screen/Canvas.hpp"
@@ -133,7 +130,7 @@ AirspaceLabelRenderer::DrawInternal(Canvas &canvas,
       int labelHeight = topSize.cy + baseSize.cy;
 
       // box
-      RasterPoint pos = projection.GeoToScreen(label.pos);
+      const auto pos = projection.GeoToScreen(label.pos);
       PixelRect rect;
       rect.left = pos.x - labelWidth / 2;
       rect.top = pos.y;

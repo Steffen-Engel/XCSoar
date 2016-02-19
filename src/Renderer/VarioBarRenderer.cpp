@@ -45,19 +45,19 @@ VarioBarRenderer::Draw(Canvas &canvas, const PixelRect &rc,
   const ScopeAlphaBlend alpha_blend;
 #endif
 
-  RasterPoint VarioBar[6] = {
+  BulkPixelPoint VarioBar[6] = {
       { 0, 0 }, { 9, -9 }, { 18, 0 }, { 18, 0 }, { 9, 0 }, { 0, 0 }
   };
-  RasterPoint VarioBarAvg[4] = {
+  BulkPixelPoint VarioBarAvg[4] = {
       { 0, 0 }, { 9, -9 }, { 9, 0 }, { 0, 0 }
   };
-  RasterPoint clipping_arrow[6] = {
+  BulkPixelPoint clipping_arrow[6] = {
       { 0, 0 }, { 9, 9 }, { 18, 0 }, { 18, 6 }, { 9, 15 }, { 0, 6 }
   };
-  RasterPoint clipping_arrow_av[4] = {
+  BulkPixelPoint clipping_arrow_av[4] = {
       { 0, 0 }, { 9, 9 }, { 9, 15 }, { 0, 6 }
   };
-  RasterPoint mc_arrow[6] = {
+  BulkPixelPoint mc_arrow[6] = {
       { 0, 0 }, { 9, -9 }, { 18, 0 }, { 18, -2 }, { 9, -11 }, { 0, -2 }
   };
 
@@ -72,15 +72,15 @@ VarioBarRenderer::Draw(Canvas &canvas, const PixelRect &rc,
    * area). size_divisor is used to introduce a screen size dependent scaling.
    * That workaround is an ugly hack and needs a rework. */
   const auto size_divisor =
-    std::max((double) Layout::Scale(70 / (rc.bottom - rc.top)), 0.15);
+    std::max((double) Layout::Scale(70u / rc.GetHeight()), 0.15);
 
-  PixelScalar dy_variobar = 0;
-  PixelScalar dy_variobar_av = 0;
-  PixelScalar dy_variobar_mc = 0;
+  int dy_variobar = 0;
+  int dy_variobar_av = 0;
+  int dy_variobar_mc = 0;
 
-  PixelScalar clipping_arrow_offset = Layout::Scale(4);
-  PixelScalar clipping_arrow_av_offset = Layout::Scale(4);
-//  PixelScalar clipping_arrow_mc_offset = Layout::Scale(4);
+  int clipping_arrow_offset = Layout::Scale(4);
+  int clipping_arrow_av_offset = Layout::Scale(4);
+//  int clipping_arrow_mc_offset = Layout::Scale(4);
 
   auto vario_gross = basic.brutto_vario;
 

@@ -21,7 +21,6 @@
  */
 
 #include "ReachFan.hpp"
-#include "Route/RoutePolar.hpp"
 #include "Terrain/RasterMap.hpp"
 #include "ReachFanParms.hpp"
 #include "ReachResult.hpp"
@@ -132,4 +131,15 @@ ReachFan::AcceptInRange(const GeoBounds &bounds,
 
   const FlatBoundingBox bb = projection.Project(bounds);
   root.AcceptInRange(bb, projection, visitor);
+}
+
+void
+ReachFan::AcceptInRange(const GeoBounds &bounds,
+                        FlatTriangleFanVisitor &visitor) const
+{
+  if (root.IsEmpty())
+    return;
+
+  const FlatBoundingBox bb = projection.Project(bounds);
+  root.AcceptInRange(bb, visitor);
 }

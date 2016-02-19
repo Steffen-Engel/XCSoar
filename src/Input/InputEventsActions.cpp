@@ -49,14 +49,12 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include "UIState.hpp"
 #include "Computer/Settings.hpp"
 #include "Dialogs/Dialogs.h"
-#include "Dialogs/Device/Vega/VoiceSettingsDialog.hpp"
 #include "Dialogs/Device/Vega/SwitchesDialog.hpp"
 #include "Dialogs/Airspace/Airspace.hpp"
 #include "Dialogs/Task/TaskDialogs.hpp"
 #include "Dialogs/Traffic/TrafficDialogs.hpp"
 #include "Dialogs/Waypoint/WaypointDialogs.hpp"
 #include "Dialogs/Weather/WeatherDialog.hpp"
-#include "Dialogs/Weather/PCMetDialog.hpp"
 #include "Dialogs/Plane/PlaneDialogs.hpp"
 #include "Dialogs/ProfileListDialog.hpp"
 #include "Dialogs/dlgAnalysis.hpp"
@@ -64,13 +62,9 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include "Dialogs/ReplayDialog.hpp"
 #include "Message.hpp"
 #include "Markers/Markers.hpp"
-#include "InfoBoxes/InfoBoxLayout.hpp"
 #include "MainWindow.hpp"
 #include "PopupMessage.hpp"
 #include "Projection/MapWindowProjection.hpp"
-#include "Profile/Profile.hpp"
-#include "Profile/ProfileKeys.hpp"
-#include "Util/StringUtil.hpp"
 #include "Audio/Sound.hpp"
 #include "UIActions.hpp"
 #include "Interface.hpp"
@@ -86,7 +80,6 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include "UtilsSettings.hpp"
 #include "PageActions.hpp"
 #include "Compiler.h"
-#include "Weather/Features.hpp"
 #include "MapWindow/GlueMapWindow.hpp"
 #include "Simulator.hpp"
 #include "Formatter/TimeFormatter.hpp"
@@ -518,8 +511,6 @@ InputEvents::eventSetup(const TCHAR *misc)
       ShowReplayDialog();
   } else if (StringIsEqual(misc, _T("Switches")))
     dlgSwitchesShowModal();
-  else if (StringIsEqual(misc, _T("Voice")))
-    dlgVoiceShowModal();
   else if (StringIsEqual(misc, _T("Teamcode")))
     dlgTeamCodeShowModal();
   else if (StringIsEqual(misc, _T("Target")))

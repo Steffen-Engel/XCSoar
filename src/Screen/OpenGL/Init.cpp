@@ -301,30 +301,7 @@ OpenGL::SetupContext()
 #endif
 }
 
-void
-OpenGL::SetupViewport(UnsignedPoint2D size)
-{
-  window_size = size;
-  viewport_size = size;
-
-  glViewport(0, 0, size.x, size.y);
-
-#ifdef USE_GLSL
-  projection_matrix = glm::ortho<float>(0, size.x, size.y, 0, -1, 1);
-  UpdateShaderProjectionMatrix();
-#else
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-#ifdef HAVE_GLES
-  glOrthox(0, size.x << 16, size.y << 16, 0, -(1<<16), 1<<16);
-#else
-  glOrtho(0, size.x, size.y, 0, -1, 1);
-#endif
-
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
-#endif
-}
+#ifdef SOFTWARE_ROTATE_DISPLAY
 
 /**
  * Determine the projection rotation angle (in degrees) of the
@@ -359,38 +336,35 @@ OrientationToRotation(DisplayOrientation orientation)
 static void
 OrientationSwap(UnsignedPoint2D &p, DisplayOrientation orientation)
 {
-  switch (orientation) {
-  case DisplayOrientation::DEFAULT:
-  case DisplayOrientation::LANDSCAPE:
-  case DisplayOrientation::REVERSE_LANDSCAPE:
-    break;
-
-  case DisplayOrientation::PORTRAIT:
-  case DisplayOrientation::REVERSE_PORTRAIT:
+  if (AreAxesSwapped(orientation))
     std::swap(p.x, p.y);
-    break;
-  }
 }
 
-void
-OpenGL::SetupViewport(UnsignedPoint2D &size, DisplayOrientation orientation)
+#endif /* SOFTWARE_ROTATE_DISPLAY */
+
+UnsignedPoint2D
+OpenGL::SetupViewport(UnsignedPoint2D size)
 {
   window_size = size;
 
   glViewport(0, 0, size.x, size.y);
 
 #ifdef USE_GLSL
+#ifdef SOFTWARE_ROTATE_DISPLAY
   projection_matrix = glm::rotate(glm::mat4(),
-                                  OrientationToRotation(orientation),
+                                  OrientationToRotation(display_orientation),
                                   glm::vec3(0, 0, 1));
-  OrientationSwap(size, orientation);
+  OrientationSwap(size, display_orientation);
+#endif
   projection_matrix = glm::ortho<float>(0, size.x, size.y, 0, -1, 1);
   UpdateShaderProjectionMatrix();
 #else
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glRotatef(OrientationToRotation(orientation), 0, 0, 1);
-  OrientationSwap(size, orientation);
+#ifdef SOFTWARE_ROTATE_DISPLAY
+  glRotatef(OrientationToRotation(display_orientation), 0, 0, 1);
+  OrientationSwap(size, display_orientation);
+#endif
 #ifdef HAVE_GLES
   glOrthox(0, size.x << 16, size.y << 16, 0, -(1<<16), 1<<16);
 #else
@@ -403,9 +377,7 @@ OpenGL::SetupViewport(UnsignedPoint2D &size, DisplayOrientation orientation)
 
   viewport_size = size;
 
-#ifdef SOFTWARE_ROTATE_DISPLAY
-  OpenGL::display_orientation = orientation;
-#endif
+  return size;
 }
 
 void

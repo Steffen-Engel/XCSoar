@@ -29,6 +29,7 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Screen/Color.hpp"
 #include "Screen/RawBitmap.hpp"
+#include "Renderer/GeoBitmapRenderer.hpp"
 #include "Projection/WindowProjection.hpp"
 #include "Asset.hpp"
 #include "Event/Idle.hpp"
@@ -186,6 +187,8 @@ RasterRenderer::ScanMap(const RasterMap &map, const WindowProjection &projection
 
 #ifdef ENABLE_OPENGL
   bounds = projection.GetScreenBounds().Scale(1.5);
+  bounds.IntersectWith(map.GetBounds());
+
   height_matrix.Fill(map, bounds,
                      projection.GetScreenWidth() / quantisation_pixels,
                      projection.GetScreenHeight() / quantisation_pixels,
@@ -492,4 +495,24 @@ RasterRenderer::ContourStart(const unsigned contour_height_scale)
   unsigned char *col_base = contour_column_base;
   for (unsigned x = height_matrix.GetWidth(); x > 0; --x)
     *col_base++ = ContourInterval(*src++, contour_height_scale);
+}
+
+void
+RasterRenderer::Draw(Canvas &canvas,
+                     const WindowProjection &projection,
+                     bool transparent_white) const
+{
+#ifdef ENABLE_OPENGL
+  if (bounds.IsValid() && bounds.Overlaps(projection.GetScreenBounds()))
+    DrawGeoBitmap(*image,
+                  PixelSize(height_matrix.GetWidth(),
+                            height_matrix.GetHeight()),
+                  bounds,
+                  projection);
+#else
+  image->StretchTo(height_matrix.GetWidth(), height_matrix.GetHeight(),
+                   canvas, projection.GetScreenWidth(),
+                   projection.GetScreenHeight(),
+                   transparent_white);
+#endif
 }

@@ -133,7 +133,7 @@ public:
    * @return -1 if there is no button at the specified position
    */
   gcc_pure
-  int GetButtonIndexAt(RasterPoint p) const;
+  int GetButtonIndexAt(PixelPoint p) const;
 
 private:
   void CalculateLayout();
@@ -150,9 +150,9 @@ protected:
   bool OnKeyCheck(unsigned key_code) const override;
   bool OnKeyDown(unsigned key_code) override;
 
-  bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  bool OnMouseUp(PixelScalar x, PixelScalar y) override;
-  bool OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseUp(PixelPoint p) override;
+  bool OnMouseMove(PixelPoint p, unsigned keys) override;
 
   void EndDrag();
 };

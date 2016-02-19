@@ -26,7 +26,7 @@ Copyright_License {
 
 #include "Features.hpp"
 #include "System.hpp"
-#include "Screen/OpenGL/Point.hpp"
+#include "Screen/Point.hpp"
 #include "FBO.hpp"
 #include "Asset.hpp"
 
@@ -46,23 +46,22 @@ extern unsigned num_textures;
 class GLTexture {
 protected:
   GLuint id;
-  UPixelScalar width, height;
+
+  PixelSize size;
 
   /**
    * The real dimensions of the texture.  This may differ when
    * ARB_texture_non_power_of_two is not available.
    */
-  GLsizei allocated_width, allocated_height;
+  PixelSize allocated_size;
 
 public:
 #ifdef ANDROID
-  GLTexture(GLuint _id, UPixelScalar _width, UPixelScalar _height,
-            UPixelScalar _allocated_width, UPixelScalar _allocated_height)
-    :id(_id), width(_width), height(_height),
-     allocated_width(_allocated_width), allocated_height(_allocated_height) {
+  GLTexture(GLuint _id, PixelSize _size, PixelSize _allocated_size)
+    :id(_id), size(_size), allocated_size(_allocated_size) {
 #ifndef NDEBUG
-    assert(allocated_width >= width);
-    assert(allocated_height >= height);
+    assert(allocated_size.cx >= size.cx);
+    assert(allocated_size.cy >= size.cy);
 
     ++num_textures;
 #endif
@@ -72,9 +71,9 @@ public:
   /**
    * Create a texture with undefined content.
    */
-  GLTexture(UPixelScalar _width, UPixelScalar _height);
+  explicit GLTexture(PixelSize _size);
 
-  GLTexture(GLint internal_format, GLsizei width, GLsizei height,
+  GLTexture(GLint internal_format, PixelSize _size,
             GLenum format, GLenum type, const GLvoid *data);
 
   ~GLTexture() {
@@ -96,25 +95,30 @@ public:
       : GL_UNSIGNED_BYTE;
   }
 
-  UPixelScalar GetWidth() const {
-    return width;
+  unsigned GetWidth() const {
+    return size.cx;
   }
 
-  UPixelScalar GetHeight() const {
-    return height;
+  unsigned GetHeight() const {
+    return size.cy;
   }
 
   gcc_pure
-  PixelSize GetSize() const {
-    return { width, height };
+  const PixelSize &GetSize() const {
+    return size;
+  }
+
+  gcc_pure
+  PixelRect GetRect() const {
+    return PixelRect(GetSize());
   }
 
   /**
    * Returns the physical size of the texture.
    */
   gcc_pure
-  PixelSize GetAllocatedSize() const {
-    return { allocated_width, allocated_height };
+  const PixelSize &GetAllocatedSize() const {
+    return allocated_size;
   }
 
   /**
@@ -135,10 +139,7 @@ protected:
 
 #ifdef HAVE_OES_DRAW_TEXTURE
 private:
-  void DrawOES(PixelScalar dest_x, PixelScalar dest_y,
-               UPixelScalar dest_width, UPixelScalar dest_height,
-               PixelScalar src_x, PixelScalar src_y,
-               UPixelScalar src_width, UPixelScalar src_height) const;
+  void DrawOES(PixelRect dest, PixelRect src) const;
   void DrawFlippedOES(PixelRect dest, PixelRect src) const;
 #endif
 
@@ -152,14 +153,10 @@ public:
                               GL_TEXTURE_2D, id, 0);
   }
 
-  void Draw(PixelScalar dest_x, PixelScalar dest_y,
-            UPixelScalar dest_width, UPixelScalar dest_height,
-            PixelScalar src_x, PixelScalar src_y,
-            UPixelScalar src_width, UPixelScalar src_height) const;
+  void Draw(PixelRect dest, PixelRect src) const;
 
-  void Draw(PixelScalar dest_x, PixelScalar dest_y) const {
-    Draw(dest_x, dest_y, width, height,
-         0, 0, width, height);
+  void Draw(PixelPoint dest) const {
+    Draw(PixelRect(dest, GetSize()), GetRect());
   }
 
   /**

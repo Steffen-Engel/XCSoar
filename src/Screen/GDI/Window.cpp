@@ -37,17 +37,15 @@ Window::Create(ContainerWindow *parent, const TCHAR *cls, const TCHAR *text,
 {
   assert(IsScreenInitialized());
   assert(rc.left <= rc.right);
-  assert(rc.right - rc.left < 0x1000000);
+  assert(rc.GetWidth() < 0x1000000);
   assert(rc.top <= rc.bottom);
-  assert(rc.bottom - rc.top < 0x1000000);
-
-  double_clicks = window_style.double_clicks;
+  assert(rc.GetHeight() < 0x1000000);
 
   DWORD style = window_style.style, ex_style = window_style.ex_style;
 
   hWnd = ::CreateWindowEx(ex_style, cls, text, style,
                           rc.left, rc.top,
-                          rc.right - rc.left, rc.bottom - rc.top,
+                          rc.GetWidth(), rc.GetHeight(),
                           parent != nullptr ? parent->hWnd : nullptr,
                           nullptr, nullptr, this);
 
@@ -72,8 +70,8 @@ Window::IsMaximised() const
   const PixelRect this_rc = GetPosition();
   const PixelRect parent_rc = GetParentClientRect();
 
-  return (this_rc.right - this_rc.left) >= (parent_rc.right - parent_rc.left) &&
-    (this_rc.bottom - this_rc.top) >= (parent_rc.bottom - parent_rc.top);
+  return this_rc.GetWidth() >= parent_rc.GetWidth() &&
+    this_rc.GetHeight() >= parent_rc.GetHeight();
 }
 
 void
@@ -152,12 +150,13 @@ Window::OnMessage(HWND _hWnd, UINT message,
     return 0;
 
   case WM_MOUSEMOVE:
-    if (OnMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam), wParam))
+    if (OnMouseMove(PixelPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)),
+                    wParam))
       return 0;
     break;
 
   case WM_LBUTTONDOWN:
-    if (OnMouseDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
+    if (OnMouseDown(PixelPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
       /* true returned: message was handled */
       ResetUserIdle();
       return 0;
@@ -165,7 +164,7 @@ Window::OnMessage(HWND _hWnd, UINT message,
     break;
 
   case WM_LBUTTONUP:
-    if (OnMouseUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
+    if (OnMouseUp(PixelPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
       /* true returned: message was handled */
       ResetUserIdle();
       return 0;
@@ -173,14 +172,7 @@ Window::OnMessage(HWND _hWnd, UINT message,
     break;
 
   case WM_LBUTTONDBLCLK:
-    if (!double_clicks)
-      /* instead of disabling CS_DBLCLKS (which would affect all
-         instances of a window class), we just translate
-         WM_LBUTTONDBLCLK to WM_LBUTTONDOWN here; this even works for
-         built-in window class such as BUTTON */
-      return OnMessage(_hWnd, WM_LBUTTONDOWN, wParam, lParam);
-
-    if (OnMouseDouble(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))) {
+    if (OnMouseDouble(PixelPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)))) {
       /* true returned: message was handled */
       ResetUserIdle();
       return 0;
@@ -190,8 +182,8 @@ Window::OnMessage(HWND _hWnd, UINT message,
 
 #ifdef WM_MOUSEWHEEL
   case WM_MOUSEWHEEL:
-    if (OnMouseWheel(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
-                       GET_WHEEL_DELTA_WPARAM(wParam))) {
+    if (OnMouseWheel(PixelPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)),
+                     GET_WHEEL_DELTA_WPARAM(wParam))) {
       /* true returned: message was handled */
       ResetUserIdle();
       return 0;

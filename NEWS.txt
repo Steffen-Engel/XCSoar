@@ -8,15 +8,35 @@ Version 7.0 - not yet released
   - driver for XC Tracer Vario
   - driver for KRT2 radio
 * weather
+  - merge all weather data in one dialog
+  - allow showing both terrain and RASP
   - show satellite images from pc_met (Deutscher Wetterdienst)
 * Windows
   - drop support for Windows CE
   - require Windows Vista or later
   - allow starting multiple XCSoar instances
+* Linux
+  - drop support for SDL 1.2
+  - display rotation
 * Android
   - drop support for ARMv6 CPUs
 * Kobo
   - support Kobo Glo HD
+
+Version 6.8.3 - not yet released
+* map
+  - fix distorted terrain when zoomed out
+* data files
+  - use correct "comment" field for OziExplorer files
+  - relax file format detection for OziExplorer files
+  - fix bogus arrival heights on watched waypoints when GPS unavailable
+  - fix crash in airspace parser
+  - fix crash in XML parser
+* devices
+  - GTAltimeter: remove unmaintained driver (#3661)
+* Kobo
+  - support Kobo Glo HD
+* fix crash in SkyLines tracking
 
 Version 6.8.2 - 2015/09/19
 * Rubik R-26S polar

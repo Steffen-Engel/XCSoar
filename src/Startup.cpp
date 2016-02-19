@@ -31,7 +31,7 @@ Copyright_License {
 #include "Simulator.hpp"
 #include "InfoBoxes/InfoBoxManager.hpp"
 #include "Terrain/RasterTerrain.hpp"
-#include "Terrain/RasterWeatherStore.hpp"
+#include "Weather/Rasp/RaspStore.hpp"
 #include "Input/InputEvents.hpp"
 #include "Input/InputQueue.hpp"
 #include "Dialogs/StartupDialog.hpp"
@@ -95,11 +95,8 @@ Copyright_License {
 #include "Thread/Debug.hpp"
 #include "Util/Error.hxx"
 
-#ifdef USE_LUA
 #include "Lua/StartFile.hpp"
 #include "Lua/Background.hpp"
-#include <windef.h> /* for MAX_PATH */
-#endif
 
 #ifdef ENABLE_OPENGL
 #include "Screen/OpenGL/Globals.hpp"
@@ -134,14 +131,12 @@ AfterStartup()
 {
   StartupLogFreeRamAndStorage();
 
-#ifdef USE_LUA
   {
     Error error;
     const auto lua_path = LocalPath(_T("lua"));
     if (!Lua::StartFile(AllocatedPath::Build(lua_path, _T("init.lua")), error))
       LogError(error);
   }
-#endif
 
   if (is_simulator()) {
     InputEvents::processGlideComputer(GCE_STARTUP_SIMULATOR);
@@ -324,7 +319,7 @@ Startup()
 
 
   GlidePolar &gp = CommonInterface::SetComputerSettings().polar.glide_polar_task;
-  gp = GlidePolar(fixed(0));
+  gp = GlidePolar(0);
   gp.SetMC(computer_settings.task.safety_mc);
   gp.SetBugs(computer_settings.polar.degradation_factor);
   PlaneGlue::FromProfile(CommonInterface::SetComputerSettings().plane,
@@ -355,8 +350,8 @@ Startup()
 
   // Scan for weather forecast
   LogFormat("RASP load");
-  rasp = new RasterWeatherStore();
-  rasp->ScanAll(CommonInterface::Basic().location, operation);
+  rasp = new RaspStore();
+  rasp->ScanAll();
 
   // Reads the airspace files
   ReadAirspace(airspace_database, terrain, computer_settings.pressure,
@@ -495,9 +490,7 @@ Shutdown()
 
   StartupLogFreeRamAndStorage();
 
-#ifdef USE_LUA
   Lua::StopAllBackground();
-#endif
 
   // Turn off all displays
   global_running = false;

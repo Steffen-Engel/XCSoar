@@ -11,6 +11,9 @@ endif
 
 ICF ?= n
 
+# enable gcc/clang sanitizers?
+SANITIZE ?= n
+
 # show map renderer times?
 STOP_WATCH ?= n
 ifeq ($(STOP_WATCH),y)
@@ -44,8 +47,4 @@ TESTING = y
 
 ifeq ($(TESTING),y)
   TARGET_CPPFLAGS += -DTESTING
-endif
-
-ifneq ($(WGS84),n)
-TARGET_CPPFLAGS += -DUSE_WGS84
 endif

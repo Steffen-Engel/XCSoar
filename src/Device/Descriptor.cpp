@@ -34,12 +34,10 @@ Copyright_License {
 #include "Port/DumpPort.hpp"
 #include "NMEA/Info.hpp"
 #include "Thread/Mutex.hpp"
-#include "Util/StringUtil.hpp"
 #include "Util/StringAPI.hxx"
 #include "Logger/NMEALogger.hpp"
 #include "Language/Language.hpp"
 #include "Operation/Operation.hpp"
-#include "OS/Clock.hpp"
 #include "OS/Path.hpp"
 #include "../Simulator.hpp"
 #include "Input/InputQueue.hpp"
@@ -324,8 +322,9 @@ DeviceDescriptor::OpenDroidSoarV2()
     i2cbaro[1] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
                        ioio_helper->GetHolder(),
                        // needs calibration ?
-                       (config.sensor_factor == fixed(0)) ? DeviceConfig::PressureUse::PITOT_ZERO :
-                                                            DeviceConfig::PressureUse::PITOT,
+                       config.sensor_factor == 0
+                       ? DeviceConfig::PressureUse::PITOT_ZERO
+                       : DeviceConfig::PressureUse::PITOT,
                        config.sensor_offset, 1 + (0x77 << 8) + (46 << 16), 0 ,
                        5,
                        0);
@@ -350,9 +349,9 @@ DeviceDescriptor::OpenI2Cbaro()
       i2cbaro[i] = new I2CbaroDevice(GetIndex(), Java::GetEnv(),
                        ioio_helper->GetHolder(),
                        // needs calibration ?
-                       (config.sensor_factor == fixed(0) && config.press_use == DeviceConfig::PressureUse::PITOT) ?
-                                          DeviceConfig::PressureUse::PITOT_ZERO :
-                                          config.press_use,
+                       config.sensor_factor == 0 && config.press_use == DeviceConfig::PressureUse::PITOT
+                       ? DeviceConfig::PressureUse::PITOT_ZERO
+                       : config.press_use,
                        config.sensor_offset,
                        config.i2c_bus, config.i2c_addr,
                        config.press_use == DeviceConfig::PressureUse::TEK_PRESSURE ? 20 : 5,
@@ -767,7 +766,7 @@ DeviceDescriptor::WriteNMEA(const TCHAR *line, OperationEnvironment &env)
 #endif
 
 bool
-DeviceDescriptor::PutMacCready(fixed value, OperationEnvironment &env)
+DeviceDescriptor::PutMacCready(double value, OperationEnvironment &env)
 {
   assert(InMainThread());
 
@@ -792,7 +791,7 @@ DeviceDescriptor::PutMacCready(fixed value, OperationEnvironment &env)
 }
 
 bool
-DeviceDescriptor::PutBugs(fixed value, OperationEnvironment &env)
+DeviceDescriptor::PutBugs(double value, OperationEnvironment &env)
 {
   assert(InMainThread());
 
@@ -817,7 +816,7 @@ DeviceDescriptor::PutBugs(fixed value, OperationEnvironment &env)
 }
 
 bool
-DeviceDescriptor::PutBallast(fixed fraction, fixed overload,
+DeviceDescriptor::PutBallast(double fraction, double overload,
                              OperationEnvironment &env)
 {
   assert(InMainThread());

@@ -55,10 +55,10 @@ NOAAListRenderer::Draw(Canvas &canvas, PixelRect rc,
                        const NOAALook &look,
                        const TwoTextRowsRenderer &row_renderer)
 {
-  const PixelScalar line_height = rc.bottom - rc.top;
+  const unsigned line_height = rc.GetHeight();
 
-  const RasterPoint pt(rc.left + line_height / 2,
-                       rc.top + line_height / 2);
+  const PixelPoint pt(rc.left + line_height / 2,
+                      rc.top + line_height / 2);
   look.icon.Draw(canvas, pt);
 
   rc.left += line_height;

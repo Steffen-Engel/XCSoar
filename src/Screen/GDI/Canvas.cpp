@@ -27,6 +27,7 @@ Copyright_License {
 #include "Compatibility/gdi.h"
 #include "Asset.hpp" /* for needclipping */
 #include "AlphaBlend.hpp"
+#include "Math/Angle.hpp"
 
 #include <algorithm>
 
@@ -39,7 +40,7 @@ Canvas::DrawLine(int ax, int ay, int bx, int by)
   ::MoveToEx(dc, ax, ay, nullptr);
   ::LineTo(dc, bx, by);
 #else
-  RasterPoint p[2] = {{ax, ay}, {bx, by}};
+  BulkPixelPoint p[2] = {{ax, ay}, {bx, by}};
   DrawPolyline(p, 2);
 #endif
 }
@@ -54,7 +55,7 @@ Canvas::DrawTwoLines(int ax, int ay, int bx, int by, int cx, int cy)
   ::LineTo(dc, bx, by);
   ::LineTo(dc, cx, cy);
 #else
-  RasterPoint p[2];
+  BulkPixelPoint p[2];
 
   p[0].x = ax;
   p[0].y = ay;
@@ -69,32 +70,32 @@ Canvas::DrawTwoLines(int ax, int ay, int bx, int by, int cx, int cy)
 }
 
 void
-Canvas::DrawSegment(int x, int y, unsigned radius,
+Canvas::DrawSegment(PixelPoint center, unsigned radius,
                     Angle start, Angle end, bool horizon)
 {
   assert(IsDefined());
 
-  ::Segment(*this, x, y, radius, start, end, horizon);
+  ::Segment(*this, center, radius, start, end, horizon);
 }
 
 void
-Canvas::DrawAnnulus(int x, int y,
+Canvas::DrawAnnulus(PixelPoint center,
                     unsigned small_radius, unsigned big_radius,
                     Angle start, Angle end)
 {
   assert(IsDefined());
 
-  ::Annulus(*this, x, y, big_radius, start, end, small_radius);
+  ::Annulus(*this, center, big_radius, start, end, small_radius);
 }
 
 void
-Canvas::DrawKeyhole(int x, int y,
+Canvas::DrawKeyhole(PixelPoint center,
                     unsigned small_radius, unsigned big_radius,
                     Angle start, Angle end)
 {
   assert(IsDefined());
 
-  ::KeyHole(*this, x, y, big_radius, start, end, small_radius);
+  ::KeyHole(*this, center, big_radius, start, end, small_radius);
 }
 
 const PixelSize
@@ -102,9 +103,9 @@ Canvas::CalcTextSize(const TCHAR *text, size_t length) const
 {
   assert(IsDefined());
 
-  PixelSize size;
+  SIZE size;
   ::GetTextExtentPoint(dc, text, length, &size);
-  return size;
+  return PixelSize(size.cx, size.cy);
 }
 
 const PixelSize
@@ -141,20 +142,22 @@ Canvas::DrawText(int x, int y,
 }
 
 void
-Canvas::DrawOpaqueText(int x, int y, const PixelRect &rc,
+Canvas::DrawOpaqueText(int x, int y, const PixelRect &_rc,
                        const TCHAR *text)
 {
   assert(IsDefined());
 
+  RECT rc = _rc;
   ::ExtTextOut(dc, x, y, ETO_OPAQUE, &rc, text, _tcslen(text), nullptr);
 }
 
 void
-Canvas::DrawClippedText(int x, int y, const PixelRect &rc,
+Canvas::DrawClippedText(int x, int y, const PixelRect &_rc,
                         const TCHAR *text)
 {
   assert(IsDefined());
 
+  RECT rc = _rc;
   ::ExtTextOut(dc, x, y, ETO_CLIPPED, &rc, text, _tcslen(text), nullptr);
 }
 
@@ -164,9 +167,9 @@ Canvas::DrawClippedText(int x, int y, unsigned width,
 {
   const PixelSize size = CalcTextSize(text);
 
-  PixelRect rc;
+  RECT rc;
   ::SetRect(&rc, x, y, x + std::min(width, unsigned(size.cx)), y + size.cy);
-  DrawClippedText(x, y, rc, text);
+  ::ExtTextOut(dc, x, y, ETO_CLIPPED, &rc, text, _tcslen(text), nullptr);
 }
 
 void

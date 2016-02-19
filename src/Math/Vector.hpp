@@ -24,7 +24,6 @@ Copyright_License {
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
-#include "Util.hpp"
 #include "Point2D.hpp"
 #include "Geo/SpeedVector.hpp"
 
@@ -45,16 +44,6 @@ struct Vector : DoublePoint2D {
     auto sc = speed.bearing.SinCos();
     x = sc.second * speed.norm;
     y = sc.first * speed.norm;
-  }
-
-  gcc_pure
-  double SquareMagnitude() const {
-    return Square(x) + Square(y);
-  }
-
-  gcc_pure
-  double Magnitude() const {
-    return hypot(x, y);
   }
 };
 

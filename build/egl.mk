@@ -18,9 +18,6 @@ EGL = n
 else ifeq ($(ENABLE_SDL),y)
 # no EGL if SDL was enabled explicitly
 EGL = n
-else ifeq ($(USE_SDL2),y)
-# no EGL if SDL was enabled explicitly
-EGL = n
 else ifeq ($(TARGET),ANDROID)
 # Android uses Java-EGL
 EGL ?= n
@@ -64,8 +61,6 @@ USE_CONSOLE = y
 else ifeq ($(ENABLE_MESA_KMS),y)
 $(eval $(call pkg-config-library,DRM,libdrm))
 $(eval $(call pkg-config-library,GBM,gbm))
-DRM_CPPFLAGS := $(patsubst -I%,-isystem %,$(DRM_CPPFLAGS))
-GBM_CPPFLAGS := $(patsubst -I%,-isystem %,$(GBM_CPPFLAGS))
 EGL_FEATURE_CPPFLAGS += -DMESA_KMS
 EGL_CPPFLAGS += $(DRM_CPPFLAGS) $(GBM_CPPFLAGS)
 EGL_LDLIBS += $(DRM_LDLIBS) $(GBM_LDLIBS)

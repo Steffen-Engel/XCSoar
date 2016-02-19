@@ -24,12 +24,10 @@ Copyright_License {
 #include "ChartRenderer.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Language/Language.hpp"
 #include "Math/LeastSquares.hpp"
 #include "Util/StaticString.hxx"
 
 #include <assert.h>
-#include <stdio.h>
 #include <windef.h> /* for MAX_PATH */
 
 void
@@ -87,7 +85,7 @@ ChartRenderer::ScaleYFromData(const LeastSquares &lsdata)
   if (fabs(y.max - y.min) > 50) {
     y.scale = (y.max - y.min);
     if (y.scale > 0)
-      y.scale = (rc.bottom - rc.top - padding_bottom) / y.scale;
+      y.scale = (rc.GetHeight() - padding_bottom) / y.scale;
   } else {
     y.scale = 2000;
   }
@@ -110,7 +108,7 @@ ChartRenderer::ScaleXFromData(const LeastSquares &lsdata)
 
   x.scale = (x.max - x.min);
   if (x.scale > 0)
-    x.scale = (rc.right - rc.left - padding_left) / x.scale;
+    x.scale = (rc.GetWidth() - padding_left) / x.scale;
 }
 
 void
@@ -127,7 +125,7 @@ ChartRenderer::ScaleYFromValue(const double value)
 
   y.scale = (y.max - y.min);
   if (y.scale > 0)
-    y.scale = (rc.bottom - rc.top - padding_bottom) / y.scale;
+    y.scale = (rc.GetHeight() - padding_bottom) / y.scale;
 }
 
 void
@@ -144,7 +142,7 @@ ChartRenderer::ScaleXFromValue(const double value)
 
   x.scale = (x.max - x.min);
   if (x.scale > 0)
-    x.scale = (rc.right - rc.left - padding_left) / x.scale;
+    x.scale = (rc.GetWidth() - padding_left) / x.scale;
 }
 
 void
@@ -153,8 +151,8 @@ ChartRenderer::DrawLabel(const TCHAR *text, const double xv, const double yv)
   canvas.Select(look.label_font);
   canvas.SetBackgroundTransparent();
 
-  PixelSize tsize = canvas.CalcTextSize(text);
-  RasterPoint pt = ToScreen(xv, yv);
+  auto tsize = canvas.CalcTextSize(text);
+  auto pt = ToScreen(xv, yv);
   canvas.DrawText(pt.x - tsize.cx / 2, pt.y - tsize.cy / 2, text);
 }
 
@@ -270,7 +268,7 @@ ChartRenderer::DrawFilledLine(const double xmin, const double ymin,
                               const double xmax, const double ymax,
                               const Brush &brush)
 {
-  RasterPoint line[4];
+  BulkPixelPoint line[4];
 
   line[0] = ToScreen(xmin, ymin);
   line[1] = ToScreen(xmax, ymax);
@@ -321,14 +319,14 @@ ChartRenderer::DrawFilledLineGraph(const LeastSquares &lsdata)
   assert(slots.size() >= 2);
 
   const unsigned n = slots.size() + 2;
-  RasterPoint *points = point_buffer.get(n);
+  auto *points = point_buffer.get(n);
 
-  RasterPoint *p = points;
+  auto *p = points;
   for (const auto &i : slots)
     *p++ = ToScreen(i.x, i.y);
-  const RasterPoint &last = p[-1];
-  *p++ = RasterPoint{ last.x, rc.bottom - padding_bottom };
-  *p++ = RasterPoint{ points[0].x, rc.bottom - padding_bottom };
+  const auto &last = p[-1];
+  *p++ = BulkPixelPoint(last.x, rc.bottom - padding_bottom);
+  *p++ = BulkPixelPoint(points[0].x, rc.bottom - padding_bottom);
 
   assert(p == points + n);
 
@@ -342,9 +340,9 @@ ChartRenderer::DrawLineGraph(const LeastSquares &lsdata, const Pen &pen)
   assert(slots.size() >= 2);
 
   const unsigned n = slots.size();
-  RasterPoint *points = point_buffer.get(n);
+  auto *points = point_buffer.get(n);
 
-  RasterPoint *p = points;
+  auto *p = points;
   for (const auto &i : slots)
     *p++ = ToScreen(i.x, i.y);
   assert(p == points + n);
@@ -387,7 +385,7 @@ ChartRenderer::DrawXGrid(double tic_step, const Pen &pen,
   canvas.Select(look.axis_value_font);
   canvas.SetBackgroundTransparent();
 
-  RasterPoint line[2];
+  PixelPoint line[2];
 
   /** the minimum next position of the text, to avoid overlapping */
   int next_text = rc.left;
@@ -444,7 +442,7 @@ ChartRenderer::DrawYGrid(double tic_step, const Pen &pen,
   canvas.Select(look.axis_value_font);
   canvas.SetBackgroundTransparent();
 
-  RasterPoint line[2];
+  PixelPoint line[2];
 
   /* increase tic step so graph not too crowded */
   while ((y.max-y.min)/tic_step > 10) {
@@ -496,7 +494,7 @@ ChartRenderer::DrawFilledY(const std::vector<std::pair<double, double>> &vals,
   if (vals.size()<2)
     return;
   const unsigned fsize = vals.size()+2;
-  RasterPoint *line = point_buffer.get(fsize);
+  auto *line = point_buffer.get(fsize);
 
   for (unsigned i = 0; i < vals.size(); ++i)
     line[i + 2] = ToScreen(vals[i].first, vals[i].second);
@@ -518,13 +516,15 @@ ChartRenderer::DrawFilledY(const std::vector<std::pair<double, double>> &vals,
 void
 ChartRenderer::DrawDot(const double x, const double y, const unsigned _width)
 {
-  RasterPoint p = ToScreen(x, y);
+  auto p = ToScreen(x, y);
 
   const int width = _width;
-  RasterPoint line[4] = { { p.x, p.y - width },
-                          { p.x - width, p.y },
-                          { p.x, p.y + width },
-                          { p.x + width, p.y } };
+  const BulkPixelPoint line[4] = {
+    { p.x, p.y - width },
+    { p.x - width, p.y },
+    { p.x, p.y + width },
+    { p.x + width, p.y },
+  };
   canvas.SelectNullPen();
   canvas.DrawTriangleFan(line, 4);
 }

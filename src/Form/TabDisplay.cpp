@@ -30,8 +30,6 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Asset.hpp"
 
-#include <assert.h>
-
 TabDisplay::TabDisplay(TabWidget &_pager, const DialogLook &_look,
                        ContainerWindow &parent, PixelRect rc,
                        bool _vertical,
@@ -183,10 +181,10 @@ TabDisplay::Add(const TCHAR *caption, const MaskedIcon *icon)
 }
 
 int
-TabDisplay::GetButtonIndexAt(RasterPoint p) const
+TabDisplay::GetButtonIndexAt(PixelPoint p) const
 {
   for (unsigned i = 0; i < GetSize(); i++) {
-    if (buttons[i]->rc.IsInside(p))
+    if (buttons[i]->rc.Contains(p))
       return i;
   }
 
@@ -317,14 +315,14 @@ TabDisplay::OnKeyDown(unsigned key_code)
 }
 
 bool
-TabDisplay::OnMouseDown(PixelScalar x, PixelScalar y)
+TabDisplay::OnMouseDown(PixelPoint p)
 {
   EndDrag();
 
   // If possible -> Give focus to the Control
   SetFocus();
 
-  int i = GetButtonIndexAt({ x, y });
+  int i = GetButtonIndexAt(p);
   if (i >= 0) {
     dragging = true;
     drag_off_button = false;
@@ -334,11 +332,11 @@ TabDisplay::OnMouseDown(PixelScalar x, PixelScalar y)
     return true;
   }
 
-  return PaintWindow::OnMouseDown(x, y);
+  return PaintWindow::OnMouseDown(p);
 }
 
 bool
-TabDisplay::OnMouseUp(PixelScalar x, PixelScalar y)
+TabDisplay::OnMouseUp(PixelPoint p)
 {
   if (dragging) {
     EndDrag();
@@ -348,19 +346,19 @@ TabDisplay::OnMouseUp(PixelScalar x, PixelScalar y)
 
     return true;
   } else {
-    return PaintWindow::OnMouseUp(x, y);
+    return PaintWindow::OnMouseUp(p);
   }
 }
 
 bool
-TabDisplay::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+TabDisplay::OnMouseMove(PixelPoint p, unsigned keys)
 {
   if (!dragging)
     return false;
 
   const PixelRect &rc = buttons[down_index]->rc;
 
-  bool not_on_button = !rc.IsInside({ x, y });
+  bool not_on_button = !rc.Contains(p);
   if (drag_off_button != not_on_button) {
     drag_off_button = not_on_button;
     Invalidate(rc);

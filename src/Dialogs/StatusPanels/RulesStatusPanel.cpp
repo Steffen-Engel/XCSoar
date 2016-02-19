@@ -29,6 +29,7 @@ Copyright_License {
 #include "Formatter/LocalTimeFormatter.hpp"
 #include "Language/Language.hpp"
 #include "Task/ProtectedTaskManager.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"
 
@@ -74,7 +75,7 @@ RulesStatusPanel::Refresh()
   }
 
   Temp[0] = _T('\0');
-  fixed finish_height(0);
+  double finish_height(0);
 
   if (protected_task_manager != nullptr) {
     ProtectedTaskManager::Lease task_manager(*protected_task_manager);

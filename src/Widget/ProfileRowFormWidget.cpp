@@ -26,11 +26,7 @@ Copyright_License {
 #include "Form/DataField/File.hpp"
 #include "Profile/Profile.hpp"
 #include "LocalPath.hpp"
-#include "Math/Angle.hpp"
 #include "Util/ConvertString.hpp"
-
-#include <windef.h> /* for MAX_PATH */
-#include <assert.h>
 
 WndProperty *
 RowFormWidget::AddFile(const TCHAR *label, const TCHAR *help,
@@ -116,7 +112,7 @@ RowFormWidget::SaveValue(unsigned i, const char *registry_key,
 
 bool
 RowFormWidget::SaveValue(unsigned i, const char *registry_key,
-                         fixed &value) const
+                         double &value) const
 {
   if (!SaveValue(i, value))
     return false;

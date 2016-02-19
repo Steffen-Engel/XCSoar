@@ -27,6 +27,7 @@ Copyright_License {
 #include "Form/ActionListener.hpp"
 #include "Language/Language.hpp"
 #include "Task/ProtectedTaskManager.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Factory/AbstractTaskFactory.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/IntermediatePoint.hpp"
@@ -179,7 +180,7 @@ FindMatTurnpoint()
   };
 
   auto wp = way_points.GetNearestIf(basic.location,
-                                    fixed(CylinderZone::MAT_RADIUS),
+                                    CylinderZone::MAT_RADIUS,
                                     turnpoint_predicate);
 
   if (wp == nullptr)

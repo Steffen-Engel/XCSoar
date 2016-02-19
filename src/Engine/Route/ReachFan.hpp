@@ -46,6 +46,10 @@ public:
     return root.IsEmpty();
   }
 
+  const FlatProjection &GetProjection() const {
+    return projection;
+  }
+
   void Reset();
 
   bool Solve(const AGeoPoint origin, const RoutePolars &rpolars,
@@ -58,6 +62,9 @@ public:
 
   void AcceptInRange(const GeoBounds& bounds,
                      TriangleFanVisitor& visitor) const;
+
+  void AcceptInRange(const GeoBounds &bounds,
+                     FlatTriangleFanVisitor &visitor) const;
 
   int GetTerrainBase() const {
     return terrain_base;

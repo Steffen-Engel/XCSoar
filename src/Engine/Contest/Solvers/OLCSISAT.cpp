@@ -21,7 +21,6 @@
 */
 
 #include "OLCSISAT.hpp"
-#include "Trace/Trace.hpp"
 #include "Geo/SearchPointVector.hpp"
 
 OLCSISAT::OLCSISAT(const Trace &_trace)
@@ -34,10 +33,10 @@ OLCSISAT::OLCSISAT(const Trace &_trace)
   R = remainder distance
 
   V: 1.00 point per km
-  Z: 0.75 points per km
-  total score = V + Z*0.75
-              = V + 0.75*(S-V)
-              = (V + 3*S)/4
+  Z: 0.50 points per km
+  total score = V + Z*0.50
+              = V + 0.50*(S-V)
+              = (V + S)/2
 */
 
 ContestResult
@@ -69,7 +68,6 @@ OLCSISAT::CalculateResult(const ContestTraceVector &solution) const
 
   // S = total distance
   ContestResult result = ContestDijkstra::CalculateResult(solution);
-  result.score = ApplyHandicap((V + 3 * result.distance) / 4000);
+  result.score = ApplyHandicap((V + result.distance) / 2000);
   return result;
 }
-

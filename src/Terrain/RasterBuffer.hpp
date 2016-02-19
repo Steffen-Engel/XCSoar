@@ -24,8 +24,9 @@ Copyright_License {
 #ifndef XCSOAR_RASTER_BUFFER_HPP
 #define XCSOAR_RASTER_BUFFER_HPP
 
+#include "RasterTraits.hpp"
 #include "Height.hpp"
-#include "Util/AllocatedGrid.hpp"
+#include "Util/AllocatedGrid.hxx"
 #include "Compiler.h"
 
 class RasterBuffer {
@@ -52,11 +53,11 @@ public:
   }
 
   unsigned GetFineWidth() const {
-    return GetWidth() << 8;
+    return GetWidth() << RasterTraits::SUBPIXEL_BITS;
   }
 
   unsigned GetFineHeight() const {
-    return GetHeight() << 8;
+    return GetHeight() << RasterTraits::SUBPIXEL_BITS;
   }
 
   TerrainHeight *GetData() {

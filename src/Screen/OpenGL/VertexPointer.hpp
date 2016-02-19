@@ -25,11 +25,15 @@ Copyright_License {
 #define XCSOAR_SCREEN_OPENGL_VERTEX_POINTER_HPP
 
 #include "System.hpp"
-#include "Point.hpp"
+#include "Types.hpp"
 
 #ifdef USE_GLSL
 #include "Attribute.hpp"
 #endif
+
+struct FloatPoint2D;
+struct BulkPixelPoint;
+struct ExactPixelPoint;
 
 struct ScopeVertexPointer {
 #ifdef USE_GLSL
@@ -72,11 +76,11 @@ struct ScopeVertexPointer {
     Update(type, 0, p);
   }
 
-  void Update(const RasterPoint *p) {
+  void Update(const BulkPixelPoint *p) {
     Update(GL_VALUE, p);
   }
 
-  void Update(const ExactRasterPoint *p) {
+  void Update(const ExactPixelPoint *p) {
     Update(GL_EXACT, p);
   }
 

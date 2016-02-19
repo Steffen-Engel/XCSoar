@@ -22,9 +22,9 @@ Copyright_License {
 */
 
 #include "MapWindow.hpp"
-#include "Screen/Icon.hpp"
 #include "Geo/Math.hpp"
 #include "Task/ProtectedTaskManager.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Renderer/TaskRenderer.hpp"
 #include "Renderer/TaskPointRenderer.hpp"
@@ -32,8 +32,6 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Math/Screen.hpp"
 #include "Look/MapLook.hpp"
-
-#include <stdio.h>
 
 void
 MapWindow::DrawTask(Canvas &canvas)
@@ -85,11 +83,11 @@ MapWindow::DrawRoute(Canvas &canvas)
   const auto &route = Calculated().planned_route;
 
   const auto r_size = route.size();
-  RasterPoint p[r_size], *pp = &p[0];
+  BulkPixelPoint p[r_size], *pp = &p[0];
   for (auto i = route.begin(), end = route.end(); i != end; ++i, ++pp)
     *pp = render_projection.GeoToScreen(*i);
 
-  ScreenClosestPoint(p[r_size-1], p[r_size-2], p[r_size-1], &p[r_size-1], Layout::Scale(20));
+  p[r_size - 1] = ScreenClosestPoint(p[r_size-1], p[r_size-2], p[r_size-1], Layout::Scale(20));
 
   canvas.Select(look.task.bearing_pen);
   canvas.DrawPolyline(p, r_size);
@@ -144,7 +142,7 @@ MapWindow::DrawTaskOffTrackIndicator(Canvas &canvas)
     if ((idist != ilast) && (idist > 0) && (idist < 1000)) {
       TCHAR Buffer[5];
       _stprintf(Buffer, _T("%d"), idist);
-      RasterPoint sc = render_projection.GeoToScreen(dloc);
+      auto sc = render_projection.GeoToScreen(dloc);
       PixelSize tsize = canvas.CalcTextSize(Buffer);
       canvas.DrawText(sc.x - tsize.cx / 2, sc.y - tsize.cy / 2, Buffer);
       ilast = idist;

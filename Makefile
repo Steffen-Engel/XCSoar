@@ -48,9 +48,6 @@
 #
 #   LLVM        "y" to compile LLVM bitcode with clang
 #
-#   WGS84       "y" to use WGS84 instead of FAI sphere for distance calculations.
-#               This is enabled by default.
-#
 #   LIBCXX      "y" to compile with libc++, or the absolute path of the
 #               libc++ svn/git working directory.
 #
@@ -64,6 +61,7 @@ topdir = .
 -include $(topdir)/build/local-config.mk
 
 include $(topdir)/build/make.mk
+include $(topdir)/build/thunk.mk
 include $(topdir)/build/bool.mk
 include $(topdir)/build/string.mk
 include $(topdir)/build/dirs.mk
@@ -112,8 +110,6 @@ include $(topdir)/build/manual.mk
 include $(topdir)/build/libboost.mk
 INCLUDES += $(BOOST_CPPFLAGS)
 
-ifneq ($(MAKECMDGOALS),libs) # kludge to allow bootstrapping thirdparty libraries
-
 # Create libraries for zzip, jasper and compatibility stuff
 include $(topdir)/build/libresource.mk
 include $(topdir)/build/liblook.mk
@@ -157,8 +153,6 @@ include $(topdir)/build/libaudio.mk
 include $(topdir)/build/libterrain.mk
 include $(topdir)/build/lua.mk
 include $(topdir)/build/harness.mk
-
-endif
 
 include $(topdir)/build/vali.mk
 include $(topdir)/build/main.mk

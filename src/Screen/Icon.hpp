@@ -39,7 +39,7 @@ protected:
 
   PixelSize size;
 
-  RasterPoint origin;
+  PixelPoint origin;
 
 public:
   const PixelSize &GetSize() const {
@@ -57,10 +57,7 @@ public:
     bitmap.Reset();
   }
 
-  void Draw(Canvas &canvas, PixelScalar x, PixelScalar y) const;
-  void Draw(Canvas &canvas, RasterPoint pt) const {
-    Draw(canvas, pt.x, pt.y);
-  }
+  void Draw(Canvas &canvas, PixelPoint p) const;
 
   void Draw(Canvas &canvas, const PixelRect &rc, bool inverse) const;
 };

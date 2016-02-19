@@ -32,18 +32,18 @@ Copyright_License {
 #include "Screen/Canvas.hpp"
 
 static void
-DrawArrow(Canvas &canvas, RasterPoint point, const double mag, const Angle angle)
+DrawArrow(Canvas &canvas, PixelPoint point, const double mag, const Angle angle)
 {
   const FastRotation r(angle);
 
   auto p = r.Rotate(mag, 0);
-  canvas.DrawLine(point, point + RasterPoint((int)p.x, (int)p.y));
+  canvas.DrawLine(point, point + PixelPoint((int)p.x, (int)p.y));
 
   p = r.Rotate(mag - 5, -3);
-  canvas.DrawLine(point, point + RasterPoint((int)p.x, (int)p.y));
+  canvas.DrawLine(point, point + PixelPoint((int)p.x, (int)p.y));
 
   p = r.Rotate(mag - 5, 3);
-  canvas.DrawLine(point, point + RasterPoint((int)p.x, (int)p.y));
+  canvas.DrawLine(point, point + PixelPoint((int)p.x, (int)p.y));
 }
 
 void
@@ -92,7 +92,7 @@ RenderWindChart(Canvas &canvas, const PixelRect rc,
 
 #define WINDVECTORMAG 25
 
-  numsteps = (int)((rc.bottom - rc.top) / WINDVECTORMAG) - 1;
+  numsteps = (int)(rc.GetHeight() / WINDVECTORMAG) - 1;
 
   canvas.Select(chart_look.GetPen(ChartLook::STYLE_MEDIUMBLACK));
 
@@ -113,7 +113,7 @@ RenderWindChart(Canvas &canvas, const PixelRect rc,
 
     Angle angle = Angle::FromXY(wind.y, -wind.x);
 
-    RasterPoint point = chart.ToScreen((chart.GetXMin() + chart.GetXMax()) / 2, h);
+    auto point = chart.ToScreen((chart.GetXMin() + chart.GetXMax()) / 2, h);
 
     DrawArrow(canvas, point, mag * WINDVECTORMAG, angle);
   }

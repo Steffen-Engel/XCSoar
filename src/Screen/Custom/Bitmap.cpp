@@ -42,15 +42,6 @@ Copyright_License {
 #include <tchar.h>
 
 Bitmap::Bitmap(ConstBuffer<void> _buffer)
-  :
-#ifdef ENABLE_OPENGL
-#ifdef ANDROID
-  id(0),
-#endif
-  texture(nullptr), interpolation(false)
-#else
-  buffer(WritableImageBuffer<BitmapPixelTraits>::Empty())
-#endif
 {
   Load(_buffer);
 }
@@ -58,8 +49,8 @@ Bitmap::Bitmap(ConstBuffer<void> _buffer)
 bool
 Bitmap::Load(ConstBuffer<void> buffer, Type type)
 {
-  const UncompressedImage uncompressed = LoadPNG(buffer.data, buffer.size);
-  return Load(uncompressed, type);
+  auto uncompressed = LoadPNG(buffer.data, buffer.size);
+  return uncompressed.IsDefined() && Load(std::move(uncompressed), type);
 }
 
 static UncompressedImage
@@ -79,6 +70,6 @@ DecompressImageFile(Path path)
 bool
 Bitmap::LoadFile(Path path)
 {
-  const UncompressedImage uncompressed = DecompressImageFile(path);
-  return uncompressed.IsVisible() && Load(uncompressed);
+  auto uncompressed = DecompressImageFile(path);
+  return uncompressed.IsDefined() && Load(std::move(uncompressed));
 }

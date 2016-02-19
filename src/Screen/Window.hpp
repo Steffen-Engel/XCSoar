@@ -55,13 +55,11 @@ protected:
   bool visible = true;
   bool enabled = true;
   bool tab_stop = false, control_parent = false;
-  bool double_clicks = false;
   bool has_border = false;
 
 #else /* USE_WINUSER */
   DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
   DWORD ex_style = 0;
-  bool double_clicks = false;
 
 #endif /* USE_WINUSER */
 
@@ -144,10 +142,6 @@ public:
 #endif
   }
 
-  void EnableDoubleClicks() {
-    double_clicks = true;
-  }
-
   friend class Window;
 };
 
@@ -170,7 +164,7 @@ protected:
   ContainerWindow *parent = nullptr;
 
 private:
-  RasterPoint position;
+  PixelPoint position;
   PixelSize size = {0, 0};
 
 private:
@@ -185,9 +179,6 @@ private:
 #else
   HWND hWnd = nullptr;
 #endif
-
-private:
-  bool double_clicks = false;
 
 public:
   Window() = default;
@@ -259,43 +250,49 @@ public:
   }
 
 #ifndef USE_WINUSER
-  PixelScalar GetTop() const {
+  PixelPoint GetTopLeft() const {
+    assert(IsDefined());
+
+    return position;
+  }
+
+  int GetTop() const {
     assert(IsDefined());
 
     return position.y;
   }
 
-  PixelScalar GetLeft() const {
+  int GetLeft() const {
     assert(IsDefined());
 
     return position.x;
   }
 
-  UPixelScalar GetWidth() const {
+  unsigned GetWidth() const {
     assert(IsDefined());
 
     return size.cx;
   }
 
-  UPixelScalar GetHeight() const {
+  unsigned GetHeight() const {
     assert(IsDefined());
 
     return size.cy;
   }
 
-  PixelScalar GetRight() const {
+  int GetRight() const {
     return GetLeft() + GetWidth();
   }
 
-  PixelScalar GetBottom() const {
+  int GetBottom() const {
     return GetTop() + GetHeight();
   }
 #else /* USE_WINUSER */
-  UPixelScalar GetWidth() const {
+  unsigned GetWidth() const {
     return GetSize().cx;
   }
 
-  UPixelScalar GetHeight() const {
+  unsigned GetHeight() const {
     return GetSize().cy;
   }
 #endif
@@ -335,7 +332,7 @@ public:
   gcc_pure
   bool IsMaximised() const;
 
-  void Move(PixelScalar left, PixelScalar top) {
+  void Move(int left, int top) {
     AssertThread();
 
 #ifndef USE_WINUSER
@@ -348,8 +345,8 @@ public:
 #endif
   }
 
-  void Move(PixelScalar left, PixelScalar top,
-            UPixelScalar width, UPixelScalar height) {
+  void Move(int left, int top,
+            unsigned width, unsigned height) {
     AssertThread();
 
 #ifndef USE_WINUSER
@@ -366,14 +363,14 @@ public:
     assert(rc.left < rc.right);
     assert(rc.top < rc.bottom);
 
-    Move(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
+    Move(rc.left, rc.top, rc.GetWidth(), rc.GetHeight());
   }
 
   void MoveToCenter() {
     const PixelSize window_size = GetSize();
     const PixelSize parent_size = GetParentClientRect().GetSize();
-    PixelScalar dialog_x = (parent_size.cx - window_size.cx) / 2;
-    PixelScalar dialog_y = (parent_size.cy - window_size.cy) / 2;
+    int dialog_x = (parent_size.cx - window_size.cx) / 2;
+    int dialog_y = (parent_size.cy - window_size.cy) / 2;
     Move(dialog_x, dialog_y);
   }
 
@@ -381,8 +378,8 @@ public:
    * Like move(), but does not trigger a synchronous redraw.  The
    * caller is responsible for redrawing.
    */
-  void FastMove(PixelScalar left, PixelScalar top,
-                UPixelScalar width, UPixelScalar height) {
+  void FastMove(int left, int top,
+                unsigned width, unsigned height) {
     AssertThread();
 
 #ifndef USE_WINUSER
@@ -395,7 +392,7 @@ public:
   }
 
   void FastMove(const PixelRect rc) {
-    FastMove(rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top);
+    FastMove(rc.left, rc.top, rc.GetWidth(), rc.GetHeight());
   }
 
   /**
@@ -407,7 +404,7 @@ public:
 
 #ifdef USE_WINUSER
     ::SetWindowPos(hWnd, nullptr,
-                   rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
+                   rc.left, rc.top, rc.GetWidth(), rc.GetHeight(),
                    SWP_SHOWWINDOW | SWP_NOACTIVATE |
                    SWP_NOZORDER | SWP_NOOWNERZORDER);
 #else
@@ -416,7 +413,7 @@ public:
 #endif
   }
 
-  void Resize(UPixelScalar width, UPixelScalar height) {
+  void Resize(unsigned width, unsigned height) {
     AssertThread();
 
 #ifndef USE_WINUSER
@@ -704,11 +701,11 @@ public:
   {
     assert(IsDefined());
 
-    PixelRect rc;
 #ifndef USE_WINUSER
-    rc = GetPosition();
+    PixelRect rc = GetPosition();
     ToScreen(rc);
 #else
+    RECT rc;
     ::GetWindowRect(hWnd, &rc);
 #endif
     return rc;
@@ -755,7 +752,7 @@ public:
 #ifndef USE_WINUSER
     return PixelRect(size);
 #else
-    PixelRect rc;
+    RECT rc;
     ::GetClientRect(hWnd, &rc);
     return rc;
 #endif
@@ -767,11 +764,8 @@ public:
     assert(IsDefined());
 
 #ifdef USE_WINUSER
-    PixelRect rc = GetClientRect();
-    PixelSize s;
-    s.cx = rc.right;
-    s.cy = rc.bottom;
-    return s;
+    const auto rc = GetClientRect();
+    return PixelSize(rc.right, rc.bottom);
 #else
     return size;
 #endif
@@ -782,16 +776,12 @@ public:
    * client area.
    */
   gcc_pure
-  bool IsInside(int x, int y) const {
+  bool IsInside(PixelPoint p) const {
     assert(IsDefined());
 
     const PixelSize size = GetSize();
-    return unsigned(x) < unsigned(size.cx) && unsigned(y) < unsigned(size.cy);
-  }
-
-  gcc_pure
-  bool IsInside(RasterPoint pt) const {
-    return IsInside(pt.x, pt.y);
+    return unsigned(p.x) < unsigned(size.cx) &&
+        unsigned(p.y) < unsigned(size.cy);
   }
 
   /**
@@ -805,7 +795,7 @@ public:
     HWND hParent = ::GetParent(hWnd);
     assert(hParent != nullptr);
 
-    PixelRect rc;
+    RECT rc;
     ::GetClientRect(hParent, &rc);
     return rc;
   }
@@ -829,9 +819,10 @@ public:
     ::EndPaint(hWnd, ps);
   }
 
-  void Scroll(PixelScalar dx, PixelScalar dy, const PixelRect &rc) {
+  void Scroll(int dx, int dy, const PixelRect &_rc) {
     assert(IsDefined());
 
+    const RECT rc = _rc;
     ::ScrollWindowEx(hWnd, dx, dy, &rc, nullptr, nullptr, nullptr,
                      SW_INVALIDATE);
   }
@@ -909,11 +900,11 @@ public:
   virtual void OnCreate();
   virtual void OnDestroy();
   virtual void OnResize(PixelSize new_size);
-  virtual bool OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys);
-  virtual bool OnMouseDown(PixelScalar x, PixelScalar y);
-  virtual bool OnMouseUp(PixelScalar x, PixelScalar y);
-  virtual bool OnMouseDouble(PixelScalar x, PixelScalar y);
-  virtual bool OnMouseWheel(PixelScalar x, PixelScalar y, int delta);
+  virtual bool OnMouseMove(PixelPoint p, unsigned keys);
+  virtual bool OnMouseDown(PixelPoint p);
+  virtual bool OnMouseUp(PixelPoint p);
+  virtual bool OnMouseDouble(PixelPoint p);
+  virtual bool OnMouseWheel(PixelPoint p, int delta);
 
 #ifdef HAVE_MULTI_TOUCH
   /**

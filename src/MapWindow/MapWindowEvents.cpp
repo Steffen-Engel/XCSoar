@@ -55,6 +55,17 @@ MapWindow::OnCreate()
   WindowCanvas canvas(*this);
   buffer_canvas.Create(canvas);
 #endif
+
+  // initialize other systems
+  const PixelSize size = GetSize();
+  visible_projection.SetScreenSize(size);
+  visible_projection.SetMapScale(5000);
+  visible_projection.SetScreenOrigin(size.cx / 2, size.cy / 2);
+  visible_projection.UpdateScreenBounds();
+
+#ifndef ENABLE_OPENGL
+  buffer_projection = visible_projection;
+#endif
 }
 
 void
@@ -96,9 +107,9 @@ MapWindow::OnPaint(Canvas &canvas)
     const int buffer_width = buffer_projection.GetScreenWidth();
     const int buffer_height = buffer_projection.GetScreenHeight();
 
-    const RasterPoint top_left =
+    const auto top_left =
       visible_projection.GeoToScreen(buffer_projection.ScreenToGeo(0, 0));
-    RasterPoint bottom_right =
+    auto bottom_right =
       visible_projection.GeoToScreen(buffer_projection.ScreenToGeo(buffer_width,
                                                                    buffer_height));
 

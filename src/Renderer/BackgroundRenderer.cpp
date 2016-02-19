@@ -22,27 +22,15 @@ Copyright_License {
 */
 
 #include "BackgroundRenderer.hpp"
-#include "Terrain/WeatherTerrainRenderer.hpp"
+#include "Terrain/TerrainRenderer.hpp"
 #include "Projection/WindowProjection.hpp"
 #include "Screen/Canvas.hpp"
 #include "NMEA/Derived.hpp"
 
-static constexpr Angle DEFAULT_SHADING_ANGLE = Angle::Degrees(-45);
+const Angle BackgroundRenderer::DEFAULT_SHADING_ANGLE = Angle::Degrees(-45);
 
-BackgroundRenderer::BackgroundRenderer()
-  :terrain(nullptr),
-   weather(nullptr),
-   renderer(nullptr),
-   shading_angle(DEFAULT_SHADING_ANGLE)
-{
-}
-
-void
-BackgroundRenderer::Reset()
-{
-  delete renderer;
-  renderer = nullptr;
-}
+BackgroundRenderer::BackgroundRenderer() {}
+BackgroundRenderer::~BackgroundRenderer() {}
 
 void
 BackgroundRenderer::Flush()
@@ -55,14 +43,7 @@ void
 BackgroundRenderer::SetTerrain(const RasterTerrain *_terrain)
 {
   terrain = _terrain;
-  Reset();
-}
-
-void
-BackgroundRenderer::SetWeather(const RasterWeatherCache *_weather)
-{
-  weather = _weather;
-  Reset();
+  renderer.reset();
 }
 
 void
@@ -70,31 +51,19 @@ BackgroundRenderer::Draw(Canvas& canvas,
                          const WindowProjection& proj,
                          const TerrainRendererSettings &terrain_settings)
 {
-  if (terrain == nullptr) {
-    // terrain may have been re-set, so may need new renderer
-    Reset();
-    canvas.ClearWhite();
-    return;
-  }
-  if (!terrain_settings.enable) {
-    canvas.ClearWhite();
-    return;
-  }
+  canvas.ClearWhite();
 
-  if (!renderer) {
-    // defer creation until first draw because
-    // the buffer size, smoothing etc is set by the
-    // loaded terrain properties
-    if (weather != nullptr) {
-      renderer = new WeatherTerrainRenderer(*terrain, *weather);
-    } else {
-      renderer = new TerrainRenderer(*terrain);
-    }
-  }
+  if (terrain_settings.enable && terrain != nullptr) {
+    if (!renderer)
+      // defer creation until first draw because
+      // the buffer size, smoothing etc is set by the
+      // loaded terrain properties
+      renderer.reset(new TerrainRenderer(*terrain));
 
-  renderer->SetSettings(terrain_settings);
-  renderer->Generate(proj, shading_angle);
-  renderer->Draw(canvas, proj);
+    renderer->SetSettings(terrain_settings);
+    if (renderer->Generate(proj, shading_angle))
+      renderer->Draw(canvas, proj);
+  }
 }
 
 void
@@ -102,18 +71,21 @@ BackgroundRenderer::SetShadingAngle(const WindowProjection& projection,
                                     const TerrainRendererSettings &settings,
                                     const DerivedInfo &calculated)
 {
+  Angle angle;
+
   if (settings.slope_shading == SlopeShading::WIND &&
       calculated.wind_available &&
       calculated.wind.norm >= 0.5)
-    SetShadingAngle(projection, calculated.wind.bearing);
+    angle = calculated.wind.bearing;
 
   else if (settings.slope_shading == SlopeShading::SUN &&
            calculated.sun_data_available)
-    SetShadingAngle(projection, calculated.sun_azimuth);
+    angle = calculated.sun_azimuth;
 
   else
-    SetShadingAngle(projection, DEFAULT_SHADING_ANGLE);
+    angle = DEFAULT_SHADING_ANGLE;
 
+  SetShadingAngle(projection, angle);
 }
 
 void

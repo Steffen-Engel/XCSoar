@@ -24,6 +24,8 @@ Copyright_License {
 #ifndef XCSOAR_UNCOMPRESSED_IMAGE_HPP
 #define XCSOAR_UNCOMPRESSED_IMAGE_HPP
 
+#include "Screen/Point.hpp"
+
 #include <memory>
 
 #include <stdint.h>
@@ -63,6 +65,8 @@ private:
   std::unique_ptr<uint8_t[]> data;
 
 public:
+  UncompressedImage() = default;
+
   UncompressedImage(Format _format, unsigned _pitch,
                     unsigned _width, unsigned _height,
                     std::unique_ptr<uint8_t[]> &&_data,
@@ -74,14 +78,11 @@ public:
   UncompressedImage(UncompressedImage &&other) = default;
   UncompressedImage(const UncompressedImage &other) = delete;
 
+  UncompressedImage &operator=(UncompressedImage &&src) = default;
   UncompressedImage &operator=(const UncompressedImage &other) = delete;
 
-  static UncompressedImage Invalid() {
-    return UncompressedImage(Format::INVALID, 0, 0, 0, nullptr);
-  }
-
-  bool IsVisible() const {
-    return format != Format::INVALID;
+  bool IsDefined() const {
+    return !!data;
   }
 
   Format GetFormat() const {
@@ -94,6 +95,10 @@ public:
 
   unsigned GetPitch() const {
     return pitch;
+  }
+
+  PixelSize GetSize() const {
+    return {width, height};
   }
 
   unsigned GetWidth() const {

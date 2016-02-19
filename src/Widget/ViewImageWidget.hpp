@@ -25,28 +25,33 @@ Copyright_License {
 #define XCSOAR_VIEW_IMAGE_WIDGET_HPP
 
 #include "WindowWidget.hpp"
-#include "Form/Draw.hpp"
 
 class Bitmap;
 
 /**
- * A widget which displays an image (a #Bitmap instance).
+ * A widget which displays an image (a #Bitmap instance which is
+ * managed by the caller).
  */
 class ViewImageWidget : public WindowWidget {
-  const Bitmap &bitmap;
-  WndOwnerDrawFrame view;
+  const Bitmap *bitmap;
 
 public:
-  explicit ViewImageWidget(const Bitmap &_bitmap)
+  explicit ViewImageWidget(const Bitmap *_bitmap=nullptr)
     :bitmap(_bitmap) {}
+
+  explicit ViewImageWidget(const Bitmap &_bitmap)
+    :bitmap(&_bitmap) {}
+
+  void SetBitmap(const Bitmap *_bitmap);
+
+  void SetBitmap(const Bitmap &_bitmap) {
+    SetBitmap(&_bitmap);
+  }
 
 protected:
   /* virtual methods from class Widget */
   void Prepare(ContainerWindow &parent, const PixelRect &rc) override;
   void Unprepare() override;
-
-private:
-  void OnImagePaint(Canvas &canvas, const PixelRect &rc);
 };
 
 #endif

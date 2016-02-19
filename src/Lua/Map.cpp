@@ -135,7 +135,7 @@ l_map_pancursor(lua_State *L)
   if (!projection.IsValid())
     return 0;
 
-  RasterPoint pt = projection.GetScreenOrigin();
+  auto pt = projection.GetScreenOrigin();
   pt.x -= dx * int(projection.GetScreenWidth()) / 4;
   pt.y -= dy * int(projection.GetScreenHeight()) / 4;
   map_window->SetLocation(projection.ScreenToGeo(pt));
@@ -194,8 +194,8 @@ l_map_zoom(lua_State *L)
  
   auto vmin = CommonInterface::GetComputerSettings().polar.glide_polar_task.GetVMin();
   auto scale_2min_distance = vmin * 12;
-  const fixed scale_100m = fixed(10);
-  const fixed scale_1600km = fixed(1600*100);
+  constexpr double scale_100m = 10;
+  constexpr double scale_1600km = 1600 * 100;
   auto minreasonable = displayMode == DisplayMode::CIRCLING
     ? scale_100m
     : std::max(scale_100m, scale_2min_distance);

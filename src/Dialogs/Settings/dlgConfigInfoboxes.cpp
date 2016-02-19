@@ -30,10 +30,7 @@ Copyright_License {
 #include "Form/Button.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Screen/SingleWindow.hpp"
-#include "Event/KeyCode.hpp"
 #include "Form/DataField/Enum.hpp"
-#include "Form/DataField/String.hpp"
 #include "Form/DataField/Listener.hpp"
 #include "InfoBoxes/InfoBoxSettings.hpp"
 #include "InfoBoxes/InfoBoxLayout.hpp"
@@ -42,7 +39,6 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "Util/StringAPI.hxx"
 #include "Util/StaticArray.hxx"
-#include "Compiler.h"
 
 #include <assert.h>
 
@@ -63,8 +59,8 @@ public:
 
 protected:
   /* virtual methods from class Window */
-  virtual bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseDouble(PixelScalar x, PixelScalar y) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseDouble(PixelPoint p) override;
 
   /* virtual methods from class PaintWindow */
   virtual void OnPaint(Canvas &canvas) override;
@@ -295,7 +291,6 @@ InfoBoxesConfigWidget::Prepare(ContainerWindow &parent,
                       button_style, dialog, mrOK);
 
   WindowStyle preview_style;
-  preview_style.EnableDoubleClicks();
   preview_style.Hide();
 
   previews.resize(layout.info_boxes.count);
@@ -392,14 +387,14 @@ InfoBoxesConfigWidget::SetCurrentInfoBox(unsigned _current_preview)
 }
 
 bool
-InfoBoxPreview::OnMouseDown(PixelScalar x, PixelScalar y)
+InfoBoxPreview::OnMouseDown(PixelPoint p)
 {
   parent->SetCurrentInfoBox(i);
   return true;
 }
 
 bool
-InfoBoxPreview::OnMouseDouble(PixelScalar x, PixelScalar y)
+InfoBoxPreview::OnMouseDouble(PixelPoint p)
 {
   parent->BeginEditing();
   return true;

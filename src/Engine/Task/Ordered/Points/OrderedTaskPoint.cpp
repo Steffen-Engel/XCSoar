@@ -29,7 +29,6 @@
 #include "Task/ObservationZones/Boundary.hpp"
 #include "Geo/GeoBounds.hpp"
 #include "Geo/Flat/FlatProjection.hpp"
-#include "Task/Visitors/TaskPointVisitor.hpp"
 #include "Geo/Math.hpp"
 
 #include <assert.h>
@@ -126,7 +125,7 @@ OrderedTaskPoint::CheckEnterTransition(const AircraftState &ref_now,
     TransitionConstraint(ref_now.location, ref_last.location);
 }
 
-fixed
+double
 OrderedTaskPoint::DoubleLegDistance(const GeoPoint &ref) const
 {
   assert(tp_previous);

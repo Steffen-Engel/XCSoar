@@ -30,6 +30,7 @@ Copyright_License {
 #include "Task/ProtectedTaskManager.hpp"
 #include "Interface.hpp"
 #include "Computer/GlideComputer.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"
 #include "Engine/Task/ObservationZones/ObservationZonePoint.hpp"
@@ -195,7 +196,7 @@ TargetMapWindow::OnPaintBuffer(Canvas &canvas)
 #endif
 
   // Calculate screen position of the aircraft
-  const RasterPoint aircraft_pos = projection.GeoToScreen(Basic().location);
+  const auto aircraft_pos = projection.GeoToScreen(Basic().location);
 
   // reset label over-write preventer
   label_block.reset();

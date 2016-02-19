@@ -45,7 +45,6 @@ Copyright_License {
 #include "Audio/Sound.hpp"
 
 #include <assert.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 struct WarningItem
@@ -377,7 +376,7 @@ AirspaceWarningListWidget::OnPaintItem(Canvas &canvas,
     _stprintf(buffer, _T("%d secs"),
               (int)solution.elapsed_time);
 
-    if (positive(solution.distance))
+    if (solution.distance > 0)
       _stprintf(buffer + _tcslen(buffer), _T(" dist %d m"),
                 (int)solution.distance);
     else {

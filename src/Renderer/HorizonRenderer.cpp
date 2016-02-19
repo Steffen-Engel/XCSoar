@@ -47,9 +47,9 @@ HorizonRenderer::Draw(Canvas &canvas, const PixelRect &rc,
   is the case or not.
   */
 
-  const RasterPoint center = rc.GetCenter();
+  const auto center = rc.GetCenter();
 
-  const int radius = std::min(rc.right - rc.left, rc.bottom - rc.top) / 2
+  const int radius = std::min(rc.GetWidth(), rc.GetHeight()) / 2
     - Layout::Scale(1);
 
   auto bank_degrees = attitude.IsBankAngleUseable()
@@ -70,23 +70,15 @@ HorizonRenderer::Draw(Canvas &canvas, const PixelRect &rc,
 
   phi = bank_degrees;
 
-  // steeper pitch to the ground: no sky to see...
-  if (pitch_degrees > double(-50.0))
-  {
   // draw sky part
   canvas.Select(look.sky_pen);
   canvas.Select(look.sky_brush);
-  canvas.DrawSegment(center.x, center.y, radius, alpha2, alpha1, true);
-  }
+  canvas.DrawSegment(center, radius, alpha2, alpha1, true);
 
-  // steeper pitch to the sky: no ground to see...
-  if (pitch_degrees < double(50.0))
-  {
   // draw ground part
   canvas.Select(look.terrain_pen);
   canvas.Select(look.terrain_brush);
-  canvas.DrawSegment(center.x, center.y, radius, alpha1, alpha2, true);
-  }
+  canvas.DrawSegment(center, radius, alpha1, alpha2, true);
 
   // draw aircraft symbol
   canvas.Select(look.aircraft_pen);

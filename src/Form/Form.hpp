@@ -82,7 +82,7 @@ protected:
   KeyDownFunction key_down_function;
   CharacterFunction character_function;
 
-  RasterPoint last_drag;
+  PixelPoint last_drag;
 
   /**
    * The OnPaint event is called when the button needs to be drawn
@@ -139,7 +139,7 @@ public:
   }
 
   unsigned GetTitleHeight() const {
-    return title_rect.bottom - title_rect.top;
+    return title_rect.GetHeight();
   }
 
   void SetForceOpen(bool _force) {
@@ -177,9 +177,9 @@ public:
   void OnResize(PixelSize new_size) override;
   void OnDestroy() override;
 
-  bool OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys) override;
-  bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  bool OnMouseUp(PixelScalar x, PixelScalar y) override;
+  bool OnMouseMove(PixelPoint p, unsigned keys) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseUp(PixelPoint p) override;
   void OnCancelMode() override;
 
 #ifdef WIN32

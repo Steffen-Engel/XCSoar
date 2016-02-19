@@ -24,7 +24,6 @@ Copyright_License {
 #include "Settings.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "OS/Clock.hpp"
-#include "Asset.hpp"
 #include "Atmosphere/Temperature.hpp"
 
 void
@@ -66,7 +65,6 @@ ComputerSettings::SetDefaults()
   wind.SetDefaults();
   polar.SetDefaults();
   team_code.SetDefaults();
-  voice.SetDefaults();
   poi.SetDefaults();
   features.SetDefaults();
   circling.SetDefaults();

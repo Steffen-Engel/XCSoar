@@ -35,9 +35,6 @@ Copyright_License {
 GlueMapWindow::GlueMapWindow(const Look &look)
   :MapWindow(look.map, look.traffic),
 #ifdef ENABLE_OPENGL
-   data_timer(*this),
-#endif
-#ifdef ENABLE_OPENGL
    kinetic_timer(*this),
 #endif
    thermal_band_renderer(look.thermal_band, look.chart),
@@ -89,14 +86,6 @@ GlueMapWindow::SetTerrain(RasterTerrain *_terrain)
                         [this](){
                           SendUser(unsigned(Command::INVALIDATE));
                         });
-}
-
-void
-GlueMapWindow::Create(ContainerWindow &parent, const PixelRect &rc)
-{
-  MapWindow::Create(parent, rc);
-
-  visible_projection.SetScale(CommonInterface::GetMapSettings().cruise_scale);
 }
 
 void
@@ -218,15 +207,6 @@ GlueMapWindow::QuickRedraw()
      trigger that now */
   draw_thread->TriggerRedraw();
 #endif
-}
-
-/**
- * This idle function allows progressive scanning of visibility etc
- */
-bool
-GlueMapWindow::Idle()
-{
-  return render_projection.IsValid() && UpdateWeather();
 }
 
 bool

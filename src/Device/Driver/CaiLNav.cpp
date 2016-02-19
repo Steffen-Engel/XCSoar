@@ -29,8 +29,6 @@ Copyright_License {
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
 #include "Units/Units.hpp"
-#include "Units/Unit.hpp"
-#include "LogFile.hpp"
 
 static void
 FormatLatitude(char *buffer, size_t buffer_size, Angle latitude )
@@ -142,7 +140,7 @@ FormatGPRMB(char *buffer, size_t buffer_size, const GeoPoint& here,
     return false;
 
   const GeoVector vector(here, destination);
-  const bool has_arrived = vector.distance < fixed(1000); // < 1km ?
+  const bool has_arrived = vector.distance < 1000; // < 1km ?
 
   snprintf(buffer, buffer_size, "GPRMB,%c,,,,,,,,,%06.1f,%04.1f,%c",
            here.IsValid() ? 'A' : 'V',

@@ -7,6 +7,20 @@ from build.freetype import FreeTypeProject
 from build.sdl2 import SDL2Project
 from build.lua import LuaProject
 
+glibc = AutotoolsProject(
+    'http://mirror.netcologne.de/gnu/libc/glibc-2.22.tar.xz',
+    'e51e02bf552a0a1fbbdc948fb2f5e83c',
+    'include/unistd.h',
+    [
+        '--enable-static-nss',
+        '--enable-kernel=2.6.35',
+        '--disable-werror',
+        '--disable-build-nscd',
+        '--disable-nscd',
+    ],
+    shared=True,
+)
+
 boost = BoostProject(
     'http://netcologne.dl.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.bz2',
     '65a840e1a0b13a558ff19eeb2c4f0cbe',
@@ -32,8 +46,8 @@ freetype = FreeTypeProject(
 )
 
 curl = AutotoolsProject(
-    'http://curl.haxx.se/download/curl-7.46.0.tar.lzma',
-    'f845c513830d38c1b7ac39a98c1c2b11',
+    'http://curl.haxx.se/download/curl-7.47.0.tar.lzma',
+    'a6a400c4d6de843d13ffbbb39f4d8173',
     'lib/libcurl.a',
     [
         '--disable-shared', '--enable-static',
@@ -67,8 +81,8 @@ proj = AutotoolsProject(
 )
 
 libpng = AutotoolsProject(
-    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.20.tar.xz',
-    '3968acb7c66ef81a9dab867f35d0eb4b',
+    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.21.tar.xz',
+    '3bacb4728f6694a64ad9052769d6a4ce',
     'lib/libpng.a',
     [
         '--disable-shared', '--enable-static',

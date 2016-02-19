@@ -34,7 +34,6 @@ Copyright_License {
 #include "Form/Button.hpp"
 #include "Form/LambdaActionListener.hpp"
 #include "Screen/Layout.hpp"
-#include "Event/KeyCode.hpp"
 #include "Profile/Profile.hpp"
 #include "LogFile.hpp"
 #include "Util/Macros.hpp"
@@ -167,7 +166,7 @@ class ConfigurationExtraButtons final
     PixelRect expert, button2, button1;
 
     Layout(const PixelRect &rc):expert(rc), button2(rc), button1(rc) {
-      const unsigned height = rc.bottom - rc.top;
+      const unsigned height = rc.GetHeight();
       const unsigned max_control_height = ::Layout::GetMaximumControlHeight();
 
       if (height >= 3 * max_control_height) {

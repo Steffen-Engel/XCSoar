@@ -23,15 +23,12 @@ Copyright_License {
 
 #include "Gauge/GaugeVario.hpp"
 #include "Look/VarioLook.hpp"
-#include "Look/UnitsLook.hpp"
 #include "Screen/Canvas.hpp"
-#include "Screen/UnitSymbol.hpp"
 #include "Screen/Layout.hpp"
+#include "Renderer/UnitSymbolRenderer.hpp"
 #include "Math/FastRotation.hpp"
 #include "Units/Units.hpp"
 #include "Util/Clamp.hpp"
-
-#include <algorithm>
 
 #define DELTA_V_STEP 4.
 #define DELTA_V_LIMIT 16.
@@ -40,9 +37,8 @@ Copyright_License {
 
 GaugeVario::GaugeVario(const FullBlackboard &_blackboard,
                        ContainerWindow &parent, const VarioLook &_look,
-                       const UnitsLook &_units_look,
                        PixelRect rc, const WindowStyle style)
-  :blackboard(_blackboard), look(_look), units_look(_units_look),
+  :blackboard(_blackboard), look(_look),
    nlength0(Layout::Scale(15)),
    nlength1(Layout::Scale(6)),
    nwidth(Layout::Scale(4)),
@@ -64,8 +60,7 @@ void
 GaugeVario::OnPaintBuffer(Canvas &canvas)
 {
   const PixelRect rc = GetClientRect();
-  const unsigned width = rc.right - rc.left;
-  const unsigned height = rc.bottom - rc.top;
+  const unsigned width = rc.GetWidth(), height = rc.GetHeight();
 
   if (!IsPersistent() || !layout_initialised) {
     unsigned value_height = 4 + look.value_font.GetCapitalHeight()
@@ -173,7 +168,7 @@ GaugeVario::OnPaintBuffer(Canvas &canvas)
 }
 
 gcc_const
-static RasterPoint
+static PixelPoint
 TransformRotatedPoint(IntPoint2D pt, IntPoint2D offset)
 {
   return { pt.x + offset.x, (pt.y * 112 / 100) + offset.y + 1 };
@@ -182,8 +177,8 @@ TransformRotatedPoint(IntPoint2D pt, IntPoint2D offset)
 void
 GaugeVario::MakePolygon(const int i)
 {
-  RasterPoint *bit = getPolygon(i);
-  RasterPoint *bline = &lines[i + gmax];
+  auto *bit = getPolygon(i);
+  auto *bline = &lines[i + gmax];
 
   const FastIntegerRotation r(Angle::Degrees(i));
 
@@ -198,7 +193,7 @@ GaugeVario::MakePolygon(const int i)
                                  offset);
 }
 
-RasterPoint *
+BulkPixelPoint *
 GaugeVario::getPolygon(int i)
 {
   return polys + (i + gmax) * 3;
@@ -404,10 +399,18 @@ GaugeVario::RenderValue(Canvas &canvas, int x, int y,
 
   if (!IsPersistent() ||
       value_info->last_unit != Units::current.vertical_speed_unit) {
-    value_info->last_unit = Units::current.vertical_speed_unit;
-    const UnitSymbol *unit_symbol = units_look.GetSymbol(value_info->last_unit);
-    unit_symbol->Draw(canvas, x - Layout::Scale(5), value_info->rc.top,
-                      look.background_color, COLOR_GRAY);
+    auto unit = value_info->last_unit = Units::current.vertical_speed_unit;
+
+    const int ascent_height = look.value_font.GetAscentHeight();
+    const int unit_height =
+      UnitSymbolRenderer::GetAscentHeight(look.unit_font, unit);
+
+    canvas.Select(look.unit_font);
+    canvas.SetTextColor(COLOR_GRAY);
+    UnitSymbolRenderer::Draw(canvas,
+                             PixelPoint(x - Layout::Scale(5),
+                                        value_info->text_position.y + ascent_height - unit_height),
+                             unit, look.unit_fraction_pen);
   }
 }
 
@@ -468,7 +471,7 @@ GaugeVario::RenderSpeedToFly(Canvas &canvas, int x, int y)
     canvas.SelectNullPen();
 
     if (look.colors) {
-      if (positive(v_diff)) {
+      if (v_diff > 0) {
         // too slow
         canvas.Select(look.sink_brush);
       } else {
@@ -481,17 +484,17 @@ GaugeVario::RenderSpeedToFly(Canvas &canvas, int x, int y)
         canvas.SelectBlackBrush();
     }
 
-    if (positive(v_diff)) {
+    if (v_diff > 0) {
       // too slow
       y = ybottom;
       y += YOFFSET;
 
-      while (positive(v_diff)) {
+      while (v_diff > 0) {
         if (v_diff > DELTA_V_STEP) {
           canvas.Rectangle(x, y,
                            x + arrow_x_size * 2 + 1, y + arrow_y_size - 1);
         } else {
-          RasterPoint arrow[3];
+          BulkPixelPoint arrow[3];
           arrow[0].x = x;
           arrow[0].y = y;
           arrow[1].x = x + arrow_x_size;
@@ -503,17 +506,17 @@ GaugeVario::RenderSpeedToFly(Canvas &canvas, int x, int y)
         v_diff -= DELTA_V_STEP;
         y += arrow_y_size;
       }
-    } else if (negative(v_diff)) {
+    } else if (v_diff < 0) {
       // too fast
       y = ytop;
       y -= YOFFSET;
 
-      while (negative(v_diff)) {
+      while (v_diff < 0) {
         if (v_diff < -DELTA_V_STEP) {
           canvas.Rectangle(x, y + 1,
                            x + arrow_x_size * 2 + 1, y - arrow_y_size + 2);
         } else {
-          RasterPoint arrow[3];
+          BulkPixelPoint arrow[3];
           arrow[0].x = x;
           arrow[0].y = y;
           arrow[1].x = x + arrow_x_size;
@@ -535,8 +538,8 @@ GaugeVario::RenderBallast(Canvas &canvas)
   static int last_ballast = -1;
   static PixelRect label_rect = {-1,-1,-1,-1};
   static PixelRect value_rect = {-1,-1,-1,-1};
-  static RasterPoint label_pos = {-1,-1};
-  static RasterPoint value_pos = {-1,-1};
+  static PixelPoint label_pos = {-1,-1};
+  static PixelPoint value_pos = {-1,-1};
 
   if (!ballast_initialised) { // ontime init, origin and background rect
     const PixelRect rc = GetClientRect();
@@ -636,8 +639,8 @@ GaugeVario::RenderBugs(Canvas &canvas)
   static int last_bugs = -1;
   static PixelRect label_rect = {-1,-1,-1,-1};
   static PixelRect value_rect = {-1,-1,-1,-1};
-  static RasterPoint label_pos = {-1,-1};
-  static RasterPoint value_pos = {-1,-1};
+  static PixelPoint label_pos = {-1,-1};
+  static PixelPoint value_pos = {-1,-1};
 
   if (!bugs_initialised) {
     const PixelRect rc = GetClientRect();

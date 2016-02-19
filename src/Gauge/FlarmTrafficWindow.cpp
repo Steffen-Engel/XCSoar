@@ -149,7 +149,7 @@ FlarmTrafficWindow::PrevTarget()
  * to select the next one
  */
 void
-FlarmTrafficWindow::UpdateSelector(const FlarmId id, const RasterPoint pt)
+FlarmTrafficWindow::UpdateSelector(const FlarmId id, const PixelPoint pt)
 {
   // Update #selection
   if (!id.IsDefined())
@@ -158,11 +158,11 @@ FlarmTrafficWindow::UpdateSelector(const FlarmId id, const RasterPoint pt)
     SetTarget(id);
 
   // If we don't have a valid selection and we can't find
-  // a target close to to the RasterPoint we select the next one
+  // a target close to to the PixelPoint we select the next one
   // on the internal list
   if (selection < 0 && (
       pt.x < 0 || pt.y < 0 ||
-      !SelectNearTarget(pt.x, pt.y, radius * 2)) )
+      !SelectNearTarget(pt, radius * 2)) )
     NextTarget();
 }
 
@@ -187,7 +187,7 @@ FlarmTrafficWindow::Update(Angle new_direction, const TrafficList &new_data,
                            const TeamCodeSettings &new_settings)
 {
   FlarmId selection_id;
-  RasterPoint pt;
+  PixelPoint pt;
   if (!small && selection >= 0) {
     selection_id = data.list[selection].id;
     pt = sc[selection];
@@ -375,7 +375,7 @@ FlarmTrafficWindow::PaintRadarTarget(Canvas &canvas,
   }
 
   // Create an arrow polygon
-  RasterPoint Arrow[5];
+  BulkPixelPoint Arrow[5];
   if (small) {
     Arrow[0].x = -3;
     Arrow[0].y = 4;
@@ -485,7 +485,7 @@ FlarmTrafficWindow::PaintTargetInfoSmall(
   // Calculate size of the output string
   PixelSize tsize = canvas.CalcTextSize(buffer);
 
-  UPixelScalar dist = Layout::FastScale(traffic.HasAlarm() ? 12 : 8);
+  unsigned dist = Layout::FastScale(traffic.HasAlarm() ? 12 : 8);
 
   // Draw string
   canvas.DrawText(sc[i].x + dist, sc[i].y - tsize.cy / 2, buffer);
@@ -495,7 +495,7 @@ FlarmTrafficWindow::PaintTargetInfoSmall(
   canvas.SelectNullPen();
 
   // Prepare the triangular polygon
-  RasterPoint triangle[4];
+  BulkPixelPoint triangle[4];
   triangle[0].x = 0;
   triangle[0].y = -4;
   triangle[1].x = 3;
@@ -717,7 +717,7 @@ FlarmTrafficWindow::OnPaint(Canvas &canvas)
 }
 
 bool
-FlarmTrafficWindow::SelectNearTarget(int x, int y, int max_distance)
+FlarmTrafficWindow::SelectNearTarget(PixelPoint p, int max_distance)
 {
   int min_distance = 99999;
   int min_id = -1;
@@ -727,8 +727,7 @@ FlarmTrafficWindow::SelectNearTarget(int x, int y, int max_distance)
     if (!data.list[i].IsDefined())
       continue;
 
-    int distance_sq = (x - sc[i].x) * (x - sc[i].x) +
-                      (y - sc[i].y) * (y - sc[i].y);
+    int distance_sq = (p - sc[i]).MagnitudeSquared();
 
     if (distance_sq > min_distance
         || distance_sq > max_distance * max_distance)

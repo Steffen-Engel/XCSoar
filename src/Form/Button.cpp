@@ -23,7 +23,6 @@
 
 #include "Form/Button.hpp"
 #include "Form/ActionListener.hpp"
-#include "Look/ButtonLook.hpp"
 #include "Event/KeyCode.hpp"
 #include "Asset.hpp"
 #include "Renderer/TextButtonRenderer.hpp"
@@ -173,17 +172,17 @@ Button::OnKeyDown(unsigned key_code)
 }
 
 bool
-Button::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+Button::OnMouseMove(PixelPoint p, unsigned keys)
 {
   if (dragging) {
-    SetDown(IsInside(x, y));
+    SetDown(IsInside(p));
     return true;
   } else
-    return PaintWindow::OnMouseMove(x, y, keys);
+    return PaintWindow::OnMouseMove(p, keys);
 }
 
 bool
-Button::OnMouseDown(PixelScalar x, PixelScalar y)
+Button::OnMouseDown(PixelPoint p)
 {
   if (IsTabStop())
     SetFocus();
@@ -195,7 +194,7 @@ Button::OnMouseDown(PixelScalar x, PixelScalar y)
 }
 
 bool
-Button::OnMouseUp(PixelScalar x, PixelScalar y)
+Button::OnMouseUp(PixelPoint p)
 {
   if (!dragging)
     return true;

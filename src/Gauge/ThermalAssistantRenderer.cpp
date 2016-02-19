@@ -36,10 +36,10 @@
 #include "Screen/OpenGL/Scope.hpp"
 #endif
 
-RasterPoint
+PixelPoint
 ThermalAssistantRenderer::LiftPoints::GetAverage() const
 {
-  RasterPoint avg = { 0, 0 };
+  PixelPoint avg(0, 0);
 
   for (auto it = begin(), it_end = end(); it != it_end; ++it) {
     avg.x += it->x;
@@ -103,7 +103,7 @@ ThermalAssistantRenderer::CalculateLiftPoints(LiftPoints &lift_points,
 double
 ThermalAssistantRenderer::NormalizeLift(double lift, double max_lift)
 {
-  lift = (lift + max_lift) / Double(max_lift);
+  lift = (lift + max_lift) / (2 * max_lift);
   return Clamp(lift, 0., 1.);
 }
 
@@ -112,7 +112,7 @@ ThermalAssistantRenderer::PaintRadarPlane(Canvas &canvas) const
 {
   canvas.Select(look.plane_pen);
 
-  PixelScalar x = mid.x + (circling.TurningLeft() ? radius : -radius);
+  int x = mid.x + (circling.TurningLeft() ? radius : -radius);
 
   canvas.DrawLine(x + Layout::FastScale(small ? 5 : 10),
               mid.y - Layout::FastScale(small ? 1 : 2),
@@ -200,7 +200,7 @@ ThermalAssistantRenderer::PaintNotCircling(Canvas &canvas) const
 void
 ThermalAssistantRenderer::UpdateLayout(const PixelRect &rc)
 {
-  radius = std::min(rc.right - rc.left, rc.bottom - rc.top) / 2 - padding;
+  radius = std::min(rc.GetWidth(), rc.GetHeight()) / 2 - padding;
   mid = rc.GetCenter();
 }
 

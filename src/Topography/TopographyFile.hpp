@@ -27,7 +27,7 @@ Copyright_License {
 
 #include "shapelib/mapserver.h"
 #include "Geo/GeoBounds.hpp"
-#include "Util/AllocatedArray.hpp"
+#include "Util/AllocatedArray.hxx"
 #include "Util/Serial.hpp"
 #include "Screen/Color.hpp"
 #include "ResourceId.hpp"
@@ -36,8 +36,6 @@ Copyright_License {
 #ifdef ENABLE_OPENGL
 #include "XShapePoint.hpp"
 #endif
-
-#include <forward_list>
 
 #include <assert.h>
 

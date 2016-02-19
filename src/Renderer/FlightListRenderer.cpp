@@ -40,14 +40,14 @@ FlightListRenderer::Draw(Canvas &canvas, PixelRect rc)
   canvas.SetBackgroundTransparent();
 
   if (flights.empty()) {
-    RasterPoint center = rc.GetCenter();
+    auto center = rc.GetCenter();
     const TCHAR *text = _T("No flights");
     PixelSize size = canvas.CalcTextSize(text);
     canvas.DrawText(center.x - size.cx / 2, center.y - size.cy / 2, text);
     return;
   }
 
-  const unsigned height = rc.bottom - rc.top;
+  const unsigned height = rc.GetHeight();
 
   const unsigned padding = Layout::GetTextPadding();
   const unsigned font_height = font.GetHeight();

@@ -29,7 +29,6 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Device/Vega/VegaParametersWidget.cpp \
 	$(SRC)/Dialogs/Device/Vega/VegaConfigurationDialog.cpp \
 	$(SRC)/Dialogs/Device/Vega/VegaDemoDialog.cpp \
-	$(SRC)/Dialogs/Device/Vega/VoiceSettingsDialog.cpp \
 	$(SRC)/Dialogs/Device/Vega/SwitchesDialog.cpp \
 	$(SRC)/Dialogs/Device/FLARM/ConfigWidget.cpp \
 	$(SRC)/Dialogs/Device/ManageyAllDialog.cpp \
@@ -204,6 +203,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Airspace/AirspaceComputerSettings.cpp \
 	$(SRC)/Airspace/NearestAirspace.cpp \
 	$(SRC)/Renderer/AirspaceRendererSettings.cpp \
+	$(SRC)/Renderer/GeoBitmapRenderer.cpp \
 	\
 	$(SRC)/Operation/Operation.cpp \
 	$(SRC)/Operation/ProxyOperationEnvironment.cpp \
@@ -461,6 +461,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Renderer/WaveRenderer.cpp \
 	$(SRC)/Projection/ChartProjection.cpp \
 	$(SRC)/MapWindow/Items/MapItem.cpp \
+	$(SRC)/MapWindow/Items/OverlayMapItem.cpp \
 	$(SRC)/MapWindow/Items/List.cpp \
 	$(SRC)/MapWindow/Items/Builder.cpp \
 	$(SRC)/MapWindow/MapWindow.cpp \
@@ -486,6 +487,11 @@ XCSOAR_SOURCES := \
 	$(SRC)/UIUtil/GestureManager.cpp \
 	$(SRC)/UIUtil/TrackingGestureManager.cpp \
 	$(SRC)/DrawThread.cpp \
+	\
+	$(SRC)/Weather/Rasp/RaspStore.cpp \
+	$(SRC)/Weather/Rasp/RaspCache.cpp \
+	$(SRC)/Weather/Rasp/RaspRenderer.cpp \
+	$(SRC)/Weather/Rasp/RaspStyle.cpp \
 	\
 	$(SRC)/Computer/BasicComputer.cpp \
 	$(SRC)/Computer/GroundSpeedComputer.cpp \
@@ -580,8 +586,6 @@ XCSOAR_SOURCES := \
 	$(SRC)/OS/LogError.cpp \
 	$(SRC)/Version.cpp \
 	$(SRC)/Audio/Sound.cpp \
-	$(SRC)/Audio/VegaVoice.cpp \
-	$(SRC)/Audio/VegaVoiceSettings.cpp \
 	$(SRC)/Compatibility/fmode.c \
 	$(SRC)/Profile/Profile.cpp \
 	$(SRC)/Profile/Screen.cpp \
@@ -623,7 +627,6 @@ XCSOAR_SOURCES := \
 	$(SRC)/Math/SunEphemeris.cpp \
 	\
 	$(SRC)/Screen/Layout.cpp \
-	$(SRC)/Screen/UnitSymbol.cpp \
 	$(SRC)/Screen/Ramp.cpp \
 	$(SRC)/Screen/TerminalWindow.cpp \
 	\
@@ -675,6 +678,7 @@ $(call SRC_TO_OBJ,$(SRC)/Dialogs/Inflate.cpp): CPPFLAGS += $(ZLIB_CPPFLAGS)
 
 ifeq ($(OPENGL),y)
 XCSOAR_SOURCES += \
+	$(SRC)/Dialogs/Weather/MapOverlayWidget.cpp \
 	$(SRC)/MapWindow/OverlayBitmap.cpp
 endif
 

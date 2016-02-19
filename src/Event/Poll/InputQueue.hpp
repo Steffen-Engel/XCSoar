@@ -76,12 +76,9 @@ public:
   }
 
 #ifndef USE_LIBINPUT
-  void SetMouseRotation(bool swap, bool invert_x, bool invert_y) {
-    merge_mouse.SetSwap(swap);
-    merge_mouse.SetInvert(invert_x, invert_y);
+  void SetDisplayOrientation(DisplayOrientation orientation) {
+    merge_mouse.SetDisplayOrientation(orientation);
   }
-
-  void SetMouseRotation(DisplayOrientation orientation);
 #endif
 
   bool HasPointer() const {
@@ -102,11 +99,11 @@ public:
   }
 #endif
 
-  RasterPoint GetMousePosition() const {
+  PixelPoint GetMousePosition() const {
 #ifdef USE_LIBINPUT
-    return { int(libinput_handler.GetX()), int(libinput_handler.GetY()) };
+    return PixelPoint(libinput_handler.GetX(), libinput_handler.GetY());
 #else
-    return { int(merge_mouse.GetX()), int(merge_mouse.GetY()) };
+    return merge_mouse.GetPosition();
 #endif
   }
 

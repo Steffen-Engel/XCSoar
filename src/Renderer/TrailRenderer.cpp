@@ -112,7 +112,7 @@ GetMinMax(TrailSettings::Type type, const TracePointVector &trace)
 void
 TrailRenderer::Draw(Canvas &canvas, const TraceComputer &trace_computer,
                     const WindowProjection &projection, unsigned min_time,
-                    bool enable_traildrift, const RasterPoint pos,
+                    bool enable_traildrift, const PixelPoint pos,
                     const NMEAInfo &basic, const DerivedInfo &calculated,
                     const TrailSettings &settings)
 {
@@ -142,7 +142,7 @@ TrailRenderer::Draw(Canvas &canvas, const TraceComputer &trace_computer,
 
   const GeoBounds bounds = projection.GetScreenBounds().Scale(4);
 
-  RasterPoint last_point = RasterPoint(0, 0);
+  PixelPoint last_point(0, 0);
   bool last_valid = false;
   for (auto it = trace.begin(), end = trace.end(); it != end; ++it) {
     const GeoPoint gp = enable_traildrift
@@ -155,7 +155,7 @@ TrailRenderer::Draw(Canvas &canvas, const TraceComputer &trace_computer,
       continue;
     }
 
-    RasterPoint pt = projection.GeoToScreen(gp);
+    auto pt = projection.GeoToScreen(gp);
 
     if (last_valid) {
       if (settings.type == TrailSettings::Type::ALTITUDE) {
@@ -217,7 +217,7 @@ TrailRenderer::Draw(Canvas &canvas, const TraceComputer &trace_computer,
     Draw(canvas, projection);
 }
 
-RasterPoint *
+BulkPixelPoint *
 TrailRenderer::Prepare(unsigned n)
 {
   points.GrowDiscard(n);
@@ -245,7 +245,7 @@ TrailRenderer::DrawTraceVector(Canvas &canvas, const Projection &projection,
                                const ContestTraceVector &trace)
 {
   const unsigned n = trace.size();
-  RasterPoint *p = Prepare(n);
+  auto *p = Prepare(n);
 
   for (const auto &i : trace)
     *p++ = projection.GeoToScreen(i.GetLocation());
@@ -261,7 +261,7 @@ TrailRenderer::DrawTriangle(Canvas &canvas, const Projection &projection,
 
   const unsigned start = 1, n = 3;
 
-  RasterPoint *p = Prepare(n);
+  auto *p = Prepare(n);
 
   for (unsigned i = start; i < start + n; ++i)
     *p++ = projection.GeoToScreen(trace[i].GetLocation());
@@ -274,7 +274,7 @@ TrailRenderer::DrawTraceVector(Canvas &canvas, const Projection &projection,
                                const TracePointVector &trace)
 {
   const unsigned n = trace.size();
-  RasterPoint *p = Prepare(n);
+  auto *p = Prepare(n);
 
   for (const auto &i : trace)
     *p++ = projection.GeoToScreen(i.GetLocation());

@@ -24,9 +24,11 @@ Copyright_License {
 #ifndef XCSOAR_MAP_OVERLAY_BITMAP_HPP
 #define XCSOAR_MAP_OVERLAY_BITMAP_HPP
 
+#include "Overlay.hpp"
 #include "Screen/Bitmap.hpp"
 #include "Geo/Quadrilateral.hpp"
 #include "Geo/GeoBounds.hpp"
+#include "Util/tstring.hpp"
 
 #include <stdexcept>
 
@@ -36,9 +38,9 @@ class WindowProjection;
 /**
  * A georeferenced bitmap that can be rendered in the #MapWindow.
  *
- * @see MapWindow:SetOverlayBitmap()
+ * @see MapWindow:SetOverlay()
  */
-class MapOverlayBitmap {
+class MapOverlayBitmap final : public MapOverlay {
   Bitmap bitmap;
 
   /**
@@ -56,6 +58,8 @@ class MapOverlayBitmap {
 
   float alpha = 1;
 
+  tstring label;
+
 public:
   /**
    * Load a GeoTIFF file.
@@ -65,9 +69,11 @@ public:
   /**
    * Move an existing #Bitmap with a geo reference.
    */
-  MapOverlayBitmap(Bitmap &&_bitmap, GeoQuadrilateral _bounds) noexcept
+  MapOverlayBitmap(Bitmap &&_bitmap, GeoQuadrilateral _bounds,
+                   tstring::const_pointer _label) noexcept
     :bitmap(std::move(_bitmap)), bounds(_bounds),
-     simple_bounds(bounds.GetBounds()) {}
+     simple_bounds(bounds.GetBounds()),
+     label(_label) {}
 
   /**
    * By default, this class uses the bitmap's alpha channel.  This
@@ -84,10 +90,14 @@ public:
     alpha = _alpha;
   }
 
-  /**
-   * Draw the bitmap to the given #Canvas.
-   */
-  void Draw(Canvas &canvas, const WindowProjection &projection) noexcept;
+  /* virtual methods from class MapOverlay */
+  const TCHAR *GetLabel() const override {
+    return label.c_str();
+  }
+
+  bool IsInside(GeoPoint p) const override;
+  void Draw(Canvas &canvas,
+            const WindowProjection &projection) noexcept override;
 };
 
 #endif

@@ -45,7 +45,7 @@ class DoubleClick {
 
   PeriodClock clock;
 
-  RasterPoint location;
+  PixelPoint location;
 
 public:
   /**
@@ -60,9 +60,9 @@ public:
    * Call this in the "mouse up" handler.  It will take care for
    * resetting this object when the mouse/finger has moved too much.
    */
-  void Moved(RasterPoint _location) {
+  void Moved(PixelPoint _location) {
     if (clock.IsDefined() &&
-        manhattan_distance(location, _location) > MAX_DISTANCE_PX)
+        (unsigned)ManhattanDistance(location, _location) > MAX_DISTANCE_PX)
       Reset();
   }
 
@@ -71,9 +71,9 @@ public:
    *
    * @return true if a double click was detected
    */
-  bool Check(RasterPoint _location) {
+  bool Check(PixelPoint _location) {
     const bool result = !clock.CheckAlwaysUpdate(INTERVAL_MS) &&
-      manhattan_distance(location, _location) <= MAX_DISTANCE_PX;
+      (unsigned)ManhattanDistance(location, _location) <= MAX_DISTANCE_PX;
 
     location = _location;
     return result;

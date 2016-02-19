@@ -27,12 +27,10 @@ Copyright_License {
 #include "../dlgTaskHelpers.hpp"
 #include "Dialogs/Message.hpp"
 #include "Dialogs/Waypoint/WaypointDialogs.hpp"
-#include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
 #include "Event/KeyCode.hpp"
 #include "Renderer/TwoTextRowsRenderer.hpp"
 #include "Interface.hpp"
-#include "Screen/SingleWindow.hpp"
 #include "Form/Button.hpp"
 #include "Form/List.hpp"
 #include "Widget/ListWidget.hpp"
@@ -41,8 +39,6 @@ Copyright_License {
 #include "Formatter/UserUnits.hpp"
 #include "Formatter/AngleFormatter.hpp"
 #include "Look/DialogLook.hpp"
-#include "Look/TaskLook.hpp"
-#include "Look/AirspaceLook.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/StartPoint.hpp"
 #include "Engine/Task/Ordered/Points/IntermediatePoint.hpp"
@@ -55,7 +51,6 @@ Copyright_License {
 #include "UIGlobals.hpp"
 
 #include <assert.h>
-#include <stdio.h>
 
 enum Buttons {
   EDIT = 100,
@@ -120,7 +115,7 @@ private:
   }
 
   Layout CalculateLayout(const PixelRect &rc) const {
-    const PixelScalar dx = (rc.right - rc.left) / 5;
+    const int dx = rc.GetWidth() / 5;
 
     return {
       { rc.left         , rc.top, rc.left +     dx, rc.bottom },
@@ -403,7 +398,7 @@ TaskEditPanel::OnPaintItem(Canvas &canvas, const PixelRect rc,
   assert(DrawListIndex <= ordered_task->TaskSize());
 
   const unsigned padding = Layout::GetTextPadding();
-  const unsigned line_height = rc.bottom - rc.top;
+  const unsigned line_height = rc.GetHeight();
 
   TCHAR buffer[120];
 
@@ -415,7 +410,7 @@ TaskEditPanel::OnPaintItem(Canvas &canvas, const PixelRect rc,
 
   const OrderedTaskPoint &tp = ordered_task->GetTaskPoint(DrawListIndex);
   GeoVector leg = tp.GetNominalLegVector();
-  bool show_leg_info = leg.distance > fixed(0.01);
+  bool show_leg_info = leg.distance > 0.01;
 
   PixelRect text_rc = rc;
   text_rc.left += line_height + padding;
@@ -443,8 +438,8 @@ TaskEditPanel::OnPaintItem(Canvas &canvas, const PixelRect rc,
   row_renderer.DrawFirstRow(canvas, text_rc, buffer);
 
   // Draw icon
-  const RasterPoint pt(rc.left + line_height / 2,
-                       rc.top + line_height / 2);
+  const PixelPoint pt(rc.left + line_height / 2,
+                      rc.top + line_height / 2);
 
   const unsigned radius = line_height / 2 - padding;
   OZPreviewRenderer::Draw(canvas, tp.GetObservationZone(),

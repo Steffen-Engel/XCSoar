@@ -25,8 +25,7 @@ Copyright_License {
 #define XCSOAR_TERRAIN_HEIGHT_MATRIX_HPP
 
 #include "Height.hpp"
-#include "Util/AllocatedArray.hpp"
-#include "Compiler.h"
+#include "Util/AllocatedArray.hxx"
 
 class RasterMap;
 

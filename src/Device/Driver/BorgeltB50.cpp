@@ -23,9 +23,7 @@ Copyright_License {
 
 #include "Device/Driver/BorgeltB50.hpp"
 #include "Device/Driver/CAI302/PocketNav.hpp"
-#include "Device/Parser.hpp"
 #include "Device/Driver.hpp"
-#include "Device/Port/Port.hpp"
 #include "Units/System.hpp"
 #include "NMEA/Checksum.hpp"
 #include "NMEA/Info.hpp"
@@ -33,8 +31,6 @@ Copyright_License {
 #include "Atmosphere/Temperature.hpp"
 #include "Util/Clamp.hpp"
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 
 class B50Device : public AbstractDevice {
@@ -46,9 +42,9 @@ public:
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, struct NMEAInfo &info) override;
 
-  bool PutMacCready(fixed mc, OperationEnvironment &env) override;
-  bool PutBugs(fixed bugs, OperationEnvironment &env) override;
-  bool PutBallast(fixed fraction, fixed overload,
+  bool PutMacCready(double mc, OperationEnvironment &env) override;
+  bool PutBugs(double bugs, OperationEnvironment &env) override;
+  bool PutBallast(double fraction, double overload,
                   OperationEnvironment &env) override;
 };
 
@@ -74,7 +70,7 @@ PBB50(NMEAInputLine &line, NMEAInfo &info)
   // $PBB50,0,.0,.0,0,0,1.07,0,-228*58
   // $PBB50,14,-.2,.0,196,0,.92,0,-228*71
 
-  fixed vtas, value;
+  double vtas, value;
 
   bool vtas_av = line.ReadChecked(vtas);
 
@@ -99,10 +95,10 @@ PBB50(NMEAInputLine &line, NMEAInfo &info)
   // of max performance
 
   if (line.ReadChecked(value))
-    info.settings.ProvideBugs(fixed(1) - Clamp(value, fixed(0), fixed(30)) / 100,
+    info.settings.ProvideBugs(1 - Clamp(value, 0., 30.) / 100.,
                               info.clock);
 
-  fixed ballast_overload;
+  double ballast_overload;
   if (line.ReadChecked(ballast_overload))
     info.settings.ProvideBallastOverload(ballast_overload, info.clock);
 
@@ -141,7 +137,7 @@ B50Device::ParseNMEA(const char *String, NMEAInfo &info)
 }
 
 bool
-B50Device::PutMacCready(fixed mac_cready, OperationEnvironment &env)
+B50Device::PutMacCready(double mac_cready, OperationEnvironment &env)
 {
   /* the Borgelt B800 understands the CAI302 "!g" command for
      MacCready, ballast and bugs */
@@ -150,7 +146,7 @@ B50Device::PutMacCready(fixed mac_cready, OperationEnvironment &env)
 }
 
 bool
-B50Device::PutBugs(fixed bugs, OperationEnvironment &env)
+B50Device::PutBugs(double bugs, OperationEnvironment &env)
 {
   /* the Borgelt B800 understands the CAI302 "!g" command for
      MacCready, ballast and bugs */
@@ -159,7 +155,7 @@ B50Device::PutBugs(fixed bugs, OperationEnvironment &env)
 }
 
 bool
-B50Device::PutBallast(fixed fraction, gcc_unused fixed overload,
+B50Device::PutBallast(double fraction, gcc_unused double overload,
                       OperationEnvironment &env)
 {
   /* the Borgelt B800 understands the CAI302 "!g" command for

@@ -163,7 +163,6 @@ void
 DistanceBearing(const GeoPoint &loc1, const GeoPoint &loc2,
                 double *distance, Angle *bearing)
 {
-#ifdef USE_WGS84
   const auto lon21 = loc2.longitude - loc1.longitude;
 
   auto u1 = atan((1 - FLATTENING) * loc1.latitude.tan()),
@@ -240,58 +239,6 @@ DistanceBearing(const GeoPoint &loc1, const GeoPoint &loc2,
   if (bearing != nullptr)
     *bearing = Angle::Radians(atan2(cosu2 * sin(lambda),
       cosu1 * sinu2 - sinu1 * cosu2 * cos(lambda))).AsBearing();
-
-#else
-  return DistanceBearingS(loc1, loc2, distance, bearing);
-#endif
-}
-
-double
-CrossTrackError(const GeoPoint &loc1, const GeoPoint &loc2,
-                const GeoPoint &loc3, GeoPoint *loc4)
-{
-  Angle dist_AD, crs_AD;
-  DistanceBearingS(loc1, loc3, &dist_AD, &crs_AD);
-
-  Angle dist_AB, crs_AB;
-  DistanceBearingS(loc1, loc2, &dist_AB, &crs_AB);
-
-  //  The "along track distance", ATD, the distance from A along the
-  //  course towards B to the point abeam D
-
-  const auto sindist_AD = dist_AD.sin();
-
-  // cross track distance
-  const Angle cross_track_distance =
-    EarthASin(sindist_AD * (crs_AD - crs_AB).sin());
-
-#ifdef USE_WGS84
-  const auto sc = cross_track_distance.SinCos();
-  const auto sinXTD = sc.first, cosXTD = sc.second;
-
-  const Angle along_track_distance =
-    EarthASin(Cathetus(sindist_AD, sinXTD) / cosXTD);
-
-  auto loc4_tmp = IntermediatePoint(loc1, loc2, along_track_distance, dist_AB);
-
-  if (loc4)
-    *loc4 = loc4_tmp;
-
-  return Distance(loc3, loc4_tmp);
-
-#else
-  if (loc4) {
-    const auto sc = cross_track_distance.SinCos();
-    const auto sinXTD = sc.first, cosXTD = sc.second;
-
-    const Angle along_track_distance =
-      EarthASin(Cathetus(sindist_AD, sinXTD) / cosXTD);
-
-    *loc4 = IntermediatePoint(loc1, loc2, along_track_distance, dist_AB);
-  }
-
-  return FAISphere::AngleToEarthDistance(cross_track_distance);
-#endif
 }
 
 double
@@ -326,13 +273,9 @@ ProjectedDistance(const GeoPoint &loc1, const GeoPoint &loc2,
   const Angle along_track_distance =
     EarthASin(Cathetus(sindist_AD, sinXTD) / cosXTD);
 
-#ifdef USE_WGS84
   auto projected = IntermediatePoint(loc1, loc2, along_track_distance, dist_AB);
 
   return Distance(loc1, projected);
-#else
-  return FAISphere::AngleToEarthDistance(along_track_distance);
-#endif
 }
 
 
@@ -372,7 +315,6 @@ FindLatitudeLongitude(const GeoPoint &loc, const Angle bearing,
 
   GeoPoint loc_out;
 
-#ifdef USE_WGS84
   const auto lon1 = loc.longitude.Radians();
   const auto lat1 = loc.latitude.Radians();
 
@@ -428,28 +370,6 @@ FindLatitudeLongitude(const GeoPoint &loc, const Angle bearing,
 
   loc_out.longitude = Angle::Radians(lon1 + L);
   loc_out.latitude = Angle::Radians(lat2);
-
-#else
-  const Angle distance_angle = FAISphere::EarthDistanceToAngle(distance);
-
-  const auto scd = distance_angle.SinCos();
-  const auto sin_distance = scd.first, cos_distance = scd.second;
-
-  const auto scb = bearing.SinCos();
-  const auto sin_bearing = scb.first, cos_bearing = scb.second;
-
-  const auto scl = loc.latitude.SinCos();
-  const auto sin_latitude = scl.first, cos_latitude = scl.second;
-
-  loc_out.latitude = EarthASin(SmallMult(sin_latitude, cos_distance)
-                               + SmallMult(cos_latitude, sin_distance,
-                                           cos_bearing));
-
-  loc_out.longitude = loc.longitude +
-    Angle::FromXY(cos_distance - SmallMult(sin_latitude,
-                                           loc_out.latitude.sin()),
-                  SmallMult(sin_bearing, sin_distance, cos_latitude));
-#endif
 
   loc_out.Normalize(); // ensure longitude is within -180:180
 

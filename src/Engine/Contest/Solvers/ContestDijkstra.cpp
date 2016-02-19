@@ -28,7 +28,6 @@ Copyright_License {
 
 #include <algorithm>
 #include <assert.h>
-#include <limits.h>
 
 // set size of reserved queue elements (may differ from Dijkstra default)
 static constexpr unsigned CONTEST_QUEUE_SIZE = 5000;
@@ -189,8 +188,8 @@ ContestDijkstra::CalculateResult(const ContestTraceVector &solution) const
     previous = current;
   }
 
-  #define fixed_fifth 0.0002
-  result.score *= fixed_fifth;
+  #define FIFTH 0.0002
+  result.score *= FIFTH;
   result.score = ApplyHandicap(result.score);
 
   return result;

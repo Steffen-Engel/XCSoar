@@ -55,15 +55,35 @@ RawBitmap::RawBitmap(unsigned nWidth, unsigned nHeight)
   bi.bmiHeader.biYPelsPerMeter = 3780;
   bi.bmiHeader.biClrUsed = 0;
   bi.bmiHeader.biClrImportant = 0;
+
+  VOID *pvBits;
+  HDC hDC = ::GetDC(nullptr);
+  bitmap = CreateDIBSection(hDC, &bi, DIB_RGB_COLORS, &pvBits, nullptr, 0);
+  ::ReleaseDC(nullptr, hDC);
+  buffer = (RawColor *)pvBits;
+}
+
+RawBitmap::~RawBitmap()
+{
+  ::DeleteObject(bitmap);
 }
 
 void
 RawBitmap::StretchTo(unsigned width, unsigned height,
                      Canvas &dest_canvas,
-                     unsigned dest_width, unsigned dest_height) const
+                     unsigned dest_width, unsigned dest_height,
+                     bool transparent_white) const
 {
-  ::StretchDIBits(dest_canvas, 0, 0,
-                  dest_width, dest_height,
-                  0, GetHeight() - height, width, height,
-                  GetBuffer(), &bi, DIB_RGB_COLORS, SRCCOPY);
+  HDC source_dc = ::CreateCompatibleDC(dest_canvas);
+  ::SelectObject(source_dc, bitmap);
+  if (transparent_white)
+    ::TransparentBlt(dest_canvas, 0, 0, dest_width, dest_height,
+                     source_dc, 0, 0, width, height,
+                     COLOR_WHITE);
+  else
+    ::StretchBlt(dest_canvas, 0, 0,
+                 dest_width, dest_height,
+                 source_dc, 0, 0, width, height,
+                 SRCCOPY);
+  ::DeleteDC(source_dc);
 }

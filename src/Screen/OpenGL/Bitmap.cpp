@@ -52,9 +52,11 @@ Bitmap::EnableInterpolation()
 }
 
 bool
-Bitmap::Load(const UncompressedImage &uncompressed, gcc_unused Type type)
+Bitmap::MakeTexture(const UncompressedImage &uncompressed, Type type)
 {
-  delete texture;
+  assert(IsScreenInitialized());
+  assert(uncompressed.IsDefined());
+
   texture = type == Type::MONO
     ? ImportAlphaTexture(uncompressed)
     : ImportTexture(uncompressed);
@@ -64,8 +66,40 @@ Bitmap::Load(const UncompressedImage &uncompressed, gcc_unused Type type)
   if (interpolation)
     texture->EnableInterpolation();
 
-  size = { uncompressed.GetWidth(), uncompressed.GetHeight() };
-  flipped = uncompressed.IsFlipped();
+  return true;
+}
+
+bool
+Bitmap::Load(UncompressedImage &&_uncompressed, Type _type)
+{
+  assert(IsScreenInitialized());
+  assert(_uncompressed.IsDefined());
+
+  Reset();
+
+  size = { _uncompressed.GetWidth(), _uncompressed.GetHeight() };
+  flipped = _uncompressed.IsFlipped();
+
+#ifdef ANDROID
+  uncompressed = std::move(_uncompressed);
+  type = _type;
+
+  AddSurfaceListener(*this);
+
+  if (!surface_valid)
+    return true;
+
+  if (!MakeTexture(uncompressed, type)) {
+    Reset();
+    return false;
+  }
+#else
+  if (!MakeTexture(_uncompressed, _type)) {
+    Reset();
+    return false;
+  }
+#endif
+
   return true;
 }
 
@@ -82,11 +116,3 @@ Bitmap::Reset()
 }
 
 #endif /* !ANDROID */
-
-const PixelSize
-Bitmap::GetSize() const
-{
-  assert(IsDefined());
-
-  return size;
-}

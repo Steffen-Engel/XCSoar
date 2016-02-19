@@ -44,13 +44,10 @@ struct Event;
 struct Event;
 #elif defined(ENABLE_SDL)
 union SDL_Event;
+struct SDL_Window;
 #endif
 
 #include <tchar.h>
-
-#ifdef ENABLE_SDL
-#include <SDL_version.h>
-#endif
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
 enum class DisplayOrientation : uint8_t;
@@ -79,32 +76,20 @@ struct _XDisplay;
 
 class TopWindowStyle : public WindowStyle {
 #if defined(ENABLE_SDL) || defined(USE_X11)
-  bool full_screen;
+  bool full_screen = false;
 #endif
 #ifdef ENABLE_SDL
-  bool resizable;
+  bool resizable = false;
 #endif
 
 public:
   TopWindowStyle()
-#if defined(ENABLE_SDL) || defined(USE_X11)
-    :full_screen(false)
-#endif
-#ifdef ENABLE_SDL
-    , resizable(false)
-#endif
   {
     Popup();
   }
 
   TopWindowStyle(const WindowStyle other)
     :WindowStyle(other)
-#if defined(ENABLE_SDL) || defined(USE_X11)
-    , full_screen(false)
-#endif
-#ifdef ENABLE_SDL
-    , resizable(false)
-#endif
   {
     Popup();
   }
@@ -154,6 +139,8 @@ class TopWindow : public ContainerWindow {
 #elif defined(USE_WAYLAND)
   struct wl_display *native_display;
   struct wl_egl_window *native_window;
+#elif defined(ENABLE_SDL)
+  SDL_Window *window;
 #endif
 
 #ifndef USE_WINUSER
@@ -180,11 +167,11 @@ class TopWindow : public ContainerWindow {
 
   /**
    * Was the application view resized while paused?  If true, then
-   * new_width and new_height contain the new display dimensions.
+   * new_size contains the new display dimensions.
    */
   bool resized = false;
 
-  UPixelScalar new_width, new_height;
+  PixelSize new_size;
 #endif
 
   DoubleClick double_click;
@@ -215,7 +202,7 @@ public:
               TopWindowStyle style=TopWindowStyle());
 #endif
 
-#if defined(USE_X11) || defined(USE_WAYLAND)
+#if defined(USE_X11) || defined(USE_WAYLAND) || defined(ENABLE_SDL)
 private:
   void CreateNative(const TCHAR *text, PixelSize size, TopWindowStyle style);
 
@@ -231,7 +218,7 @@ public:
   void CheckResize() {}
 #endif
 
-#if !defined(USE_WINUSER) && !(defined(ENABLE_SDL) && (SDL_MAJOR_VERSION >= 2))
+#if !defined(USE_WINUSER) && !defined(ENABLE_SDL)
 #if defined(ANDROID) || defined(USE_FB) || defined(USE_EGL) || defined(USE_GLX) || defined(USE_VFB)
   void SetCaption(gcc_unused const TCHAR *caption) {}
 #else
@@ -255,11 +242,8 @@ public:
       if (::GetWindowPlacement(hWnd, &placement) &&
           (placement.showCmd == SW_MINIMIZE ||
            placement.showCmd == SW_SHOWMINIMIZED)) {
-        placement.rcNormalPosition.right -= placement.rcNormalPosition.left;
-        placement.rcNormalPosition.bottom -= placement.rcNormalPosition.top;
-        placement.rcNormalPosition.left = 0;
-        placement.rcNormalPosition.top = 0;
-        return reinterpret_cast<const PixelRect &>(placement.rcNormalPosition);
+        const auto &r = placement.rcNormalPosition;
+        return PixelRect(0, 0, r.right - r.left, r.bottom - r.top);
       }
     }
 
@@ -323,7 +307,7 @@ public:
    * that this has happened.  The caller should also submit the RESIZE
    * event to the event queue.  This method is thread-safe.
    */
-  void AnnounceResize(UPixelScalar width, UPixelScalar height);
+  void AnnounceResize(PixelSize _new_size);
 
   bool ResumeSurface();
 
@@ -352,14 +336,14 @@ public:
   void SetDisplayOrientation(DisplayOrientation orientation);
 #endif
 
-#ifdef HAVE_HIGHDPI_SUPPORT
 protected:
-  template<typename T>
-  void PointToReal(T& x, T& y) const {
-    x = static_cast<T>(static_cast<float>(x) * point_to_real_x);
-    y = static_cast<T>(static_cast<float>(y) * point_to_real_y);
-  }
+  PixelPoint PointToReal(PixelPoint p) const {
+#ifdef HAVE_HIGHDPI_SUPPORT
+    p.x = int(static_cast<float>(p.x) * point_to_real_x);
+    p.y = int(static_cast<float>(p.y) * point_to_real_y);
 #endif
+    return p;
+  }
 
 protected:
   virtual bool OnActivate();

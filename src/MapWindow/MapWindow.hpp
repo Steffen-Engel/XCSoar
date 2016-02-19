@@ -41,10 +41,6 @@ Copyright_License {
 #include "Weather/Features.hpp"
 #include "Tracking/SkyLines/Features.hpp"
 
-#ifdef ENABLE_OPENGL
-#include "OverlayBitmap.hpp"
-#endif
-
 #include <memory>
 
 struct MapLook;
@@ -52,15 +48,16 @@ struct TrafficLook;
 class TopographyStore;
 class CachedTopographyRenderer;
 class RasterTerrain;
-class RasterWeatherStore;
-class RasterWeatherCache;
-class MapOverlayBitmap;
+class RaspStore;
+class RaspRenderer;
+class MapOverlay;
 class Waypoints;
 class Airspaces;
 class ProtectedTaskManager;
 class GlideComputer;
 class ContainerWindow;
 class NOAAStore;
+class MapOverlay;
 
 namespace SkyLinesTracking {
   struct Data;
@@ -126,10 +123,17 @@ protected:
 
   RasterTerrain *terrain = nullptr;
 
-  RasterWeatherCache *weather = nullptr;
+  const RaspStore *rasp_store = nullptr;
+
+  /**
+   * The current RASP renderer.  Modifications to this pointer (but
+   * not to the #RaspRenderer instance) are protected by
+   * #DoubleBufferWindow::mutex.
+   */
+  std::unique_ptr<RaspRenderer> rasp_renderer;
 
 #ifdef ENABLE_OPENGL
-  std::unique_ptr<MapOverlayBitmap> overlay_bitmap;
+  std::unique_ptr<MapOverlay> overlay;
 #endif
 
   const TrafficLook &traffic_look;
@@ -196,8 +200,6 @@ public:
     return follow_mode == FOLLOW_PAN;
   }
 
-  void Create(ContainerWindow &parent, const PixelRect &rc);
-
   void SetWaypoints(const Waypoints *_waypoints) {
     waypoints = _waypoints;
     waypoint_renderer.set_way_points(waypoints);
@@ -220,10 +222,14 @@ public:
 
   void SetTopography(TopographyStore *_topography);
   void SetTerrain(RasterTerrain *_terrain);
-  void SetWeather(const RasterWeatherStore *_weather);
+  void SetWeather(const RaspStore *_weather);
 
 #ifdef ENABLE_OPENGL
-  void SetOverlayBitmap(std::unique_ptr<MapOverlayBitmap> &&_overlay_bitmap);
+  void SetOverlay(std::unique_ptr<MapOverlay> &&_overlay);
+
+  const MapOverlay *GetOverlay() const {
+    return overlay.get();
+  }
 #endif
 
 #ifdef HAVE_NOAA
@@ -267,19 +273,18 @@ public:
   }
 
 protected:
-  void DrawBestCruiseTrack(Canvas &canvas,
-                           const RasterPoint aircraft_pos) const;
+  void DrawBestCruiseTrack(Canvas &canvas, PixelPoint aircraft_pos) const;
   void DrawTrackBearing(Canvas &canvas,
-                        const RasterPoint aircraft_pos, bool circling) const;
+                        PixelPoint aircraft_pos, bool circling) const;
   void DrawCompass(Canvas &canvas, const PixelRect &rc) const;
-  void DrawWind(Canvas &canvas, const RasterPoint &Orig,
+  void DrawWind(Canvas &canvas, const PixelPoint &Orig,
                            const PixelRect &rc) const;
   void DrawWaypoints(Canvas &canvas);
 
-  void DrawTrail(Canvas &canvas, const RasterPoint aircraft_pos,
+  void DrawTrail(Canvas &canvas, PixelPoint aircraft_pos,
                  unsigned min_time, bool enable_traildrift = false);
-  virtual void RenderTrail(Canvas &canvas, const RasterPoint aircraft_pos);
-  virtual void RenderTrackBearing(Canvas &canvas, const RasterPoint aircraft_pos);
+  virtual void RenderTrail(Canvas &canvas, PixelPoint aircraft_pos);
+  virtual void RenderTrackBearing(Canvas &canvas, PixelPoint aircraft_pos);
 
 #ifdef HAVE_SKYLINES_TRACKING_HANDLER
   void DrawSkyLinesTraffic(Canvas &canvas) const;
@@ -295,7 +300,7 @@ protected:
 
   void DrawGlideThroughTerrain(Canvas &canvas) const;
   void DrawTerrainAbove(Canvas &canvas);
-  void DrawFLARMTraffic(Canvas &canvas, const RasterPoint aircraft_pos) const;
+  void DrawFLARMTraffic(Canvas &canvas, PixelPoint aircraft_pos) const;
 
   // thread, main functions
   /**
@@ -312,15 +317,9 @@ protected:
    */
   bool UpdateTerrain();
 
-  /**
-   * @return true if UpdateWeather() should be called again
-   */
-  bool UpdateWeather();
-
   void UpdateAll() {
     UpdateTopography();
     UpdateTerrain();
-    UpdateWeather();
   }
 
 protected:
@@ -339,6 +338,9 @@ private:
    * @param canvas The drawing canvas
    */
   void RenderTerrain(Canvas &canvas);
+
+  void RenderRasp(Canvas &canvas);
+
   /**
    * Renders the topography
    * @param canvas The drawing canvas
@@ -350,7 +352,7 @@ private:
    */
   void RenderTopographyLabels(Canvas &canvas);
 
-  void RenderOverlayBitmaps(Canvas &canvas);
+  void RenderOverlays(Canvas &canvas);
 
   /**
    * Renders the final glide shading

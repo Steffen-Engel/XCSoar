@@ -26,7 +26,6 @@ Copyright_License {
 
 #include "Features.hpp"
 #include "Config.hpp"
-#include "IO/DataHandler.hpp"
 #include "Device/Util/LineSplitter.hpp"
 #include "Port/State.hpp"
 #include "Device/Parser.hpp"
@@ -458,9 +457,9 @@ public:
   bool WriteNMEA(const TCHAR *line, OperationEnvironment &env);
 #endif
 
-  bool PutMacCready(fixed mac_cready, OperationEnvironment &env);
-  bool PutBugs(fixed bugs, OperationEnvironment &env);
-  bool PutBallast(fixed fraction, fixed overload,
+  bool PutMacCready(double mac_cready, OperationEnvironment &env);
+  bool PutBugs(double bugs, OperationEnvironment &env);
+  bool PutBallast(double fraction, double overload,
                   OperationEnvironment &env);
   bool PutVolume(unsigned volume, OperationEnvironment &env);
   bool PutActiveFrequency(RadioFrequency frequency,

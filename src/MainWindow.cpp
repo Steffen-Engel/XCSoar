@@ -22,13 +22,10 @@ Copyright_License {
 */
 
 #include "MainWindow.hpp"
-#include "Startup.hpp"
 #include "MapWindow/GlueMapWindow.hpp"
 #include "PopupMessage.hpp"
 #include "InfoBoxes/InfoBoxManager.hpp"
 #include "InfoBoxes/InfoBoxLayout.hpp"
-#include "Interface.hpp"
-#include "ActionInterface.hpp"
 #include "UIActions.hpp"
 #include "PageActions.hpp"
 #include "Input/InputEvents.hpp"
@@ -42,20 +39,16 @@ Copyright_License {
 #include "Gauge/GaugeFLARM.hpp"
 #include "Gauge/GaugeThermalAssistant.hpp"
 #include "Gauge/GlueGaugeVario.hpp"
-#include "Menu/MenuBar.hpp"
 #include "Form/Form.hpp"
 #include "Widget/Widget.hpp"
 #include "UtilsSystem.hpp"
 #include "Look/GlobalFonts.hpp"
 #include "Look/DefaultFonts.hpp"
 #include "Look/Look.hpp"
-#include "Profile/ProfileKeys.hpp"
-#include "Profile/Profile.hpp"
 #include "ProgressGlue.hpp"
 #include "UIState.hpp"
 #include "DrawThread.hpp"
 #include "UIReceiveBlackboard.hpp"
-#include "Event/Idle.hpp"
 #include "UISettings.hpp"
 #include "Interface.hpp"
 
@@ -101,13 +94,13 @@ GetBottomWidgetRect(const PixelRect &rc, const Widget *bottom_widget)
     return result;
   }
 
-  const UPixelScalar requested_height = bottom_widget->GetMinimumSize().cy;
-  UPixelScalar height;
+  const unsigned requested_height = bottom_widget->GetMinimumSize().cy;
+  unsigned height;
   if (requested_height > 0) {
-    const UPixelScalar max_height = (rc.bottom - rc.top) / 2;
+    const unsigned max_height = rc.GetHeight() / 2;
     height = std::min(max_height, requested_height);
   } else {
-    const UPixelScalar recommended_height = (rc.bottom - rc.top) / 3;
+    const unsigned recommended_height = rc.GetHeight() / 3;
     height = recommended_height;
   }
 
@@ -159,7 +152,6 @@ MainWindow::~MainWindow()
 void
 MainWindow::Create(PixelSize size, TopWindowStyle style)
 {
-  style.EnableDoubleClicks();
   SingleWindow::Create(title, size, style);
 }
 
@@ -230,7 +222,7 @@ MainWindow::InitialiseConfigured()
                              Fonts::map, Fonts::map_bold,
                              ib_layout.control_size.cx);
 
-  InfoBoxManager::Create(*this, ib_layout, look->info_box, look->units);
+  InfoBoxManager::Create(*this, ib_layout, look->info_box);
   map_rect = ib_layout.remaining;
 
   ButtonLabel::CreateButtonLabels(*this, look->dialog.button);
@@ -302,7 +294,7 @@ MainWindow::ReinitialiseLayout_vario(const InfoBoxLayout::Layout &layout)
 
   if (!vario.IsDefined())
     vario.Set(new GlueGaugeVario(CommonInterface::GetLiveBlackboard(),
-                                 look->vario, look->units));
+                                 look->vario));
 
   vario.Move(layout.vario);
   vario.Show();
@@ -314,8 +306,8 @@ void
 MainWindow::ReinitialiseLayoutTA(PixelRect rc,
                                  const InfoBoxLayout::Layout &layout)
 {
-  UPixelScalar sz = std::min(layout.control_size.cy,
-                             layout.control_size.cx) * 2;
+  unsigned sz = std::min(layout.control_size.cy,
+                         layout.control_size.cx) * 2;
   rc.right = rc.left + sz;
   rc.top = rc.bottom - sz;
   thermal_assistant.Move(rc);
@@ -347,7 +339,7 @@ MainWindow::ReinitialiseLayout()
 
   look->ReinitialiseLayout(ib_layout.control_size.cx);
 
-  InfoBoxManager::Create(*this, ib_layout, look->info_box, look->units);
+  InfoBoxManager::Create(*this, ib_layout, look->info_box);
   InfoBoxManager::ProcessTimer();
   map_rect = ib_layout.remaining;
 
@@ -567,24 +559,24 @@ MainWindow::OnCancelMode()
 }
 
 bool
-MainWindow::OnMouseDown(PixelScalar x, PixelScalar y)
+MainWindow::OnMouseDown(PixelPoint p)
 {
-  if (SingleWindow::OnMouseDown(x, y))
+  if (SingleWindow::OnMouseDown(p))
     return true;
 
   if (!dragging && !HasDialog()) {
     dragging = true;
     SetCapture();
-    gestures.Start(x, y, Layout::Scale(20));
+    gestures.Start(p, Layout::Scale(20));
   }
 
   return true;
 }
 
 bool
-MainWindow::OnMouseUp(PixelScalar x, PixelScalar y)
+MainWindow::OnMouseUp(PixelPoint p)
 {
-  if (SingleWindow::OnMouseUp(x, y))
+  if (SingleWindow::OnMouseUp(p))
     return true;
 
   if (dragging) {
@@ -599,9 +591,9 @@ MainWindow::OnMouseUp(PixelScalar x, PixelScalar y)
 }
 
 bool
-MainWindow::OnMouseDouble(PixelScalar x, PixelScalar y)
+MainWindow::OnMouseDouble(PixelPoint p)
 {
-  if (SingleWindow::OnMouseDouble(x, y))
+  if (SingleWindow::OnMouseDouble(p))
     return true;
 
   StopDragging();
@@ -612,13 +604,13 @@ MainWindow::OnMouseDouble(PixelScalar x, PixelScalar y)
 }
 
 bool
-MainWindow::OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys)
+MainWindow::OnMouseMove(PixelPoint p, unsigned keys)
 {
-  if (SingleWindow::OnMouseMove(x, y, keys))
+  if (SingleWindow::OnMouseMove(p, keys))
     return true;
 
   if (dragging)
-    gestures.Update(x, y);
+    gestures.Update(p);
 
   return true;
 }

@@ -112,22 +112,19 @@ public:
   }
 #endif
 
-#if !defined(NON_INTERACTIVE) && !defined(USE_X11) && !defined(USE_WAYLAND)
-
   void SetScreenSize(unsigned width, unsigned height) {
+#if !defined(NON_INTERACTIVE) && !defined(USE_X11) && !defined(USE_WAYLAND)
     input_queue.SetScreenSize(width, height);
-  }
-
-#ifndef USE_LIBINPUT
-  void SetMouseRotation(bool swap, bool invert_x, bool invert_y) {
-    input_queue.SetMouseRotation(swap, invert_x, invert_y);
-  }
-
-  void SetMouseRotation(DisplayOrientation orientation) {
-    input_queue.SetMouseRotation(orientation);
-  }
 #endif
+  }
 
+  void SetDisplayOrientation(DisplayOrientation orientation) {
+#if !defined(NON_INTERACTIVE) && !defined(USE_X11) && !defined(USE_WAYLAND) && !defined(USE_LIBINPUT)
+    input_queue.SetDisplayOrientation(orientation);
+#endif
+  }
+
+#if !defined(NON_INTERACTIVE) && !defined(USE_X11) && !defined(USE_WAYLAND)
   bool HasPointer() const {
     return input_queue.HasPointer();
   }
@@ -142,7 +139,7 @@ public:
   }
 #endif
 
-  RasterPoint GetMousePosition() const {
+  PixelPoint GetMousePosition() const {
     return input_queue.GetMousePosition();
   }
 

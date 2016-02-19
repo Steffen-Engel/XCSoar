@@ -26,7 +26,6 @@ Copyright_License {
 #include "Form/Button.hpp"
 #include "Form/DataField/Enum.hpp"
 #include "Form/DataField/Float.hpp"
-#include "Form/DataField/Boolean.hpp"
 #include "Interface.hpp"
 #include "Language/Language.hpp"
 #include "UIGlobals.hpp"
@@ -82,10 +81,10 @@ WindSettingsPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
     WndProperty *wp =
       AddFloat(_("Speed"), _("Manual adjustment of wind speed."),
                _T("%.0f %s"), _T("%.0f"),
-               fixed(0),
-               Units::ToUserWindSpeed(Units::ToSysUnit(fixed(200),
+               0,
+               Units::ToUserWindSpeed(Units::ToSysUnit(200,
                                                        Unit::KILOMETER_PER_HOUR)),
-               fixed(1), false,
+               1, false,
                Units::ToUserWindSpeed(manual_wind.norm),
                this);
     DataFieldFloat &df = *(DataFieldFloat *)wp->GetDataField();

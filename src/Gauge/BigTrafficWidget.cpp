@@ -135,10 +135,10 @@ protected:
 
   /* virtual methods from class Window */
   virtual void OnCreate() override;
-  virtual bool OnMouseMove(PixelScalar x, PixelScalar y, unsigned keys) override;
-  virtual bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseUp(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseDouble(PixelScalar x, PixelScalar y) override;
+  bool OnMouseMove(PixelPoint p, unsigned keys) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseUp(PixelPoint p) override;
+  bool OnMouseDouble(PixelPoint p) override;
   virtual bool OnKeyDown(unsigned key_code) override;
   virtual void OnCancelMode() override;
 
@@ -279,7 +279,7 @@ FlarmTrafficControl::PaintTaskDirection(Canvas &canvas) const
   canvas.Select(look.radar_pen);
   canvas.SelectHollowBrush();
 
-  RasterPoint triangle[4];
+  BulkPixelPoint triangle[4];
   triangle[0].x = 0;
   triangle[0].y = -radius / Layout::FastScale(1) + 15;
   triangle[1].x = 7;
@@ -317,7 +317,7 @@ FlarmTrafficControl::PaintClimbRate(Canvas &canvas, PixelRect rc,
   const unsigned unit_height =
       UnitSymbolRenderer::GetAscentHeight(look.info_units_font, unit);
 
-  UPixelScalar space_width = unit_width / 3;
+  unsigned space_width = unit_width / 3;
 
   // Calculate value size
   canvas.Select(look.info_values_font);
@@ -336,7 +336,7 @@ FlarmTrafficControl::PaintClimbRate(Canvas &canvas, PixelRect rc,
   // Paint unit
   canvas.Select(look.info_units_font);
   UnitSymbolRenderer::Draw(canvas,
-                           RasterPoint(rc.right - unit_width, y - unit_height),
+                           PixelPoint(rc.right - unit_width, y - unit_height),
                            unit, look.unit_fraction_pen);
 }
 
@@ -370,8 +370,8 @@ FlarmTrafficControl::PaintDistance(Canvas &canvas, PixelRect rc,
   // Paint unit
   canvas.Select(look.info_units_font);
   UnitSymbolRenderer::Draw(canvas,
-                           RasterPoint(rc.left + value_width + space_width,
-                                       rc.bottom - unit_height),
+                           PixelPoint(rc.left + value_width + space_width,
+                                      rc.bottom - unit_height),
                            unit, look.unit_fraction_pen);
 
 
@@ -415,8 +415,8 @@ FlarmTrafficControl::PaintRelativeAltitude(Canvas &canvas, PixelRect rc,
   // Paint unit
   canvas.Select(look.info_units_font);
   UnitSymbolRenderer::Draw(canvas,
-                           RasterPoint(rc.right - unit_width,
-                                       rc.bottom - unit_height),
+                           PixelPoint(rc.right - unit_width,
+                                      rc.bottom - unit_height),
                            unit, look.unit_fraction_pen);
 
 
@@ -679,29 +679,28 @@ TrafficWidget::Update()
 }
 
 bool
-FlarmTrafficControl::OnMouseMove(PixelScalar x, PixelScalar y,
-                                 gcc_unused unsigned keys)
+FlarmTrafficControl::OnMouseMove(PixelPoint p, gcc_unused unsigned keys)
 {
   if (dragging)
-    gestures.Update(x, y);
+    gestures.Update(p);
 
   return true;
 }
 
 bool
-FlarmTrafficControl::OnMouseDown(PixelScalar x, PixelScalar y)
+FlarmTrafficControl::OnMouseDown(PixelPoint p)
 {
   if (!dragging) {
     dragging = true;
     SetCapture();
-    gestures.Start(x, y, Layout::Scale(20));
+    gestures.Start(p, Layout::Scale(20));
   }
 
   return true;
 }
 
 bool
-FlarmTrafficControl::OnMouseUp(PixelScalar x, PixelScalar y)
+FlarmTrafficControl::OnMouseUp(PixelPoint p)
 {
   if (dragging) {
     StopDragging();
@@ -712,13 +711,13 @@ FlarmTrafficControl::OnMouseUp(PixelScalar x, PixelScalar y)
   }
 
   if (!WarningMode())
-    SelectNearTarget(x, y, Layout::Scale(15));
+    SelectNearTarget(p, Layout::Scale(15));
 
   return true;
 }
 
 bool
-FlarmTrafficControl::OnMouseDouble(PixelScalar x, PixelScalar y)
+FlarmTrafficControl::OnMouseDouble(PixelPoint p)
 {
   StopDragging();
   InputEvents::ShowMenu();
@@ -793,9 +792,9 @@ TrafficWidget::UpdateLayout()
   const unsigned button_width = std::max(unsigned(rc.right / 6),
                                          button_height);
 
-  const PixelScalar x1 = rc.right / 2;
-  const PixelScalar x0 = x1 - button_width;
-  const PixelScalar x2 = x1 + button_width;
+  const int x1 = rc.right / 2;
+  const int x0 = x1 - button_width;
+  const int x2 = x1 + button_width;
 
   const int y0 = margin;
   const int y1 = y0 + button_height;
@@ -885,11 +884,8 @@ TrafficWidget::Prepare(ContainerWindow &parent, const PixelRect &_rc)
                             _("Close"), rc, WindowStyle(),
                             *this, CLOSE);
 
-  WindowStyle style;
-  style.EnableDoubleClicks();
-
   view = new FlarmTrafficControl(look.flarm_dialog);
-  view->Create(GetContainer(), rc, style);
+  view->Create(GetContainer(), rc);
 
   UpdateLayout();
 }

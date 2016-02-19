@@ -26,9 +26,10 @@ Copyright_License {
 
 #include "Features.hpp"
 
+// IWYU pragma: begin_exports
+
 #ifdef ENABLE_SDL
-#include <SDL_version.h>
-#if defined(HAVE_GLES) && (SDL_MAJOR_VERSION >= 2)
+#if defined(HAVE_GLES)
 #ifdef HAVE_GLES2
 #include <SDL_opengles2.h>
 #else
@@ -44,5 +45,7 @@ Copyright_License {
 #else
 #include <GL/gl.h>
 #endif
+
+// IWYU pragma: end_exports
 
 #endif

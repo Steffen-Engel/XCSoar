@@ -34,9 +34,9 @@ Copyright_License {
 #include <vector>
 
 static void
-GetPolygonPoints(std::vector<RasterPoint> &pts,
+GetPolygonPoints(std::vector<BulkPixelPoint> &pts,
                  const AirspacePolygon &airspace,
-                 const RasterPoint pt, unsigned radius)
+                 const PixelPoint pt, unsigned radius)
 {
   GeoBounds bounds = airspace.GetGeoBounds();
   GeoPoint center = bounds.GetCenter();
@@ -130,8 +130,8 @@ AirspacePreviewRenderer::PrepareOutline(
 }
 
 static void
-DrawShape(Canvas &canvas, AbstractAirspace::Shape shape, const RasterPoint pt,
-          unsigned radius, const std::vector<RasterPoint> &pts)
+DrawShape(Canvas &canvas, AbstractAirspace::Shape shape, const PixelPoint pt,
+          unsigned radius, const std::vector<BulkPixelPoint> &pts)
 {
   if (shape == AbstractAirspace::Shape::CIRCLE)
     canvas.DrawCircle(pt.x, pt.y, radius);
@@ -144,7 +144,7 @@ DrawShape(Canvas &canvas, AbstractAirspace::Shape shape, const RasterPoint pt,
 
 void
 AirspacePreviewRenderer::Draw(Canvas &canvas, const AbstractAirspace &airspace,
-                              const RasterPoint pt, unsigned radius,
+                              const PixelPoint pt, unsigned radius,
                               const AirspaceRendererSettings &settings,
                               const AirspaceLook &look)
 {
@@ -152,7 +152,7 @@ AirspacePreviewRenderer::Draw(Canvas &canvas, const AbstractAirspace &airspace,
   AirspaceClass type = airspace.GetType();
 
   // Container for storing the points of a polygon airspace
-  std::vector<RasterPoint> pts;
+  std::vector<BulkPixelPoint> pts;
   if (shape == AbstractAirspace::Shape::POLYGON && !IsAncientHardware())
     GetPolygonPoints(pts, (const AirspacePolygon &)airspace, pt, radius);
 

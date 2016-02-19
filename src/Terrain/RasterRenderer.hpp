@@ -144,6 +144,9 @@ public:
     return *image;
   }
 
+  void Draw(Canvas &canvas, const WindowProjection &projection,
+            bool transparent_white=false) const;
+
 protected:
   /**
    * Convert the height matrix into the image, without shading.

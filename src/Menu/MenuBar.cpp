@@ -23,7 +23,6 @@ Copyright_License {
 
 #include "MenuBar.hpp"
 #include "Screen/ContainerWindow.hpp"
-#include "Screen/Layout.hpp"
 #include "Input/InputEvents.hpp"
 
 #include <assert.h>
@@ -32,8 +31,7 @@ gcc_pure
 static PixelRect
 GetButtonPosition(unsigned i, PixelRect rc)
 {
-  UPixelScalar hwidth = rc.right - rc.left;
-  UPixelScalar hheight = rc.bottom - rc.top;
+  unsigned hwidth = rc.GetWidth(), hheight = rc.GetHeight();
 
   if (hheight > hwidth) {
     // portrait

@@ -75,7 +75,16 @@ public:
 
   bool FindPositiveArrival(const AGeoPoint &dest, ReachResult &result_r) const;
 
+  const FlatProjection &GetReachProjection() const {
+    return planner.GetReachProjection();
+  }
+
   void AcceptInRange(const GeoBounds &bounds, TriangleFanVisitor &visitor) const;
+
+  void AcceptInRange(const GeoBounds &bounds,
+                     FlatTriangleFanVisitor &visitor) const {
+    planner.AcceptInRange(bounds, visitor);
+  }
 
   gcc_pure
   GeoPoint Intersection(const AGeoPoint &origin,

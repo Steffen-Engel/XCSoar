@@ -48,7 +48,7 @@ BufferCanvas::Create(PixelSize new_size)
   assert(!active);
 
   Destroy();
-  texture = new GLTexture(new_size.cx, new_size.cy);
+  texture = new GLTexture(new_size);
 
   if (OpenGL::frame_buffer_object && OpenGL::render_buffer_stencil) {
     frame_buffer = new GLFrameBuffer();
@@ -190,7 +190,7 @@ BufferCanvas::Commit(Canvas &other)
 
     /* restore the old viewport */
 
-    assert(OpenGL::translate == RasterPoint(0, 0));
+    assert(OpenGL::translate == PixelPoint(0, 0));
 
 #ifdef HAVE_GLES
     /* there's no glPopAttrib() on GL/ES; emulate it */

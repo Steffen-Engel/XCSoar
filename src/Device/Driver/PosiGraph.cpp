@@ -32,13 +32,10 @@ Copyright_License {
 
 #include "Device/Driver/PosiGraph.hpp"
 #include "Device/Driver/LX/Internal.hpp"
-#include "Device/Parser.hpp"
 #include "Device/Driver.hpp"
 #include "Device/Config.hpp"
 #include "NMEA/Info.hpp"
 #include "NMEA/InputLine.hpp"
-
-#include <string.h>
 
 class PGDevice : public LXDevice {
 public:
@@ -54,7 +51,7 @@ GPWIN(NMEAInputLine &line, NMEAInfo &info)
 {
   line.Skip(2);
 
-  fixed value;
+  double value;
   if (line.ReadChecked(value))
     info.ProvidePressureAltitude(value / 10);
 

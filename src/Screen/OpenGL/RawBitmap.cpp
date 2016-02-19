@@ -49,7 +49,7 @@ RawBitmap::RawBitmap(unsigned nWidth, unsigned nHeight)
   :width(nWidth), height(nHeight),
    corrected_width(CorrectedWidth(nWidth)),
    buffer(new RawColor[corrected_width * height]),
-   texture(new GLTexture(corrected_width, nHeight))
+   texture(new GLTexture(PixelSize(corrected_width, nHeight)))
 {
   assert(nWidth > 0);
   assert(nHeight > 0);
@@ -70,7 +70,7 @@ void
 RawBitmap::SurfaceCreated()
 {
   if (texture == nullptr) {
-    texture = new GLTexture(corrected_width, height);
+    texture = new GLTexture(PixelSize(corrected_width, height));
     texture->EnableInterpolation();
   }
 }
@@ -109,7 +109,8 @@ RawBitmap::BindAndGetTexture() const
 void
 RawBitmap::StretchTo(unsigned width, unsigned height,
                      Canvas &dest_canvas,
-                     unsigned dest_width, unsigned dest_height) const
+                     unsigned dest_width, unsigned dest_height,
+                     gcc_unused bool transparent_white) const
 {
   GLTexture &texture = BindAndGetTexture();
 
@@ -120,5 +121,6 @@ RawBitmap::StretchTo(unsigned width, unsigned height,
   OpenGL::glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 #endif
 
-  texture.Draw(0, 0, dest_width, dest_height, 0, 0, width, height);
+  texture.Draw(PixelRect(0, 0, dest_width, dest_height),
+               PixelRect(0, 0, width, height));
 }

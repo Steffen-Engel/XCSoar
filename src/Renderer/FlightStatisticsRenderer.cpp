@@ -23,10 +23,9 @@ Copyright_License {
 
 #include "FlightStatisticsRenderer.hpp"
 #include "ChartRenderer.hpp"
-#include "Util/Macros.hpp"
-#include "Util/StringUtil.hpp"
 #include "Look/MapLook.hpp"
 #include "Task/ProtectedTaskManager.hpp"
+#include "Engine/Task/TaskManager.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
@@ -47,8 +46,6 @@ Copyright_License {
 #include "Computer/Settings.hpp"
 
 #include <algorithm>
-
-#include <stdio.h>
 
 using std::max;
 
@@ -122,14 +119,14 @@ FlightStatisticsRenderer::RenderOLC(Canvas &canvas, const PixelRect rc,
     canvas.SetBackgroundTransparent();
 
     for (const auto &i : retrospective.getNearWaypointList()) {
-      RasterPoint wp_pos = proj.GeoToScreen(i.waypoint->location);
+      auto wp_pos = proj.GeoToScreen(i.waypoint->location);
       canvas.DrawText(wp_pos.x,
                       wp_pos.y,
                       i.waypoint->name.c_str());
     }
   }
 
-  RasterPoint aircraft_pos = proj.GeoToScreen(nmea_info.location);
+  auto aircraft_pos = proj.GeoToScreen(nmea_info.location);
   AircraftRenderer::Draw(canvas, settings_map, map_look.aircraft,
                          nmea_info.attitude.heading, aircraft_pos);
 
@@ -278,7 +275,7 @@ FlightStatisticsRenderer::RenderTask(Canvas &canvas, const PixelRect rc,
     trail_renderer.Draw(canvas, *trace_computer, proj, 0);
 
   if (nmea_info.location_available) {
-    RasterPoint aircraft_pos = proj.GeoToScreen(nmea_info.location);
+    auto aircraft_pos = proj.GeoToScreen(nmea_info.location);
     AircraftRenderer::Draw(canvas, settings_map, map_look.aircraft,
                            nmea_info.attitude.heading, aircraft_pos);
   }

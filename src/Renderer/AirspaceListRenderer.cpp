@@ -25,7 +25,6 @@ Copyright_License {
 #include "TwoTextRowsRenderer.hpp"
 #include "Screen/Canvas.hpp"
 #include "Screen/Layout.hpp"
-#include "Look/DialogLook.hpp"
 #include "Airspace/AbstractAirspace.hpp"
 #include "Formatter/AirspaceFormatter.hpp"
 #include "Formatter/AngleFormatter.hpp"
@@ -33,7 +32,6 @@ Copyright_License {
 #include "Renderer/AirspacePreviewRenderer.hpp"
 #include "Geo/GeoVector.hpp"
 #include "Util/StaticString.hxx"
-#include "Util/Macros.hpp"
 
 static void
 Draw(Canvas &canvas, PixelRect rc,
@@ -44,10 +42,10 @@ Draw(Canvas &canvas, PixelRect rc,
      const AirspaceRendererSettings &renderer_settings)
 {
   const unsigned padding = Layout::GetTextPadding();
-  const unsigned line_height = rc.bottom - rc.top;
+  const unsigned line_height = rc.GetHeight();
 
-  const RasterPoint pt(rc.left + line_height / 2,
-                       rc.top + line_height / 2);
+  const PixelPoint pt(rc.left + line_height / 2,
+                      rc.top + line_height / 2);
   const unsigned radius = line_height / 2 - padding;
   AirspacePreviewRenderer::Draw(canvas, airspace, pt, radius,
                                 renderer_settings, look);

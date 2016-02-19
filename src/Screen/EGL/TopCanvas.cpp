@@ -247,14 +247,11 @@ TopCanvas::CreateEGL(EGLNativeDisplayType native_display,
     exit(EXIT_FAILURE);
   }
 
-  GLint egl_width, egl_height;
-  if (!eglQuerySurface(display, surface, EGL_WIDTH, &egl_width) ||
-      !eglQuerySurface(display, surface, EGL_HEIGHT, &egl_height)) {
-    fprintf(stderr, "eglQuerySurface()\n");
+  const PixelSize effective_size = GetNativeSize();
+  if (effective_size.cx <= 0 || effective_size.cy <= 0) {
+    fprintf(stderr, "eglQuerySurface() failed\n");
     exit(EXIT_FAILURE);
   }
-
-  const PixelSize effective_size = { egl_width, egl_height };
 
 #ifdef HAVE_GLES2
   static constexpr EGLint context_attributes[] = {
@@ -274,9 +271,7 @@ TopCanvas::CreateEGL(EGLNativeDisplayType native_display,
   }
 
   OpenGL::SetupContext();
-  OpenGL::SetupViewport(UnsignedPoint2D(effective_size.cx,
-                                        effective_size.cy));
-  Canvas::Create(effective_size);
+  SetupViewport(effective_size);
 }
 
 void
@@ -302,27 +297,16 @@ TopCanvas::Destroy()
 #endif
 }
 
-void
-TopCanvas::OnResize(PixelSize new_size)
+PixelSize
+TopCanvas::GetNativeSize() const
 {
-  if (new_size == size)
-    return;
+  GLint w, h;
+  if (!eglQuerySurface(display, surface, EGL_WIDTH, &w) ||
+      !eglQuerySurface(display, surface, EGL_HEIGHT, &h) ||
+      w <= 0 || h <= 0)
+    return PixelSize(0, 0);
 
-  OpenGL::SetupViewport(UnsignedPoint2D(new_size.cx, new_size.cy));
-  Canvas::Create(new_size);
-}
-
-void
-TopCanvas::SetDisplayOrientation(DisplayOrientation orientation)
-{
-  GLint egl_width, egl_height;
-  if (!eglQuerySurface(display, surface, EGL_WIDTH, &egl_width) ||
-      !eglQuerySurface(display, surface, EGL_HEIGHT, &egl_height))
-    return;
-
-  UnsignedPoint2D new_size(egl_width, egl_height);
-  OpenGL::SetupViewport(new_size, orientation);
-  Canvas::Create(PixelSize(new_size.x, new_size.y));
+  return PixelSize(w, h);
 }
 
 void

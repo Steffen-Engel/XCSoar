@@ -23,14 +23,12 @@ Copyright_License {
 
 #include "Screen/Bitmap.hpp"
 #include "Screen/Debug.hpp"
-#include "UncompressedImage.hpp"
 #include "ResourceLoader.hpp"
 #include "ResourceId.hpp"
 
 #ifdef ENABLE_OPENGL
 
 Bitmap::Bitmap(ResourceId id)
-  :texture(nullptr), interpolation(false)
 {
   Load(id);
 }
@@ -40,7 +38,6 @@ Bitmap::Bitmap(ResourceId id)
 #ifdef USE_MEMORY_CANVAS
 
 Bitmap::Bitmap(ResourceId id)
-  :buffer(WritableImageBuffer<BitmapPixelTraits>::Empty())
 {
   Load(id);
 }

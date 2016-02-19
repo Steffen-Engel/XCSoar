@@ -103,7 +103,7 @@ class TargetMapWindow : public BufferWindow {
     DRAG_OZ,
   } drag_mode;
 
-  RasterPoint drag_start, drag_last;
+  PixelPoint drag_start, drag_last;
 
 public:
   TargetMapWindow(const WaypointLook &waypoint_look,
@@ -176,7 +176,7 @@ private:
    * @param drag_last location of target
    * @param canvas
    */
-  void TargetPaintDrag(Canvas &canvas, const RasterPoint last_drag);
+  void TargetPaintDrag(Canvas &canvas, PixelPoint last_drag);
 
   /**
    * If PanTarget, tests if target is clicked
@@ -187,7 +187,7 @@ private:
    * @return true if click is near target
    */
   gcc_pure
-  bool isClickOnTarget(const RasterPoint drag_last) const;
+  bool isClickOnTarget(PixelPoint drag_last) const;
 
   /**
    * If PanTarget, tests if drag destination
@@ -199,7 +199,7 @@ private:
    *
    * @return true if location is in OZ
    */
-  bool isInSector(const int x, const int y);
+  bool isInSector(PixelPoint p);
 
   /**
    * If PanTarget, updates task with new target
@@ -210,7 +210,7 @@ private:
    *
    * @return true if successful
    */
-  bool TargetDragged(const int x, const int y);
+  bool TargetDragged(PixelPoint p);
 
 protected:
   virtual void OnTaskModified();
@@ -226,10 +226,9 @@ protected:
 
   virtual void OnCancelMode() override;
 
-  virtual bool OnMouseDown(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseUp(PixelScalar x, PixelScalar y) override;
-  virtual bool OnMouseMove(PixelScalar x, PixelScalar y,
-                           unsigned keys) override;
+  bool OnMouseDown(PixelPoint p) override;
+  bool OnMouseUp(PixelPoint p) override;
+  bool OnMouseMove(PixelPoint p, unsigned keys) override;
 };
 
 #endif

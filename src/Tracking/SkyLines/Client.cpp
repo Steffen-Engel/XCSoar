@@ -25,8 +25,9 @@ Copyright_License {
 #include "Assemble.hpp"
 #include "Protocol.hpp"
 #include "OS/ByteOrder.hpp"
-#include "NMEA/Info.hpp"
 #include "Net/StaticSocketAddress.hxx"
+#include "Math/Angle.hpp"
+#include "Geo/GeoPoint.hpp"
 #include "Util/CRC.hpp"
 #include "Util/ConstBuffer.hxx"
 
@@ -138,7 +139,7 @@ SkyLinesTracking::Client::SendUserNameRequest(uint32_t user_id)
 static constexpr Angle
 ImportAngle(int32_t src)
 {
-  return Angle::Degrees(fixed(int32_t(FromBE32(src))) / 1000000);
+  return Angle::Degrees(int32_t(FromBE32(src)) / 1000000.);
 }
 
 /**

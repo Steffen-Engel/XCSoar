@@ -26,7 +26,6 @@ Copyright_License {
 
 #include <algorithm>
 #include <assert.h>
-#include <string.h>
 
 void
 RasterMap::UpdateProjection()
@@ -141,9 +140,9 @@ RasterMap::FirstIntersection(const GeoPoint &origin, const int h_origin,
                              const int h_safety,
                              GeoPoint &intx, int &h) const
 {
-  const auto c_origin = projection.ProjectCoarse(origin);
-  const auto c_destination = projection.ProjectCoarse(destination);
-  const int c_diff = c_origin.ManhattanDistance(c_destination);
+  const auto c_origin = projection.ProjectCoarseRound(origin);
+  const auto c_destination = projection.ProjectCoarseRound(destination);
+  const int c_diff = ManhattanDistance(c_origin, c_destination);
   const bool can_climb = (h_destination< h_virt);
 
   intx = destination; h = h_destination; // fallback, pass
@@ -157,8 +156,7 @@ RasterMap::FirstIntersection(const GeoPoint &origin, const int h_origin,
                                  - ((c_diff * slope_fact) >> RASTER_SLOPE_FACT));
 
   RasterLocation c_int;
-  if (raster_tile_cache.FirstIntersection(c_origin.x, c_origin.y,
-                                          c_destination.x, c_destination.y,
+  if (raster_tile_cache.FirstIntersection(c_origin, c_destination,
                                           vh_origin, h_destination,
                                           slope_fact, h_ceiling, h_safety,
                                           c_int, h,
@@ -180,17 +178,16 @@ RasterMap::Intersection(const GeoPoint& origin,
                         const int h_origin, const int h_glide,
                         const GeoPoint& destination) const
 {
-  const auto c_origin = projection.ProjectCoarse(origin);
-  const auto c_destination = projection.ProjectCoarse(destination);
-  const int c_diff = c_origin.ManhattanDistance(c_destination);
+  const auto c_origin = projection.ProjectCoarseRound(origin);
+  const auto c_destination = projection.ProjectCoarseRound(destination);
+  const int c_diff = ManhattanDistance(c_origin, c_destination);
   if (c_diff == 0)
     return GeoPoint::Invalid();
 
   const int slope_fact = (((int)h_glide) << RASTER_SLOPE_FACT) / c_diff;
 
   auto c_int =
-    raster_tile_cache.Intersection(c_origin.x, c_origin.y,
-                                   c_destination.x, c_destination.y,
+    raster_tile_cache.Intersection(c_origin, c_destination,
                                    h_origin, slope_fact);
   if (c_int.x < 0)
     return GeoPoint::Invalid();

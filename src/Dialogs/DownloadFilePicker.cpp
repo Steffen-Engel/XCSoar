@@ -33,7 +33,6 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #include "Language/Language.hpp"
 #include "LocalPath.hpp"
-#include "OS/FileUtil.hpp"
 #include "OS/Path.hpp"
 #include "IO/FileLineReader.hpp"
 #include "Repository/Glue.hpp"
@@ -50,7 +49,6 @@ Copyright_License {
 #include <vector>
 
 #include <assert.h>
-#include <windef.h> /* for MAX_PATH */
 
 /**
  * This class tracks a download and updates a #ProgressDialog.
@@ -231,8 +229,8 @@ DownloadFilePickerWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   const unsigned margin = Layout::GetTextPadding();
   font_height = look.list.font->GetHeight();
 
-  UPixelScalar row_height = std::max(3u * margin + 2u * font_height,
-                                     Layout::GetMaximumControlHeight());
+  unsigned row_height = std::max(3u * margin + 2u * font_height,
+                                 Layout::GetMaximumControlHeight());
   CreateList(parent, look, rc, row_height);
   RefreshList();
 

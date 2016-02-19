@@ -22,18 +22,21 @@ Copyright_License {
 */
 
 #include "MapWindow.hpp"
-#include "OverlayBitmap.hpp"
+#include "Overlay.hpp"
 #include "Look/MapLook.hpp"
+#include "Weather/Rasp/RaspRenderer.hpp"
+#include "Weather/Rasp/RaspCache.hpp"
 #include "Topography/CachedTopographyRenderer.hpp"
 #include "Renderer/AircraftRenderer.hpp"
 #include "Renderer/WaveRenderer.hpp"
+#include "Operation/Operation.hpp"
 
 #ifdef HAVE_NOAA
 #include "Weather/NOAAStore.hpp"
 #endif
 
 void
-MapWindow::RenderTrackBearing(Canvas &canvas, const RasterPoint aircraft_pos)
+MapWindow::RenderTrackBearing(Canvas &canvas, const PixelPoint aircraft_pos)
 {
   // default rendering option assumes circling is off, so ground-relative
   DrawTrackBearing(canvas, aircraft_pos, false);
@@ -45,6 +48,43 @@ MapWindow::RenderTerrain(Canvas &canvas)
   background.SetShadingAngle(render_projection, GetMapSettings().terrain,
                              Calculated());
   background.Draw(canvas, render_projection, GetMapSettings().terrain);
+}
+
+inline void
+MapWindow::RenderRasp(Canvas &canvas)
+{
+  if (rasp_store == nullptr)
+    return;
+
+  const WeatherUIState &state = GetUIState().weather;
+  if (rasp_renderer && state.map != (int)rasp_renderer->GetParameter()) {
+#ifndef ENABLE_OPENGL
+    const ScopeLock protect(mutex);
+#endif
+
+    rasp_renderer.reset();
+  }
+
+  if (state.map < 0)
+    return;
+
+  if (!rasp_renderer) {
+#ifndef ENABLE_OPENGL
+    const ScopeLock protect(mutex);
+#endif
+    rasp_renderer.reset(new RaspRenderer(*rasp_store, state.map));
+  }
+
+  rasp_renderer->SetTime(state.time);
+
+  {
+    QuietOperationEnvironment operation;
+    rasp_renderer->Update(Calculated().date_time_local, operation);
+  }
+
+  const auto &terrain_settings = GetMapSettings().terrain;
+  if (rasp_renderer->Generate(render_projection, terrain_settings))
+    rasp_renderer->Draw(canvas, render_projection);
 }
 
 void
@@ -62,11 +102,11 @@ MapWindow::RenderTopographyLabels(Canvas &canvas)
 }
 
 inline void
-MapWindow::RenderOverlayBitmaps(Canvas &canvas)
+MapWindow::RenderOverlays(Canvas &canvas)
 {
 #ifdef ENABLE_OPENGL
-  if (overlay_bitmap)
-    overlay_bitmap->Draw(canvas, render_projection);
+  if (overlay)
+    overlay->Draw(canvas, render_projection);
 #endif
 }
 
@@ -109,7 +149,7 @@ MapWindow::RenderNOAAStations(Canvas &canvas)
   if (noaa_store == nullptr)
     return;
 
-  RasterPoint pt;
+  PixelPoint pt;
   for (auto it = noaa_store->begin(), end = noaa_store->end(); it != end; ++it)
     if (it->parsed_metar_available && it->parsed_metar.location_available &&
         render_projection.GeoToScreenIfVisible(it->parsed_metar.location, pt))
@@ -148,7 +188,7 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   }
 
   // Calculate screen position of the aircraft
-  RasterPoint aircraft_pos{0,0};
+  PixelPoint aircraft_pos{0,0};
   if (basic.location_available)
       aircraft_pos = render_projection.GeoToScreen(basic.location);
 
@@ -156,11 +196,14 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   draw_sw.Mark("RenderTerrain");
   RenderTerrain(canvas);
 
+  draw_sw.Mark("RenderRasp");
+  RenderRasp(canvas);
+
   draw_sw.Mark("RenderTopography");
   RenderTopography(canvas);
 
-  draw_sw.Mark("RenderOverlayBitmaps");
-  RenderOverlayBitmaps(canvas);
+  draw_sw.Mark("RenderOverlays");
+  RenderOverlays(canvas);
 
   draw_sw.Mark("RenderFinalGlideShading");
   RenderFinalGlideShading(canvas);

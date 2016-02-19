@@ -25,11 +25,11 @@ Copyright_License {
 #define GAUGE_VARIO_H
 
 #include "Screen/AntiFlickerWindow.hpp"
+#include "Screen/BulkPoint.hpp"
 #include "Blackboard/FullBlackboard.hpp"
 #include "Math/Point2D.hpp"
 
 struct VarioLook;
-struct UnitsLook;
 class ContainerWindow;
 
 class GaugeVario : public AntiFlickerWindow
@@ -49,7 +49,7 @@ class GaugeVario : public AntiFlickerWindow
   struct DrawInfo {
     bool initialised;
     PixelRect rc;
-    RasterPoint text_position;
+    PixelPoint text_position;
     double last_value;
     TCHAR last_text[32];
     Unit last_unit;
@@ -58,7 +58,6 @@ class GaugeVario : public AntiFlickerWindow
   const FullBlackboard &blackboard;
 
   const VarioLook &look;
-  const UnitsLook &units_look;
 
 private:
   const unsigned nlength0, nlength1, nwidth, nline;
@@ -72,9 +71,9 @@ private:
   bool ballast_initialised;
   bool bugs_initialised;
 
-  RasterPoint top_position;
-  RasterPoint middle_position;
-  RasterPoint bottom_position;
+  PixelPoint top_position;
+  PixelPoint middle_position;
+  PixelPoint bottom_position;
 
   DrawInfo value_top;
   DrawInfo value_middle;
@@ -83,13 +82,12 @@ private:
   DrawInfo label_middle;
   DrawInfo label_bottom;
 
-  RasterPoint polys[(gmax * 2 + 1) * 3];
-  RasterPoint lines[gmax * 2 + 1];
+  BulkPixelPoint polys[(gmax * 2 + 1) * 3];
+  BulkPixelPoint lines[gmax * 2 + 1];
 
 public:
   GaugeVario(const FullBlackboard &blackboard,
              ContainerWindow &parent, const VarioLook &look,
-             const UnitsLook &units_look,
              PixelRect rc, const WindowStyle style=WindowStyle());
 
 protected:
@@ -135,7 +133,7 @@ private:
 
   void MakePolygon(const int i);
   void MakeAllPolygons();
-  RasterPoint *getPolygon(const int i);
+  BulkPixelPoint *getPolygon(const int i);
 };
 
 #endif

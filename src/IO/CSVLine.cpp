@@ -21,7 +21,7 @@ Copyright_License {
 }
 */
 
-#include "NMEA/InputLine.hpp"
+#include "CSVLine.hpp"
 #include "Util/StringAPI.hxx"
 
 #include <algorithm>
@@ -238,9 +238,9 @@ CSVLine::ReadChecked(unsigned &value_r)
 }
 
 bool
-CSVLine::ReadCheckedCompare(fixed &value_r, const char *string)
+CSVLine::ReadCheckedCompare(double &value_r, const char *string)
 {
-  fixed value;
+  double value;
   if (ReadChecked(value)) {
     if (ReadCompare(string)) {
       value_r = value;

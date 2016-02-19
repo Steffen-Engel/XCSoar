@@ -26,9 +26,8 @@ Copyright_License {
 #include "Look/MapLook.hpp"
 #include "Topography/CachedTopographyRenderer.hpp"
 #include "Terrain/RasterTerrain.hpp"
-#include "Terrain/RasterWeatherCache.hpp"
+#include "Weather/Rasp/RaspRenderer.hpp"
 #include "Computer/GlideComputer.hpp"
-#include "Operation/Operation.hpp"
 
 #ifdef ENABLE_OPENGL
 #include "Screen/OpenGL/Scissor.hpp"
@@ -51,33 +50,14 @@ MapWindow::~MapWindow()
   Destroy();
 
   delete topography_renderer;
-  delete weather;
-}
-
-void
-MapWindow::Create(ContainerWindow &parent, const PixelRect &rc)
-{
-  WindowStyle style;
-  style.EnableDoubleClicks();
-  DoubleBufferWindow::Create(parent, rc, style);
-
-  // initialize other systems
-  visible_projection.SetMapScale(5000);
-  visible_projection.SetScreenOrigin((rc.left + rc.right) / 2,
-                                     (rc.bottom + rc.top) / 2);
-  visible_projection.UpdateScreenBounds();
-
-#ifndef ENABLE_OPENGL
-  buffer_projection = visible_projection;
-#endif
 }
 
 #ifdef ENABLE_OPENGL
 
 void
-MapWindow::SetOverlayBitmap(std::unique_ptr<MapOverlayBitmap> &&_overlay_bitmap)
+MapWindow::SetOverlay(std::unique_ptr<MapOverlay> &&_overlay)
 {
-  overlay_bitmap = std::move(_overlay_bitmap);
+  overlay = std::move(_overlay);
 }
 
 #endif
@@ -95,6 +75,8 @@ void
 MapWindow::FlushCaches()
 {
   background.Flush();
+  if (rasp_renderer)
+    rasp_renderer->Flush();
   airspace_renderer.Flush();
 }
 
@@ -138,23 +120,6 @@ MapWindow::UpdateTerrain()
   // always service terrain even if it's not used by the map,
   // because it's used by other calculations
   return terrain->UpdateTiles(location, radius);
-}
-
-bool
-MapWindow::UpdateWeather()
-{
-  if (weather == nullptr || !Calculated().date_time_local.IsTimePlausible())
-    return false;
-
-  const WeatherUIState &state = GetUIState().weather;
-  weather->SetParameter(state.map);
-  weather->SetTime(state.time);
-
-  QuietOperationEnvironment operation;
-  weather->Reload(Calculated().date_time_local, operation);
-  weather->SetViewCenter(visible_projection.GetGeoScreenCenter(),
-                         visible_projection.GetScreenWidthMeters() / 2);
-  return weather->IsDirty();
 }
 
 /**
@@ -202,11 +167,8 @@ MapWindow::SetTerrain(RasterTerrain *_terrain)
 }
 
 void
-MapWindow::SetWeather(const RasterWeatherStore *_weather)
+MapWindow::SetWeather(const RaspStore *_rasp_store)
 {
-  delete weather;
-  weather = _weather != nullptr
-    ? new RasterWeatherCache(*_weather)
-    : nullptr;
-  background.SetWeather(weather);
+  rasp_renderer.reset();
+  rasp_store = _rasp_store;
 }

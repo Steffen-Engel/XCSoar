@@ -26,17 +26,9 @@ Copyright_License {
 #include "Math/Util.hpp"
 #include "Util/NumberParser.hpp"
 
-#include <stdlib.h>
 #include <stdio.h>
 
 static bool DataFieldKeyUp = false;
-
-gcc_pure
-static fixed
-ParseString(const TCHAR *s)
-{
-  return fixed(ParseDouble(s));
-}
 
 int
 DataFieldFloat::GetAsInteger() const
@@ -61,11 +53,11 @@ DataFieldFloat::GetAsDisplayString() const
 void
 DataFieldFloat::SetAsInteger(int Value)
 {
-  SetAsFloat(fixed(Value));
+  SetAsFloat(Value);
 }
 
 void
-DataFieldFloat::SetAsFloat(fixed Value)
+DataFieldFloat::SetAsFloat(double Value)
 {
   if (Value < mMin)
     Value = mMin;
@@ -80,53 +72,53 @@ DataFieldFloat::SetAsFloat(fixed Value)
 void
 DataFieldFloat::SetAsString(const TCHAR *Value)
 {
-  SetAsFloat(ParseString(Value));
+  SetAsFloat(ParseDouble(Value));
 }
 
 void
 DataFieldFloat::Inc()
 {
   // no keypad, allow user to scroll small values
-  if (mFine && mValue < fixed(0.95) && mStep >= fixed(0.5) &&
-      mMin >= fixed(0))
-    SetAsFloat(mValue + fixed(1) / 10);
+  if (mFine && mValue < 0.95 && mStep >= 0.5 &&
+      mMin >= 0)
+    SetAsFloat(mValue + 1 / 10);
   else
-    SetAsFloat(fixed(mValue + mStep * SpeedUp(true)));
+    SetAsFloat(mValue + mStep * SpeedUp(true));
 }
 
 void
 DataFieldFloat::Dec()
 {
   // no keypad, allow user to scroll small values
-  if (mFine && mValue <= fixed(1) && mStep >= fixed(0.5) &&
-      mMin >= fixed(0))
-    SetAsFloat(mValue - fixed(1) / 10);
+  if (mFine && mValue <= 1 && mStep >= 0.5 &&
+      mMin >= 0)
+    SetAsFloat(mValue - 1 / 10);
   else
-    SetAsFloat(fixed(mValue - mStep * SpeedUp(false)));
+    SetAsFloat(mValue - mStep * SpeedUp(false));
 }
 
-fixed
+double
 DataFieldFloat::SpeedUp(bool keyup)
 {
   if (keyup != DataFieldKeyUp) {
     mSpeedup = 0;
     DataFieldKeyUp = keyup;
     last_step.Update();
-    return fixed(1);
+    return 1;
   }
 
   if (!last_step.Check(200)) {
     mSpeedup++;
     if (mSpeedup > 5) {
       last_step.UpdateWithOffset(350);
-      return fixed(10);
+      return 10;
     }
   } else
     mSpeedup = 0;
 
   last_step.Update();
 
-  return fixed(1);
+  return 1;
 }
 
 void
@@ -136,7 +128,7 @@ DataFieldFloat::SetFromCombo(int iDataFieldIndex, const TCHAR *sValue)
 }
 
 void
-DataFieldFloat::AppendComboValue(ComboList &combo_list, fixed value) const
+DataFieldFloat::AppendComboValue(ComboList &combo_list, double value) const
 {
   TCHAR a[edit_format.capacity()], b[display_format.capacity()];
   _stprintf(a, edit_format, (double)value);
@@ -148,7 +140,7 @@ ComboList
 DataFieldFloat::CreateComboList(const TCHAR *reference_string) const
 {
   const auto reference = reference_string != nullptr
-    ? ParseString(reference_string)
+    ? ParseDouble(reference_string)
     : mValue;
 
   ComboList combo_list;

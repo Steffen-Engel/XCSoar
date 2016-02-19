@@ -24,12 +24,11 @@ Copyright_License {
 #include "Dialogs/MapItemListDialog.hpp"
 #include "Dialogs/WidgetDialog.hpp"
 #include "Screen/Canvas.hpp"
-#include "Screen/Layout.hpp"
 #include "Dialogs/Airspace/Airspace.hpp"
 #include "Dialogs/Task/TaskDialogs.hpp"
 #include "Dialogs/Waypoint/WaypointDialogs.hpp"
 #include "Dialogs/Traffic/TrafficDialogs.hpp"
-#include "Look/DialogLook.hpp"
+#include "Dialogs/Weather/WeatherDialog.hpp"
 #include "Language/Language.hpp"
 #include "MapSettings.hpp"
 #include "MapWindow/Items/MapItem.hpp"
@@ -68,6 +67,8 @@ HasDetails(const MapItem &item)
 #ifdef HAVE_NOAA
   case MapItem::WEATHER:
 #endif
+  case MapItem::OVERLAY:
+  case MapItem::RASP:
     return true;
   }
 
@@ -318,6 +319,14 @@ ShowMapItemDialog(const MapItem &item,
     dlgNOAADetailsShowModal(((const WeatherStationMapItem &)item).station);
     break;
 #endif
+
+  case MapItem::OVERLAY:
+    ShowWeatherDialog(_T("overlay"));
+    break;
+
+  case MapItem::RASP:
+    ShowWeatherDialog(_T("rasp"));
+    break;
   }
 }
 

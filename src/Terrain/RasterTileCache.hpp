@@ -24,6 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_RASTERTILE_CACHE_HPP
 #define XCSOAR_RASTERTILE_CACHE_HPP
 
+#include "RasterTraits.hpp"
 #include "RasterTile.hpp"
 #include "RasterLocation.hpp"
 #include "Geo/GeoBounds.hpp"
@@ -31,8 +32,6 @@ Copyright_License {
 #include "Util/Serial.hpp"
 
 #include <assert.h>
-#include <tchar.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <stdint.h>
 
@@ -40,7 +39,6 @@ Copyright_License {
 
 struct jas_matrix;
 struct GridLocation;
-class OperationEnvironment;
 
 class RasterTileCache {
   static constexpr unsigned MAX_RTC_TILES = 4096;
@@ -69,15 +67,6 @@ class RasterTileCache {
    * is shifted by this number of bits
    */
   static constexpr unsigned INTERSECT_BITS = 7;
-
-public:
-  /**
-   * The fixed-point fractional part of sub-pixel coordinates.
-   *
-   * Do not edit!  There are still some hard-coded code sections left,
-   * e.g. CombinedDivAndMod().
-   */
-  static constexpr unsigned SUBPIXEL_BITS = 8;
 
 protected:
   friend struct RTDistanceSort;
@@ -199,8 +188,8 @@ public:
   void ScanLine(const RasterLocation start, const RasterLocation end,
                 TerrainHeight *buffer, unsigned size, bool interpolate) const;
 
-  bool FirstIntersection(int origin_x, int origin_y,
-                         int destination_x, int destination_y,
+  bool FirstIntersection(SignedRasterLocation origin,
+                         SignedRasterLocation destination,
                          int h_origin,
                          int h_dest,
                          const int slope_fact, const int h_ceiling,
@@ -212,8 +201,7 @@ public:
    * @return {-1,-1} if no intersection was found
    */
   gcc_pure SignedRasterLocation
-  Intersection(int origin_x, int origin_y,
-               int destination_x, int destination_y,
+  Intersection(SignedRasterLocation origin, SignedRasterLocation destination,
                int h_origin, const int slope_fact) const;
 
 private:
@@ -307,34 +295,20 @@ public:
   unsigned int GetHeight() const { return height; }
 
   unsigned GetFineWidth() const {
-    return width << SUBPIXEL_BITS;
+    return width << RasterTraits::SUBPIXEL_BITS;
   }
 
   unsigned GetFineHeight() const {
-    return height << SUBPIXEL_BITS;
+    return height << RasterTraits::SUBPIXEL_BITS;
   }
 
 private:
   unsigned GetFineTileWidth() const {
-    return tile_width << SUBPIXEL_BITS;
+    return tile_width << RasterTraits::SUBPIXEL_BITS;
   }
 
   unsigned GetFineTileHeight() const {
-    return tile_height << SUBPIXEL_BITS;
-  }
-
-  /**
-   * Convert a pixel size to an overview pixel size, rounding down.
-   */
-  static constexpr unsigned ToOverview(unsigned x) {
-    return x >> OVERVIEW_BITS;
-  }
-
-  /**
-   * Convert a pixel size to an overview pixel size, rounding up.
-   */
-  static constexpr unsigned ToOverviewCeil(unsigned x) {
-    return ToOverview(x + ~OVERVIEW_MASK);
+    return tile_height << RasterTraits::SUBPIXEL_BITS;
   }
 };
 

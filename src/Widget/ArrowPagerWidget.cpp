@@ -28,13 +28,10 @@ Copyright_License {
 #include "Form/Form.hpp"
 #include "Renderer/SymbolButtonRenderer.hpp"
 
-#include <assert.h>
-
 ArrowPagerWidget::Layout::Layout(PixelRect rc, const Widget *extra_widget)
   :main(rc)
 {
-  const unsigned width = rc.right - rc.left;
-  const unsigned height = rc.bottom - rc.top;
+  const unsigned width = rc.GetWidth(), height = rc.GetHeight();
   const unsigned button_height = ::Layout::GetMaximumControlHeight();
 
   main = rc;

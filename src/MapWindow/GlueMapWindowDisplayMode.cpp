@@ -33,17 +33,17 @@ Copyright_License {
 void
 OffsetHistory::Reset()
 {
-  offsets.fill(RasterPoint{0, 0});
+  offsets.fill(PixelPoint{0, 0});
 }
 
 inline void
-OffsetHistory::Add(RasterPoint p)
+OffsetHistory::Add(PixelPoint p)
 {
   offsets[pos] = p;
   pos = (pos + 1) % offsets.size();
 }
 
-inline RasterPoint
+inline PixelPoint
 OffsetHistory::GetAverage() const
 {
   int x = 0;
@@ -54,7 +54,7 @@ OffsetHistory::GetAverage() const
     y += i->y;
   }
 
-  RasterPoint avg;
+  PixelPoint avg;
   avg.x = x / (int) offsets.size();
   avg.y = y / (int) offsets.size();
 
@@ -311,13 +311,13 @@ GlueMapWindow::UpdateProjection()
   const bool circling =
     CommonInterface::GetUIState().display_mode == DisplayMode::CIRCLING;
 
-  const RasterPoint center = rc.GetCenter();
+  const auto center = rc.GetCenter();
 
   if (circling || !IsNearSelf())
     visible_projection.SetScreenOrigin(center.x, center.y);
   else if (settings_map.cruise_orientation == MapOrientation::NORTH_UP ||
            settings_map.cruise_orientation == MapOrientation::WIND_UP) {
-    RasterPoint offset{0, 0};
+    PixelPoint offset{0, 0};
     if (settings_map.glider_screen_position != 50 &&
         settings_map.map_shift_bias != MapShiftBias::NONE) {
       double x = 0, y = 0;
@@ -343,8 +343,8 @@ GlueMapWindow::UpdateProjection()
         }
       }
       double position_factor = (50. - settings_map.glider_screen_position) / 100.;
-      offset.x = PixelScalar(x * (rc.right - rc.left) * position_factor);
-      offset.y = PixelScalar(y * (rc.top - rc.bottom) * position_factor);
+      offset.x = int(x * rc.GetWidth() * position_factor);
+      offset.y = int(-y * rc.GetHeight() * position_factor);
       offset_history.Add(offset);
       offset = offset_history.GetAverage();
     }
@@ -360,7 +360,7 @@ GlueMapWindow::UpdateProjection()
     if (d_t <= 0) {
       SetLocationLazy(basic.location);
     } else {
-      const auto d_max = Double(visible_projection.GetMapScale());
+      const auto d_max = 2 * visible_projection.GetMapScale();
       const auto t = std::min(d_t, d_max)/d_t;
       SetLocation(basic.location.Interpolate(calculated.thermal_locator.estimate_location,
                                                t));
