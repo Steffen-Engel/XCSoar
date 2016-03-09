@@ -25,6 +25,7 @@
 
 #include "Geo/Flat/FlatGeoPoint.hpp"
 #include "Geo/Flat/FlatBoundingBox.hpp"
+#include "Util/ConstBuffer.hxx"
 
 #include <vector>
 
@@ -41,10 +42,28 @@ public:
 
   void CalcBoundingBox();
 
+  /**
+   * Add the origin to an empty
+   */
+  void AddOrigin(const AFlatGeoPoint &origin, size_t reserve);
+
   void AddPoint(FlatGeoPoint p);
 
+  /**
+   * Finish the point list.
+   *
+   * @param closed true if this is a closed circle and the origin is
+   * not part of the hull
+   * @return true if the fan is valid
+   */
+  bool CommitPoints(bool closed);
+
+  /**
+   * @param closed true if this is a closed shape and the origin is
+   * not part of the hull
+   */
   gcc_pure
-  bool IsInside(FlatGeoPoint p) const;
+  bool IsInside(FlatGeoPoint p, bool closed) const;
 
   void Clear() {
     vs.clear();
@@ -57,6 +76,22 @@ public:
 
   AFlatGeoPoint GetOrigin() const {
     return AFlatGeoPoint(vs.front(), height);
+  }
+
+  /**
+   * Returns a list of points describing the hull.
+   *
+   * @param closed true if this is a closed circle and the origin is
+   * not part of the hull
+   */
+  gcc_pure
+  ConstBuffer<FlatGeoPoint> GetHull(bool closed) const {
+    ConstBuffer<FlatGeoPoint> hull(&vs.front(), vs.size());
+    if (closed)
+      /* omit the origin, because it's not part of the hull in a
+         closed shape */
+      hull.pop_front();
+    return hull;
   }
 
   int GetHeight() const {

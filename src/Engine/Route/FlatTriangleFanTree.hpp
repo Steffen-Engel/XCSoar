@@ -36,14 +36,6 @@ struct AFlatGeoPoint;
 struct ReachFanParms;
 template<typename T> struct ConstBuffer;
 
-class TriangleFanVisitor
-{
-public:
-  virtual void StartFan() = 0;
-  virtual void AddPoint(const GeoPoint &p) = 0;
-  virtual void EndFan() = 0;
-};
-
 class FlatTriangleFanVisitor {
 public:
   virtual void VisitFan(FlatGeoPoint origin,
@@ -83,8 +75,9 @@ public:
   void CalcBB();
 
   gcc_pure
-  bool IsInsideTree(FlatGeoPoint p,
-                    const bool include_children = true) const;
+  bool IsInside(FlatGeoPoint p) const {
+    return FlatTriangleFan::IsInside(p, IsRoot());
+  }
 
   void FillReach(const AFlatGeoPoint &origin, ReachFanParms &parms);
   void DummyReach(const AFlatGeoPoint &origin);
@@ -99,7 +92,11 @@ public:
     return vs.size() == 1 && children.empty();
   }
 
-  void FillReach(const AFlatGeoPoint &origin,
+  /**
+   * @return true if a valid fan has been filled, false to discard
+   * this object
+   */
+  bool FillReach(const AFlatGeoPoint &origin,
                  const int index_low, const int index_high,
                  const ReachFanParms &parms);
 
@@ -112,10 +109,6 @@ public:
   bool FindPositiveArrival(FlatGeoPoint n,
                            const ReachFanParms &parms,
                            int &arrival_height) const;
-
-  void AcceptInRange(const FlatBoundingBox &bb,
-                     const FlatProjection &projection,
-                     TriangleFanVisitor &visitor) const;
 
   void AcceptInRange(const FlatBoundingBox &bb,
                      FlatTriangleFanVisitor &visitor) const;

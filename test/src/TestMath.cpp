@@ -1,5 +1,4 @@
-/*
-Copyright_License {
+/* Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
   Copyright (C) 2000-2016 The XCSoar Project
@@ -21,30 +20,15 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_TRACKING_SKYLINES_HANDLER_HPP
-#define XCSOAR_TRACKING_SKYLINES_HANDLER_HPP
+#include "TestMath.hpp"
+#include "TestUtil.hpp"
 
-#include "Features.hpp"
+int main(int argc, char **argv)
+{
+  plan_tests(N_TEST_LINE2D + N_TEST_QUADRILATERAL);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+  TestLine2D();
+  TestQuadrilateral();
 
-#include <stdint.h>
-#include <tchar.h>
-
-struct GeoPoint;
-
-namespace SkyLinesTracking {
-  class Handler {
-  public:
-    virtual void OnAck(unsigned id) {}
-    virtual void OnTraffic(uint32_t pilot_id, unsigned time_of_day_ms,
-                           const ::GeoPoint &location, int altitude) {}
-    virtual void OnUserName(uint32_t user_id, const TCHAR *name) {}
-    virtual void OnWave(unsigned time_of_day_ms,
-                        const ::GeoPoint &a, const ::GeoPoint &b) {}
-  };
+  return exit_status();
 }
-
-#endif
-
-#endif

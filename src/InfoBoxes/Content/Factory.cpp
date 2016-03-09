@@ -850,15 +850,6 @@ static constexpr MetaData meta_data[] = {
     next_waypoint_infobox_panels,
   },
 
-  // e_WP_ETA_VMG
-  {
-    N_("Next waypoint arrival time (ground speed)"),
-    N_("WP ETA VMG"),
-    N_("Estimated arrival time at next waypoint, assuming current ground speed is maintained."),
-    UpdateInfoBoxNextETAVMG,
-    next_waypoint_infobox_panels,
-  },
-
   // e_Horizon
   {
     N_("Attitude indicator"),
@@ -1121,6 +1112,14 @@ static constexpr MetaData meta_data[] = {
     N_("ClimbAltitude"),
     N_("Arrival altitude at the next waypoint with average climb speed of the last 30 seconds."),
     UpdateInfoBoxClimbAltitude,
+  },
+  // e_WP_ETA_VMG
+  {
+    N_("Next waypoint arrival time (ground speed)"),
+    N_("WP ETA VMG"),
+    N_("Estimated arrival time at next waypoint, assuming current ground speed is maintained."),
+    UpdateInfoBoxNextETAVMG,
+    next_waypoint_infobox_panels,
   },
 
 };

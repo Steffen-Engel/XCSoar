@@ -43,10 +43,23 @@ IsSpike(FlatGeoPoint a, FlatGeoPoint b, FlatGeoPoint c)
 }
 
 void
+FlatTriangleFan::AddOrigin(const AFlatGeoPoint &origin, size_t reserve)
+{
+  assert(vs.empty());
+
+  height = origin.altitude;
+
+  vs.reserve(reserve + 1);
+  vs.push_back(origin);
+}
+
+void
 FlatTriangleFan::AddPoint(FlatGeoPoint p)
 {
+  assert(!vs.empty());
+
   // avoid duplicates
-  if (!vs.empty() && p == vs.back())
+  if (p == vs.back())
     return;
 
   if (vs.size() >= 2 && IsSpike(vs[vs.size() - 2], vs.back(), p))
@@ -56,14 +69,49 @@ FlatTriangleFan::AddPoint(FlatGeoPoint p)
   vs.push_back(p);
 }
 
+/**
+ * Is there a spike wrapping around beginning and end of the
+ * container?
+ */
+static bool
+IsWrappedSpike(ConstBuffer<FlatGeoPoint> hull)
+{
+  assert(hull.size > 3);
+
+  return IsSpike(hull[hull.size - 2], hull[hull.size - 1], hull[0]) ||
+    IsSpike(hull[hull.size - 1], hull[0], hull[1]);
+}
+
 bool
-FlatTriangleFan::IsInside(FlatGeoPoint p) const
+FlatTriangleFan::CommitPoints(bool closed)
+{
+  auto hull = GetHull(closed);
+
+  while (hull.size > 3) {
+    if (!IsWrappedSpike(hull))
+      /* no spikes left: success! */
+      return true;
+
+    /* erase this spike */
+    vs.pop_back();
+    hull.pop_back();
+
+    /* .. and continue searching */
+  }
+
+  /* not enough points: fail */
+  return false;
+}
+
+bool
+FlatTriangleFan::IsInside(FlatGeoPoint p, bool closed) const
 {
   if (!bounding_box.IsInside(p))
     return false;
 
   bool inside = false;
-  for (auto i = vs.begin(), j = std::prev(vs.end()), end = vs.end();
+  const auto hull = GetHull(closed);
+  for (auto i = hull.begin(), end = hull.end(), j = std::prev(end);
        i != end; j = i++) {
     if ((i->y > p.y) == (j->y > p.y))
       continue;

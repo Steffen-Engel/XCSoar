@@ -40,12 +40,19 @@ struct Line2D {
   constexpr Line2D(Point _a, Point _b):a(_a), b(_b) {}
 
   /**
+   * Returns the vector pointing from #a to #b.
+   */
+  constexpr Point GetVector() const {
+    return b - a;
+  }
+
+  /**
    * Calculate squared length of line
    *
    * @return Squared length
    */
   constexpr product_type GetSquaredDistance() const {
-    return (b - a).MagnitudeSquared();
+    return GetVector().MagnitudeSquared();
   }
 
   constexpr Point GetMiddle() const {
@@ -72,7 +79,7 @@ struct Line2D {
    * Return dot product of two lines (vectors)
    */
   constexpr product_type DotProduct(Line2D<P> other) const {
-    return (b - a).DotProduct(other.b - other.a);
+    return GetVector().DotProduct(other.GetVector());
   }
 
   constexpr product_type CrossProduct() const {
@@ -86,7 +93,7 @@ struct Line2D {
    * the line, negative if it is right of the line
    */
   constexpr product_type LocatePoint(Point p) const {
-    return ::CrossProduct(b - a, p - a);
+    return ::CrossProduct(GetVector(), p - a);
   }
 
   /**
@@ -94,6 +101,40 @@ struct Line2D {
    */
   constexpr bool Contains(Point p) const {
     return LocatePoint(p) == product_type(0);
+  }
+
+  /**
+   * Calculate an interpolated point between #a and #b
+   *
+   * @param ratio the interpolation ratio where 0=#a and 1=#b
+   */
+  constexpr Point Interpolate(double ratio) const {
+    return Point(scalar_type(a.x * (1 - ratio) + b.x * ratio),
+                 scalar_type(a.y * (1 - ratio) + b.y * ratio));
+  }
+
+  /**
+   * Calculate the position of the projection of #p onto this line,
+   * expressed as ratio where 0=#a and 1=#b.
+   */
+  constexpr double ProjectedRatio(Point p) const {
+    return (double)::DotProduct(GetVector(), p - a)
+      / (double)GetSquaredDistance();
+  }
+
+  /**
+   * Calculate the projection of #p into this line.
+   */
+  constexpr Point Project(Point p) const {
+    return Interpolate(ProjectedRatio(p));
+  }
+
+  /**
+   * Calculate the square distance from a point to the projected point
+   * on an infinite line.
+   */
+  constexpr product_type SquareDistanceTo(Point p) const {
+    return (p - Project(p)).MagnitudeSquared();
   }
 };
 

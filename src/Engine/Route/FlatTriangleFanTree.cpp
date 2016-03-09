@@ -25,7 +25,6 @@
 #include "Terrain/RasterMap.hpp"
 #include "ReachFanParms.hpp"
 #include "Util/GlobalSliceAllocator.hpp"
-#include "Util/ConstBuffer.hxx"
 #include "Geo/Flat/FlatProjection.hpp"
 
 #define REACH_BUFFER 1
@@ -64,39 +63,13 @@ FlatTriangleFanTree::CalcBB()
   }
 }
 
-bool
-FlatTriangleFanTree::IsInsideTree(const FlatGeoPoint p,
-                                  const bool include_children) const
-{
-  if (include_children) {
-    if (!bb_children.IsInside(p))
-      return false;
-  } else {
-    if (!bounding_box.IsInside(p))
-      return false;
-  }
-
-  if (IsInside(p))
-    return true;
-
-  if (!include_children)
-    return false;
-
-  for (const auto &child : children)
-    if (child.IsInsideTree(p, true))
-      return true;
-
-  // should never get here!
-  return false;
-}
-
 void
 FlatTriangleFanTree::FillReach(const AFlatGeoPoint &origin,
                                ReachFanParms &parms)
 {
   gaps_filled = false;
 
-  FillReach(origin, 0, ROUTEPOLAR_POINTS + 1, parms);
+  FillReach(origin, 0, ROUTEPOLAR_POINTS, parms);
 
   for (parms.set_depth = 0; parms.set_depth < REACH_MAX_DEPTH;
       ++parms.set_depth)
@@ -111,12 +84,10 @@ FlatTriangleFanTree::FillReach(const AFlatGeoPoint &origin,
 void
 FlatTriangleFanTree::DummyReach(const AFlatGeoPoint &ao)
 {
-  assert(vs.empty());
   assert(children.empty());
 
-  AddPoint(ao);
+  AddOrigin(ao, 0);
   CalcBB();
-  height = ao.altitude;
 }
 
 bool
@@ -142,7 +113,7 @@ FlatTriangleFanTree::FillDepth(const AFlatGeoPoint &origin,
   return true;
 }
 
-void
+bool
 FlatTriangleFanTree::FillReach(const AFlatGeoPoint &origin, const int index_low,
                                const int index_high,
                                const ReachFanParms &parms)
@@ -156,12 +127,10 @@ FlatTriangleFanTree::FillReach(const AFlatGeoPoint &origin, const int index_low,
     const FlatGeoPoint x_mid = parms.ReachIntercept(index_mid, origin,
                                                     geo_origin);
     if (TooClose(x_mid, origin))
-      return;
+      return false;
   }
 
-  assert(vs.empty());
-  vs.reserve(index_high - index_low + 1);
-  AddPoint(origin);
+  AddOrigin(origin, index_high - index_low);
   for (int index = index_low; index < index_high; ++index) {
     FlatGeoPoint x = parms.ReachIntercept(index, origin, geo_origin);
     /* if ReachIntercept() did not find anything reasonable it returns
@@ -173,6 +142,8 @@ FlatTriangleFanTree::FillReach(const AFlatGeoPoint &origin, const int index_low,
 
     AddPoint(x);
   }
+
+  return CommitPoints(IsRoot());
 }
 
 void
@@ -256,9 +227,6 @@ FlatTriangleFanTree::CheckGap(const AFlatGeoPoint &n, const RouteLink &e_1,
     index_right = e_long.polar_index + REACH_SWEEP;
   }
 
-  children.emplace_back(depth + 1);
-  FlatTriangleFanTree &child = children.back();
-
   for (auto f = f0; f < 0.9; f += 0.1) {
     // find corner point
     const FlatGeoPoint px = (dp * f + FlatGeoPoint(n));
@@ -268,20 +236,14 @@ FlatTriangleFanTree::CheckGap(const AFlatGeoPoint &n, const RouteLink &e_1,
     // altitude calculated from pure glide from n to x
     const AFlatGeoPoint x(px, h);
 
-    child.FillReach(x, index_left, index_right, parms);
-
-    // prune child if empty or single spike
-    if (child.vs.size() > 3) {
+    FlatTriangleFanTree child(depth + 1);
+    if (child.FillReach(x, index_left, index_right, parms)) {
       parms.vertex_counter += child.vs.size();
       parms.fan_counter++;
+      children.emplace_back(std::move(child));
       return true;
     }
-
-    child.vs.clear();
   }
-
-  // don't need the child
-  children.pop_back();
 
   return false;
 }
@@ -312,6 +274,10 @@ FlatTriangleFanTree::FindPositiveArrival(const FlatGeoPoint n,
       arrival_height = h;
       return true;
     }
+
+    /* stop here; it is impossible for a child to find a positive
+       arrival height if this one didn't */
+    return false;
   }
 
   bool retval = false;
@@ -324,41 +290,13 @@ FlatTriangleFanTree::FindPositiveArrival(const FlatGeoPoint n,
 
 void
 FlatTriangleFanTree::AcceptInRange(const FlatBoundingBox &bb,
-                                   const FlatProjection &projection,
-                                   TriangleFanVisitor &visitor) const
-{
-  if (!bb.Overlaps(bb_children))
-    return;
-
-  if (bb.Overlaps(bounding_box)) {
-    visitor.StartFan();
-    for (const auto &v : vs)
-      visitor.AddPoint(projection.Unproject(v));
-
-    visitor.EndFan();
-  }
-
-  for (const auto &child : children)
-    child.AcceptInRange(bb, projection, visitor);
-}
-
-void
-FlatTriangleFanTree::AcceptInRange(const FlatBoundingBox &bb,
                                    FlatTriangleFanVisitor &visitor) const
 {
   if (!bb.Overlaps(bb_children))
     return;
 
-  if (bb.Overlaps(bounding_box)) {
-    ConstBuffer<FlatGeoPoint> p(&vs.front(), vs.size());
-    if (IsRoot())
-      /* omit the origin in the top-most instance because this is the
-         one that searched a full circle; including the center will
-         cause a spike in the polygon */
-      p.pop_front();
-
-    visitor.VisitFan(GetOrigin(), p);
-  }
+  if (bb.Overlaps(bounding_box))
+    visitor.VisitFan(GetOrigin(), GetHull(IsRoot()));
 
   for (const auto &child : children)
     child.AcceptInRange(bb, visitor);

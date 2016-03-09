@@ -69,10 +69,9 @@ ProtectedRoutePlanner::SolveReach(const AGeoPoint &origin,
   lease->SolveReach(origin, config, h_ceiling, do_solve);
 }
 
-void
-ProtectedRoutePlanner::AcceptInRange(const GeoBounds &bounds,
-                                     TriangleFanVisitor &visitor) const
+const FlatProjection
+ProtectedRoutePlanner::GetReachProjection() const
 {
   Lease lease(*this);
-  lease->AcceptInRange(bounds, visitor);
+  return lease->GetReachProjection();
 }

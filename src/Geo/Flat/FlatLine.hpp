@@ -99,7 +99,7 @@ public:
    */
   gcc_pure
   double GetDistance() const {
-    return hypot(dx(), dy());
+    return a.Distance(b);
   }
 
   constexpr FlatLine operator+(FlatPoint delta) const {
@@ -126,15 +126,6 @@ public:
   }
 
   using Base::DotProduct;
-
-private:
-  constexpr double dx() const {
-    return b.x - a.x;
-  }
-
-  constexpr double dy() const {
-    return b.y - a.y;
-  }
 };
 
 #endif

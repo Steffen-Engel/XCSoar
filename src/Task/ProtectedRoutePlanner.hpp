@@ -82,8 +82,8 @@ public:
   void SolveReach(const AGeoPoint &origin, const RoutePlannerConfig &config,
                   int h_ceiling, bool do_solve);
 
-  void AcceptInRange(const GeoBounds &bounds,
-                     TriangleFanVisitor &visitor) const;
+  gcc_pure
+  const FlatProjection GetReachProjection() const;
 };
 
 #endif

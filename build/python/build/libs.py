@@ -8,8 +8,8 @@ from build.sdl2 import SDL2Project
 from build.lua import LuaProject
 
 glibc = AutotoolsProject(
-    'http://mirror.netcologne.de/gnu/libc/glibc-2.22.tar.xz',
-    'e51e02bf552a0a1fbbdc948fb2f5e83c',
+    'http://mirror.netcologne.de/gnu/libc/glibc-2.23.tar.xz',
+    '456995968f3acadbed39f5eba31678df',
     'include/unistd.h',
     [
         '--enable-static-nss',
@@ -35,8 +35,8 @@ zlib = ZlibProject(
 )
 
 freetype = FreeTypeProject(
-    'http://download.savannah.gnu.org/releases/freetype/freetype-2.6.2.tar.bz2',
-    '86109d0c998787d81ac582bad9adf82e',
+    'http://download.savannah.gnu.org/releases/freetype/freetype-2.6.3.tar.bz2',
+    '0037b25a8c090bc8a1218e867b32beb1',
     'lib/libfreetype.a',
     [
         '--disable-shared', '--enable-static',
@@ -46,8 +46,8 @@ freetype = FreeTypeProject(
 )
 
 curl = AutotoolsProject(
-    'http://curl.haxx.se/download/curl-7.47.0.tar.lzma',
-    'a6a400c4d6de843d13ffbbb39f4d8173',
+    'http://curl.haxx.se/download/curl-7.47.1.tar.lzma',
+    '8242c073d8e5fc1c2a1aa946f1e903a4',
     'lib/libcurl.a',
     [
         '--disable-shared', '--enable-static',

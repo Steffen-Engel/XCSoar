@@ -88,9 +88,9 @@ TEST_NAMES = \
 	test_task \
 	TestOverwritingRingBuffer \
 	TestDateTime TestRoughTime TestWrapClock \
+	TestMath \
 	TestMathTables \
 	TestAngle TestARange \
-	TestQuadrilateral \
 	TestUnits TestEarth TestSunEphemeris \
 	TestValidity TestUTM TestProfile \
 	TestAllocatedGrid \
@@ -354,11 +354,13 @@ TEST_ARANGE_SOURCES = \
 TEST_ARANGE_DEPENDS = MATH
 $(eval $(call link-program,TestARange,TEST_ARANGE))
 
-TEST_QUADRILATERAL_SOURCES = \
+TEST_MATH_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \
-	$(TEST_SRC_DIR)/TestQuadrilateral.cpp
+	$(TEST_SRC_DIR)/TestLine2D.cpp \
+	$(TEST_SRC_DIR)/TestQuadrilateral.cpp \
+	$(TEST_SRC_DIR)/TestMath.cpp
 QUADRILATERAL_ARANGE_DEPENDS = MATH
-$(eval $(call link-program,TestQuadrilateral,TEST_QUADRILATERAL))
+$(eval $(call link-program,TestMath,TEST_MATH))
 
 TEST_CSV_LINE_SOURCES = \
 	$(SRC)/IO/CSVLine.cpp \
@@ -1633,6 +1635,7 @@ $(eval $(call link-program,RunOLCAnalysis,RUN_OLC))
 RUN_WAVE_COMPUTER_SOURCES = \
 	$(DEBUG_REPLAY_SOURCES) \
 	$(SRC)/Computer/WaveComputer.cpp \
+	$(SRC)/Formatter/TimeFormatter.cpp \
 	$(SRC)/Formatter/GeoPointFormatter.cpp \
 	$(ENGINE_SRC_DIR)/Trace/Point.cpp \
 	$(ENGINE_SRC_DIR)/Trace/Trace.cpp \
