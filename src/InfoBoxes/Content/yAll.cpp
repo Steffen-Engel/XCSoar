@@ -72,12 +72,12 @@ InfoBoxContentControls::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
     canvas.Select(stick_pen);
     canvas.Select(stick_brush);
     // paint stick
-    canvas.DrawCircle(center.x + LoggerData.eta[ETA_QR] * radius / 100, center.y + LoggerData.eta[ETA_HR] * radius / 100, Layout::Scale(3));
+    canvas.DrawCircle(center.x - LoggerData.eta[ETA_QR] * radius / 100, center.y + LoggerData.eta[ETA_HR] * radius / 100, Layout::Scale(3));
 
     marker_brush.Create(COLOR_GRAY);
     canvas.Select(marker_brush);
     // paint rudder
-    canvas.DrawCircle(center.x + LoggerData.eta[ETA_SR] * radius / 100, center.y + radius, Layout::Scale(2));
+    canvas.DrawCircle(center.x - LoggerData.eta[ETA_SR] * radius / 100, center.y + radius, Layout::Scale(2));
     // paint flap
     canvas.DrawCircle(center.x-radius, center.y+ LoggerData.eta[ETA_FLAP] * radius / 100, Layout::Scale(2));
 }
