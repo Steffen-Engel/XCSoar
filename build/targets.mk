@@ -325,7 +325,7 @@ ifeq ($(TARGET),UNIX)
 endif
 
 ifeq ($(TARGET),ANDROID)
-  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r10e
+  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r11
 
   ANDROID_SDK_PLATFORM = android-22
   ANDROID_NDK_PLATFORM = android-19
@@ -393,27 +393,11 @@ ifeq ($(TARGET),ANDROID)
 
   ANDROID_GCC_TOOLCHAIN_NAME = $(ANDROID_ABI2)-$(ANDROID_GCC_VERSION)
 
-  ifeq ($(ANDROID_ARCH),arm)
-    # on ARMv6, LLVM/clang generates the "movw" instruction which
-    # however requires ARMv7 and leads to a SIGILL crash
-    # (http://llvm.org/bugs/show_bug.cgi?id=18364 and
-    # http://bugs.xcsoar.org/ticket/3339); until this LLVM bug is
-    # fixed, we keep using gcc
-
-    # on ARM, LLVM/clang generates "str" opcodes with Rd=Rn and
-    # post-index (FlexOffset), which is illegal
-    # (http://llvm.org/bugs/show_bug.cgi?id=20323 and
-    # http://bugs.xcsoar.org/ticket/3356); until this LLVM bug is
-    # fixed, we keep using gcc
-
-    CLANG ?= n
-  endif
-
   # clang is the default compiler on Android
   CLANG ?= y
 
   ifeq ($(CLANG),y)
-    ANDROID_TOOLCHAIN_NAME = llvm-3.6
+    ANDROID_TOOLCHAIN_NAME = llvm
     LIBCXX = y
   else
     ANDROID_TOOLCHAIN_NAME = $(ANDROID_GCC_TOOLCHAIN_NAME)
@@ -450,9 +434,6 @@ ifeq ($(TARGET),ANDROID)
   ifeq ($(ARMV7),y)
     LLVM_TARGET = armv7a-none-linux-androideabi
     TARGET_ARCH += -march=armv7-a -mfloat-abi=hard -mhard-float -D_NDK_MATH_NO_SOFTFP=1
-
-    # workaround for "... uses VFP register arguments, output does not"
-    TARGET_ARCH += -Wl,--no-warn-mismatch
   endif
 
   ifeq ($(ARMV7)$(NEON),yy)
@@ -633,6 +614,9 @@ ifeq ($(TARGET),ANDROID)
 
   ifeq ($(ARMV7),y)
     TARGET_LDFLAGS += -Wl,--fix-cortex-a8
+
+    # workaround for "... uses VFP register arguments, output does not"
+    TARGET_LDFLAGS += -Wl,--no-warn-mismatch
   endif
 endif
 
