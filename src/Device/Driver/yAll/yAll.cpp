@@ -258,7 +258,7 @@ void cyAll::EndLog()
   writer = nullptr;
 }
 
-
+#if 0
 gcc_pure
 static inline
 double ComputeNoncompVario(const double pressure, const double d_pressure)
@@ -267,6 +267,7 @@ double ComputeNoncompVario(const double pressure, const double d_pressure)
   static constexpr double EXPONENT(-0.8097374740609689);
   return double(FACTOR * pow(pressure, EXPONENT) * d_pressure);
 }
+#endif
 
 
 void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)

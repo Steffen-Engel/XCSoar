@@ -13,8 +13,9 @@
 
 
 class yAllDevice : public AbstractDevice {
-private:
+public:
   Port &port;
+private:
   cyAll yAll;
 
 public:
