@@ -174,3 +174,10 @@ InfoBoxContentHorizon::Update(InfoBoxData &data)
   data.SetCustom();
 }
 
+void
+UpdateInfoBoxEmpty(InfoBoxData &data)
+{
+
+  // Set Value
+  data.SetValue(_T(" "));
+}

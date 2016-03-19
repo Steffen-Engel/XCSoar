@@ -171,6 +171,8 @@ namespace InfoBoxFactory
 
     e_ClimbInfo,
 
+    e_Empty,
+
     e_NUM_TYPES /* Last item */
   };
 

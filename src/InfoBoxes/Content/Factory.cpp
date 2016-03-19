@@ -1113,6 +1113,16 @@ static constexpr MetaData meta_data[] = {
     N_("Arrival altitude at the next waypoint with average climb speed of the last 30 seconds."),
     UpdateInfoBoxClimbAltitude,
   },
+
+  // e_Empty
+  {
+    N_("empty box"),
+    N_(" "),
+    N_("an empty box to habve free space"),
+    UpdateInfoBoxEmpty,
+  },
+
+
   // e_WP_ETA_VMG
   {
     N_("Next waypoint arrival time (ground speed)"),
