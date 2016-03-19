@@ -80,6 +80,8 @@ static constexpr StaticEnumChoice info_box_geometry_list[] = {
     N_("8 Top or Left") },
   { (unsigned)InfoBoxSettings::Geometry::TOP_LEFT_10,
     N_("10 Top or Left") },
+  { (unsigned)InfoBoxSettings::Geometry::SPLIT_10,
+    N_("10 Split") },
   { (unsigned)InfoBoxSettings::Geometry::TOP_8_VARIO,
     N_("8 Top + Vario (Portrait)") },
   { (unsigned)InfoBoxSettings::Geometry::RIGHT_9_VARIO,
