@@ -85,12 +85,6 @@ InfoBoxContentControls::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
 void
 InfoBoxContentControls::Update(InfoBoxData &data)
 {
-  if (!CommonInterface::Basic().attitude.IsBankAngleUseable() &&
-      !CommonInterface::Basic().attitude.IsPitchAngleUseable()) {
-    data.SetInvalid();
-    return;
-  }
-
   data.SetCustom();
 }
 
