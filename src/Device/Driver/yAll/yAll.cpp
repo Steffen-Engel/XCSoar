@@ -421,7 +421,6 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
       else
       {
         info.ProvideDynamicPressure(AtmosphericPressure::Pascal(double(0)));
-        info.dyn_pressure_available.Clear();
       }
       if (LoggerData.pressure[2] > MaxValues.max_q)
       {
