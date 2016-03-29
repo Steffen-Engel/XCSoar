@@ -43,6 +43,9 @@ Copyright_License {
 #include "LogFile.hpp"
 
 
+#include "LogFile.hpp"
+
+
 static void
 ShowNextWaypointDetails()
 {
