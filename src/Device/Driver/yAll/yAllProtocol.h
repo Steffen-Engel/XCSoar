@@ -17,7 +17,7 @@
 #define MSP_PID                  112   //out message         up to 16 P I D (8 are used)
 #define MSP_BOX                  113   //out message         up to 16 checkbox (11 are used)
 #define MSP_MISC                 114   //out message         powermeter trig + 8 free for future use
-#define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI 
+#define MSP_MOTOR_PINS           115   //out message         which pins are in use for motors & servos, for GUI
 #define MSP_BOXNAMES             116   //out message         the aux switch names
 #define MSP_PIDNAMES             117   //out message         the PID names
 #define MSP_WP                   118   //out message         get a WP, WP# is in the payload, returns (WP#, lat, lon, alt, flags) WP#0-home, WP#16-poshold
@@ -40,27 +40,27 @@
 
 // Logger-Message
 #define MSP_LOGGER_SET           230   //in message          sets a logger time to send data in msecs (uint32_t)
-																			 //out message				 sends a dat set of logger values
+                                       //out message				 sends a dat set of logger values
 #define MSP_RESET                231   //in message          reset logger
 #define MSP_IAS_CALIBRATION      232   //in message          no param
 
 // Data for MSP_IDENT
 typedef struct
 {
-	uint8_t version;
-	uint8_t multiType;
-	uint8_t MSPVersion;
-	uint8_t capabilities;
+  uint8_t version;
+  uint8_t multiType;
+  uint8_t MSPVersion;
+  uint8_t capabilities;
 } tIdent;
 
 
 // Data for MSP_STATUS
 typedef struct
 {
-	uint16_t cycleTime;
-	uint16_t i2cError;
-	uint16_t present;
-	uint32_t mode;
+  uint16_t cycleTime;
+  uint16_t i2cError;
+  uint16_t present;
+  uint32_t mode;
 } tStatus;
 
 
@@ -75,18 +75,18 @@ typedef struct
 #pragma pack(1)
 typedef struct
 {
-	/*00*/	uint32_t 	millis;
-	/*04*/	uint16_t 	cycle_time;
-	/*06*/	int16_t 	accel[3];			// x, y, z (1/100g)
-	/*12*/	int16_t 	angle[3];			// x-axis(bank), y-axis(pitch), z-axis(course) (1/10 degree)
-	/*18*/	int16_t 	rot[3];				// x-axis(roll), y-axis(pitch), z-axis(yaw)
-	/*24*/	int32_t 	pressure[3];	// cabin, static, differential in Pa
-	/*36*/	int16_t 	eta[4];				// flap, aileron, elevator, rudder
-	/*44*/	uint8_t 	GPS_FIX;
-	/*45*/	uint8_t		GPS_numSat;
-	/*46*/	int32_t  	GPS_latitude;
-	/*50*/	int32_t  	GPS_longitude;
-	/*54*/	int16_t		GPS_altitude;
+  /*00*/	uint32_t 	millis;
+  /*04*/	uint16_t 	cycle_time;
+  /*06*/	int16_t 	accel[3];			// x, y, z (1/100g)
+  /*12*/	int16_t 	angle[3];			// x-axis(bank), y-axis(pitch), z-axis(course) (1/10 degree)
+  /*18*/	int16_t 	rot[3];				// x-axis(roll), y-axis(pitch), z-axis(yaw)
+  /*24*/	int32_t 	pressure[3];	// cabin, static, differential in Pa
+  /*36*/	int16_t 	eta[4];				// flap, aileron, elevator, rudder
+  /*44*/	uint8_t 	GPS_FIX;
+  /*45*/	uint8_t		GPS_numSat;
+  /*46*/	int32_t  	GPS_latitude;
+  /*50*/	int32_t  	GPS_longitude;
+  /*54*/	int16_t		GPS_altitude;
   /*56*/	int16_t		GPS_speed;
   /*58*/  int16_t   GPS_heading;
   /*60*/  uint16_t  GPS_week;
@@ -102,8 +102,8 @@ typedef char assertion_on_mystruct[(   sizeof(tLoggerSetData)==66   )*2-1 ];
 // Data for all messages
 typedef struct
 {
-	tIdent					Ident;
-	tStatus					Status;
+  tIdent					Ident;
+  tStatus					Status;
   tLoggerSetData	LoggerSet;
 } tMSP;
 //tMSP MSPData;
