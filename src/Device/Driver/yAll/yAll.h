@@ -26,7 +26,7 @@ private:
 //	tstring path;   // Logger file
 	bool flying;
 	TextWriter *writer;
-	fixed last_time;
+	double last_time;
 
 	uint8_t checksum;
 	int dataSize;
