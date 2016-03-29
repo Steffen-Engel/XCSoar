@@ -97,7 +97,7 @@ GpsToMjd (long GpsCycle, long GpsWeek, long GpsSeconds)
 
 
 cyAll::cyAll()
-{	
+{
 	c_state = IDLE;
 	err_rcvd = false;
 	dataSize = 0;
@@ -171,7 +171,7 @@ void cyAll::sendRequest(uint8_t value)
 {
 	sendHeader();
 	sendByte(0);				// Payload-Size = 0
-	sendByte(value);		
+	sendByte(value);
 	sendEnd();
 }
 
@@ -180,9 +180,9 @@ void cyAll::sendRequest(uint8_t value)
 void cyAll::sendRequest(uint8_t value, uint8_t parm)
 {
 	sendHeader();
-	sendByte(1);				
-	sendByte(value);		
-	sendByte(parm);		
+	sendByte(1);
+	sendByte(value);
+	sendByte(parm);
 	sendEnd();
 }
 
@@ -190,9 +190,9 @@ void cyAll::sendRequest(uint8_t value, uint8_t parm)
 void cyAll::sendRequest(uint8_t value, uint16_t parm)
 {
 	sendHeader();
-	sendByte(2);				
-	sendByte(value);		
-	sendWord(parm);		
+	sendByte(2);
+	sendByte(value);
+	sendWord(parm);
 	sendEnd();
 }
 
@@ -200,9 +200,9 @@ void cyAll::sendRequest(uint8_t value, uint16_t parm)
 void cyAll::sendRequest(uint8_t value, uint32_t parm)
 {
 	sendHeader();
-	sendByte(4);				
-	sendByte(value);		
-	sendLong(parm);		
+	sendByte(4);
+	sendByte(value);
+	sendLong(parm);
 	sendEnd();
 }
 
@@ -279,7 +279,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
 
 	bool FlightLogger_flying = FlightState;
 
-	switch(icmd) 
+	switch(icmd)
 	{
     case MSP_IDENT:
 			data = (uint8_t*)(&MSPData.Ident);
@@ -539,30 +539,30 @@ void cyAll::parse(uint8_t c, struct NMEAInfo &info)
 static uint8_t cmd;
 
 
-	if (c_state == IDLE) 
+	if (c_state == IDLE)
 	{
 		c_state = (c=='$') ? HEADER_START : IDLE;
-	} 
-	else if (c_state == HEADER_START) 
+	}
+	else if (c_state == HEADER_START)
 	{
 		c_state = (c=='M') ? HEADER_M : IDLE;
-	} 
-	else if (c_state == HEADER_M) 
+	}
+	else if (c_state == HEADER_M)
 	{
-		if (c == '>') 
+		if (c == '>')
 		{
 			c_state = HEADER_ARROW;
-		} 
-		else if (c == '!') 
+		}
+		else if (c == '!')
 		{
 			c_state = HEADER_ERR;
-		} 
-		else 
+		}
+		else
 		{
 			c_state = IDLE;
 		}
-	} 
-	else if (c_state == HEADER_ARROW || c_state == HEADER_ERR) 
+	}
+	else if (c_state == HEADER_ARROW || c_state == HEADER_ERR)
 	{
 		/* is this an error message? */
 		err_rcvd = (c_state == HEADER_ERR);        /* now we are expecting the payload size */
@@ -573,33 +573,33 @@ static uint8_t cmd;
 		checksum ^= (c&0xFF);
 		/* the command is to follow */
 		c_state = HEADER_SIZE;
-	} 
-	else if (c_state == HEADER_SIZE) 
+	}
+	else if (c_state == HEADER_SIZE)
 	{
 		cmd = (uint8_t)(c&0xFF);
 		checksum ^= (c&0xFF);
 		c_state = HEADER_CMD;
-	} 
-	else if (c_state == HEADER_CMD && CmdBuffer.fill() < dataSize) 
+	}
+	else if (c_state == HEADER_CMD && CmdBuffer.fill() < dataSize)
 	{
 		checksum ^= (c&0xFF);
 		CmdBuffer.write8(c&0xFF);
-	} 
-	else if (c_state == HEADER_CMD && CmdBuffer.fill() >= dataSize) 
+	}
+	else if (c_state == HEADER_CMD && CmdBuffer.fill() >= dataSize)
 	{
 		/* compare calculated and transferred checksum */
 		if ((checksum&0xFF) == (c&0xFF)) {
-			if (err_rcvd) 
+			if (err_rcvd)
 			{
 				//System.err.println("Copter did not understand request type "+c);
-			} 
-			else 
+			}
+			else
 			{
 				/* we got a valid response packet, evaluate it */
 				evaluateCommand(cmd, (int)dataSize, info);
 			}
-		} // if ((checksum&0xFF) == (c&0xFF)) 
-		else 
+		} // if ((checksum&0xFF) == (c&0xFF))
+		else
 		{
 //			printf("invalid checksum for command \n");
 		}
