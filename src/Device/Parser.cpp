@@ -76,6 +76,9 @@ NMEAParser::ParseLine(const char *string, NMEAInfo &info)
 
     if (StringIsEqual(type + 3, "HDM"))
       return HDM(line, info);
+
+    if (StringIsEqual(type + 3, "MWV"))
+      return MWV(line, info);
   }
 
   // if (proprietary sentence) ...
@@ -732,6 +735,47 @@ NMEAParser::PTAS1(NMEAInputLine &line, NMEAInfo &info)
   double vtas;
   if (line.ReadChecked(vtas))
     info.ProvideTrueAirspeed(Units::ToSysUnit(vtas, Unit::KNOTS));
+
+  return true;
+}
+
+bool
+NMEAParser::MWV(NMEAInputLine &line, NMEAInfo &info)
+{
+  /*
+    * $--MWV,x.x,a,x.x,a,a,a,*hh
+    *
+    * Field Number:
+    *  1) wind angle
+    *  2) (R)elative or (T)rue
+    *  3) wind speed
+    *  4) K/M/N
+    *  5) Status A=valid
+    *  8) Checksum
+    */
+
+  double winddir, windspeed;
+
+  if (!line.ReadChecked(winddir))
+    return false;
+
+  char ch = line.ReadOneChar();
+
+  if (!line.ReadChecked(windspeed))
+    return false;
+
+  ch = line.ReadOneChar();
+  if (ch == 'N')
+  {
+    windspeed = windspeed * 1.852/3.6;
+  }
+  if (ch == 'K')
+  {
+    windspeed = windspeed / 3.6;
+  }
+
+  SpeedVector wind(Angle::Degrees(winddir), windspeed);
+  info.ProvideExternalWind(wind);
 
   return true;
 }
