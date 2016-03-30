@@ -1022,13 +1022,6 @@ static constexpr MetaData meta_data[] = {
     UpdateInfoBoxFinalMC0AltitudeDiff,
   },
 
-  {
-    N_("expected altitude at goal"),
-    N_("ClimbAltitude"),
-    N_("Arrival altitude at the next waypoint with average climb speed of the last 30 seconds."),
-    UpdateInfoBoxClimbAltitude,
-  },
-
   // NEXT_ARROW
   {
     N_("Next arrow"),
@@ -1039,6 +1032,13 @@ static constexpr MetaData meta_data[] = {
        "in the current task, the center of a selected goto waypoint "
        "or the target within the AAT sector for AAT tasks."),
     IBFHelper<InfoBoxContentNextArrow>::Create,
+  },
+
+  {
+    N_("expected altitude at goal"),
+    N_("ClimbAltitude"),
+    N_("Arrival altitude at the next waypoint with average climb speed of the last 30 seconds."),
+    UpdateInfoBoxClimbAltitude,
   },
 
   // e_WP_ETA_VMG
