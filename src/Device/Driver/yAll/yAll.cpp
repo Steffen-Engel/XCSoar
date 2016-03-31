@@ -32,8 +32,9 @@ tMaxValues MaxValues;
   * This Kalman filter is used to smooth the pressure input.
   */
 #ifdef USE_KALMAN
-KalmanFilter1d kalman_filter_static(fixed(0.05));
-KalmanFilter1d kalman_filter_dynamic(fixed(1));
+KalmanFilter1d kalman_filter_static0(double(0.05));
+KalmanFilter1d kalman_filter_static1(double(0.05));
+KalmanFilter1d kalman_filter_dynamic(double(1));
 #endif
 
 // some time helper routines
@@ -377,25 +378,26 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
 
 #ifdef USE_KALMAN
 
-        static fixed laststatictime;
+        static double laststatictime;
 
-        if (fixed(LoggerData.millis)/1000>laststatictime)
+        if (double(LoggerData.millis)/1000>laststatictime)
         {
-          kalman_filter_static.Update(LoggerData.pressure[1], fixed(0.05), fixed(LoggerData.millis)/1000-laststatictime);
+          kalman_filter_static0.Update(LoggerData.pressure[0], double(0.05), double(LoggerData.millis)/1000-laststatictime);
+          kalman_filter_static1.Update(LoggerData.pressure[1], double(0.05), double(LoggerData.millis)/1000-laststatictime);
         }
-        laststatictime = fixed(LoggerData.millis)/1000;
+        laststatictime = double(LoggerData.millis)/1000;
 //        info.ProvideNoncompVario(ComputeNoncompVario(kalman_filter_static.GetXAbs(),
 //                                                      kalman_filter_static.GetXVel()));
-        info.ProvideStaticPressure(AtmosphericPressure::Pascal(kalman_filter_static.GetXAbs()));
+        info.ProvideStaticPressure(AtmosphericPressure::Pascal(kalman_filter_static1.GetXAbs()));
 
-        static fixed lastdynamictime;
+        static double lastdynamictime;
 
-        if (fixed(LoggerData.millis)/1000>lastdynamictime)
+        if (double(LoggerData.millis)/1000>lastdynamictime)
         {
-          kalman_filter_dynamic.Update(LoggerData.pressure[2], fixed(0.05), fixed(LoggerData.millis)/1000-lastdynamictime);
+          kalman_filter_dynamic.Update(LoggerData.pressure[2], double(0.05), double(LoggerData.millis)/1000-lastdynamictime);
         }
-        lastdynamictime = fixed(LoggerData.millis)/1000;
-        fixed pressure_val;
+        lastdynamictime = double(LoggerData.millis)/1000;
+        double pressure_val;
         pressure_val = kalman_filter_dynamic.GetXAbs();
         if (pressure_val < 1) pressure_val = 0;
         info.ProvideDynamicPressure(AtmosphericPressure::Pascal(pressure_val));
