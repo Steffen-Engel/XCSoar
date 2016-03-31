@@ -754,10 +754,13 @@ NMEAParser::MWV(NMEAInputLine &line, NMEAInfo &info)
     *  8) Checksum
     */
 
-  double winddir, windspeed;
+  double windspeed;
 
-  if (!line.ReadChecked(winddir))
+  Angle winddir;
+  if (!ReadBearing(line, winddir))
+  {
     return false;
+  }
 
   char ch = line.ReadOneChar();
 
@@ -765,16 +768,21 @@ NMEAParser::MWV(NMEAInputLine &line, NMEAInfo &info)
     return false;
 
   ch = line.ReadOneChar();
-  if (ch == 'N')
+  switch (ch)
   {
-    windspeed = windspeed * 1.852/3.6;
+    case 'N':
+      windspeed = Units::ToSysUnit(windspeed, Unit::KNOTS);
+      break;
+    case 'K':
+      windspeed = Units::ToSysUnit(windspeed, Unit::KILOMETER_PER_HOUR);
+      break;
+    case 'M':
+      windspeed = Units::ToSysUnit(windspeed, Unit::METER_PER_SECOND);
+      break;
+    default:
+      return false;
   }
-  if (ch == 'K')
-  {
-    windspeed = windspeed / 3.6;
-  }
-
-  SpeedVector wind(Angle::Degrees(winddir), windspeed);
+  SpeedVector wind(winddir, windspeed);
   info.ProvideExternalWind(wind);
 
   return true;
