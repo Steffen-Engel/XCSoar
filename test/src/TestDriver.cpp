@@ -48,6 +48,7 @@
 #include "Device/Driver/Westerboer.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/Zander.hpp"
+#include "Device/Driver/Airmar.hpp"
 #include "Device/Driver.hpp"
 #include "Device/RecordedFlight.hpp"
 #include "Device/Parser.hpp"
@@ -1472,6 +1473,26 @@ TestXCTracer()
   delete device;
 }
 
+static void
+TestAirmar()
+{
+  NullPort null;
+  Device *device = airmar_driver.CreateOnPort(dummy_config, null);
+  ok1(device != NULL);
+
+  NMEAInfo nmea_info;
+  nmea_info.Reset();
+  nmea_info.clock = 1;
+
+  /* no GPS reception */
+  ok1(device->ParseNMEA("$WIMDA,29.1,I,1.007,B,22,C*22", nmea_info));
+  ok1(nmea_info.static_pressure_available);
+  ok1(equals(nmea_info.static_pressure.GetHectoPascal(), 1007.0));
+  ok1(nmea_info.temperature_available);
+  ok1(equals(nmea_info.temperature, Units::ToSysUnit(22.0, Unit::DEGREES_CELCIUS)));
+
+}
+
 
 static void
 TestDeclare(const struct DeviceRegister &driver)
@@ -1568,6 +1589,7 @@ int main(int argc, char **argv)
   TestFlyNet();
   TestVaulter();
   TestXCTracer();
+  TestAirmar();
 
   /* XXX the Triadis drivers have too many dependencies, not enabling
      for now */

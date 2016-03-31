@@ -24,6 +24,12 @@ Copyright_License {
 #ifndef XCSOAR_DEVICE_DRIVER_AIRMAR_HPP
 #define XCSOAR_DEVICE_DRIVER_AIRMAR_HPP
 
+/**
+ * A driver for airmar weather probes.
+ *
+ * @see http://www.airmartechnology.com/uploads/installguide/PB200UserManual.pdf
+ */
+
 extern const struct DeviceRegister airmar_driver;
 
 #endif

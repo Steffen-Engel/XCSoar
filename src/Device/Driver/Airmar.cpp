@@ -85,6 +85,7 @@ AirmarDevice::WIMDA(NMEAInputLine &line, NMEAInfo &info)
   double temperature;
   if (!line.ReadChecked(temperature))
     return false;
+  ch = line.ReadOneChar();
   if (ch == 'C')
   {
     // temperature in centigrade
