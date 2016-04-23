@@ -48,7 +48,7 @@ public:
     :RowFormWidget(look), device(_device){}
 
   /* virtual methods from Widget */
-  virtual void Prepare(ContainerWindow &parent, const PixelRect &rc);
+  virtual void Prepare(ContainerWindow &parent, const PixelRect &rc) override;
 
 private:
   /* virtual methods from ActionListener */
