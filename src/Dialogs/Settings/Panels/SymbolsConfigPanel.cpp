@@ -125,6 +125,8 @@ static constexpr StaticEnumChoice  aircraft_symbol_list[] = {
     N_("Simplified hang glider as line graphics, white with black contours.") },
   { (unsigned)AircraftSymbol::PARAGLIDER, N_("ParaGlider"),
     N_("Simplified para glider as line graphics, white with black contours.") },
+    { (unsigned)AircraftSymbol::ARROW, N_("Arrow"),
+      N_("Simplified line graphics, arrow") },
   { 0 }
 };
 
