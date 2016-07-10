@@ -25,6 +25,7 @@ Copyright_License {
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
 #include "IO/TextWriter.hpp"
+#include "Engine/Task/TaskManager.hpp"
 
 // Extension stuff for summarized Flightlogs...
 
@@ -187,7 +188,7 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
     start_time = date_time;
     start_time.second = 0;    // no seconds needed in logbook
 
-    if (flight.flight_time>=fixed(0)) {
+    if (flight.flight_time>=0.0) {
       sprintf((char*)temp.buffer(), "%02u.%02u.%04u  %02u:%02u ",
                         date_time.day, date_time.month, date_time.year,
                         date_time.hour, date_time.minute);
@@ -198,7 +199,7 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
   else if (strcmp(type, "landing") == 0)
   {
     GetAirfield(false);
-    if (!flight.flying && positive(flight.flight_time)) {
+    if (!flight.flying && (flight.flight_time > 0.0)) {
       sprintf((char*)temp.buffer(), "  %02u:%02u ",
                         date_time.hour, date_time.minute);
       writer.Write(temp.buffer());
@@ -248,7 +249,6 @@ FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
 bool
 FlightLogger::GetAirfield(bool takeoff)
 {
-
   ProtectedTaskManager::Lease lease(*protected_task_manager);
   const AlternateList &alternates = lease->GetAlternates();
   unsigned index = 0;
