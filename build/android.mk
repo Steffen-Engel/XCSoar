@@ -152,8 +152,7 @@ PNG_FILES = $(PNG1) $(PNG1b) $(PNG2) $(PNG3) $(PNG4) $(PNG5) \
 	$(ANDROID_BUILD)/res/drawable-xxxhdpi/notification_icon.png
 
 ifeq ($(TESTING),y)
-#MANIFEST = android/testing/AndroidManifest.xml
-MANIFEST = android/yall/AndroidManifest.xml
+MANIFEST = android/testing/AndroidManifest.xml
 else
 MANIFEST = android/AndroidManifest.xml
 endif

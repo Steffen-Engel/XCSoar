@@ -20,11 +20,11 @@
 }
 */
 
-package org.xcsoar.testing;
+package org.xcsoar.yall;
 
 /**
  * Wrapper class to move org.xcsoar.XCSoar forward to package
- * org.xcsoar.testing.
+ * org.xcsoar.yall.
  */
 public class MyService extends org.xcsoar.MyService {
   @Override public void onCreate() {
