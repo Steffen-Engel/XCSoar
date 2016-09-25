@@ -59,7 +59,8 @@ DRAWABLE_DIR = $(ANDROID_BUILD)/res/drawable
 RAW_DIR = $(ANDROID_BUILD)/res/raw
 
 ifeq ($(TESTING),y)
-ICON_SVG = $(topdir)/Data/graphics/logo_red.svg
+#ICON_SVG = $(topdir)/Data/graphics/logo_red.svg
+ICON_SVG = $(topdir)/Data/graphics/logo_yall.svg
 else
 ICON_SVG = $(topdir)/Data/graphics/logo.svg
 endif
@@ -151,7 +152,8 @@ PNG_FILES = $(PNG1) $(PNG1b) $(PNG2) $(PNG3) $(PNG4) $(PNG5) \
 	$(ANDROID_BUILD)/res/drawable-xxxhdpi/notification_icon.png
 
 ifeq ($(TESTING),y)
-MANIFEST = android/testing/AndroidManifest.xml
+#MANIFEST = android/testing/AndroidManifest.xml
+MANIFEST = android/yall/AndroidManifest.xml
 else
 MANIFEST = android/AndroidManifest.xml
 endif
