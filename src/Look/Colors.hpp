@@ -27,9 +27,12 @@ Copyright_License {
 #include "Screen/Color.hpp"
 
 #ifdef TESTING
-static constexpr Color COLOR_XCSOAR_LIGHT = Color(0xed, 0x90, 0x90);
-static constexpr Color COLOR_XCSOAR = Color(0xd0, 0x17, 0x17);
-static constexpr Color COLOR_XCSOAR_DARK = Color(0x5d, 0x0a, 0x0a);
+//static constexpr Color COLOR_XCSOAR_LIGHT = Color(0xed, 0x90, 0x90);
+//static constexpr Color COLOR_XCSOAR = Color(0xd0, 0x17, 0x17);
+//static constexpr Color COLOR_XCSOAR_DARK = Color(0x5d, 0x0a, 0x0a);
+static constexpr Color COLOR_XCSOAR_LIGHT = Color(0xff, 0xef, 0x9d);
+static constexpr Color COLOR_XCSOAR = Color(0xff, 0xcc, 0x00);
+static constexpr Color COLOR_XCSOAR_DARK = Color(0xd8, 0x94, 0x00);
 #else
 static constexpr Color COLOR_XCSOAR_LIGHT = Color(0xaa, 0xc9, 0xe4);
 static constexpr Color COLOR_XCSOAR = Color(0x3f, 0x76, 0xa8);
