@@ -57,6 +57,16 @@ public class BluetoothGattClientPort
   private static final UUID RX_TX_DESCRIPTOR_UUID =
       UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
+  /**
+   * the Taranis E has a BLE module using a GATT characteristic with this UUID 
+   * for sending data
+   */
+  private static final UUID RX_TX_CHARACTERISTIC_UUID_TARANIS =
+          UUID.fromString("0000FFE4-0000-1000-8000-00805F9B34FB");
+  private static final UUID DEVICE_NAME_CHARACTERISTIC_UUID_TARANIS =
+	      UUID.fromString("00002A23-0000-1000-8000-00805F9B34FB");
+  
+  
   private static final int MAX_WRITE_CHUNK_SIZE = 20;
 
   /* Maximum number of milliseconds to wait for disconnected state after
@@ -109,6 +119,12 @@ public class BluetoothGattClientPort
             } else if (DEVICE_NAME_CHARACTERISTIC_UUID.equals(
                 characteristic.getUuid())) {
               deviceNameCharacteristic = characteristic;
+            } else if (RX_TX_CHARACTERISTIC_UUID_TARANIS.equals(
+                characteristic.getUuid())) {
+                dataCharacteristic = characteristic;
+            } else if (DEVICE_NAME_CHARACTERISTIC_UUID_TARANIS.equals(
+               characteristic.getUuid())) {
+               deviceNameCharacteristic = characteristic;
             }
           }
         }
