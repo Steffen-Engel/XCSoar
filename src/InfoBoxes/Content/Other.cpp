@@ -34,6 +34,13 @@ Copyright_License {
 #include <tchar.h>
 
 void
+UpdateInfoBoxEmpty(InfoBoxData &data)
+{
+  // Set Value
+  data.SetValue(_T(" "));
+}
+
+void
 UpdateInfoBoxGLoad(InfoBoxData &data)
 {
   if (!CommonInterface::Basic().acceleration.available) {
