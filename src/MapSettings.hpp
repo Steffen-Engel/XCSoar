@@ -42,6 +42,7 @@ enum class AircraftSymbol : uint8_t {
   SIMPLE_LARGE,
   HANGGLIDER,
   PARAGLIDER,
+  ARROW,
 };
 
 enum class MapOrientation : uint8_t {

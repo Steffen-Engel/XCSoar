@@ -244,6 +244,32 @@ DrawParaGlider(Canvas &canvas, const AircraftLook &look,
   renderer.Draw(canvas, ARRAY_SIZE(aircraft) - 3, 3);
 }
 
+
+static void
+DrawArrow(Canvas &canvas, const AircraftLook &look,
+               const Angle angle, const PixelPoint aircraft_pos, bool inverse)
+{
+  static constexpr BulkPixelPoint aircraft[] = {
+    {0, -8},
+    {5, 8},
+    {0, 5},
+    {-5, 8},
+    {0, -8},
+   };
+
+  Pen pen;
+  Brush brush;
+  brush.Create(Color(0xdf, 0x00, 0x00));
+  pen.Create(2, Color(0x00, 0x00, 0x00));
+
+  canvas.Select(brush);
+  canvas.Select(pen);
+  const RotatedPolygonRenderer renderer(aircraft, ARRAY_SIZE(aircraft),
+                                        aircraft_pos, angle);
+  renderer.Draw(canvas, 0, ARRAY_SIZE(aircraft));
+}
+
+
 void
 AircraftRenderer::Draw(Canvas &canvas, const MapSettings &settings_map,
                        const AircraftLook &look,
@@ -272,6 +298,10 @@ AircraftRenderer::Draw(Canvas &canvas, const MapSettings &settings_map,
 
   case AircraftSymbol::PARAGLIDER:
     DrawParaGlider(canvas, look, angle, aircraft_pos,
+                   inverse);
+
+  case AircraftSymbol::ARROW:
+    DrawArrow(canvas, look, angle, aircraft_pos,
                    inverse);
     break;
   }
