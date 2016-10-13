@@ -53,11 +53,13 @@ Copyright_License {
 #include "Device/Driver/BlueFlyVario.hpp"
 #include "Device/Driver/OpenVario.hpp"
 #include "Device/Driver/Vaulter.hpp"
+#include "Device/Driver/yAll/yAllDriver.hpp"
 #include "Device/Driver/ATR833.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
 #include "Util/Macros.hpp"
 #include "Util/StringAPI.hxx"
+
 
 #include <assert.h>
 
@@ -95,6 +97,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &open_vario_driver,
   &vaulter_driver,
   &krt2_driver,
+  &yall_driver,
   &atr833_driver,
   &xctracer_driver,
   nullptr

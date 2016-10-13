@@ -30,6 +30,8 @@ Copyright_License {
 #include "LX/ManageV7Dialog.hpp"
 #include "LX/ManageNanoDialog.hpp"
 #include "LX/ManageLX16xxDialog.hpp"
+#include "ManageyAllDialog.hpp"
+
 #include "PortMonitor.hpp"
 #include "Dialogs/WidgetDialog.hpp"
 #include "Dialogs/Message.hpp"
@@ -610,6 +612,8 @@ DeviceListWidget::ManageCurrent()
       ManageLX16xxDialog(lx_device, info);
   } else if (descriptor.IsDriver(_T("Vega")))
     dlgConfigurationVarioShowModal(*device);
+  else if (descriptor.IsDriver(_T("yAll")))
+    ManageyAllDialog(*device);
   else if (descriptor.IsDriver(_T("BlueFly")))
     dlgConfigurationBlueFlyVarioShowModal(*device);
 
