@@ -156,6 +156,7 @@ namespace InfoBoxFactory
 
     /* 110..119 */
     NEXT_ARROW,
+    e_ClimbInfo,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
 
     e_NonCircling_Climb_Perc,
@@ -164,6 +165,8 @@ namespace InfoBoxFactory
 
     e_NUM_TYPES /* Last item */
   };
+
+
 
   static constexpr Type NUM_TYPES = e_NUM_TYPES;
   static constexpr Type MIN_TYPE_VAL = (Type)0;
