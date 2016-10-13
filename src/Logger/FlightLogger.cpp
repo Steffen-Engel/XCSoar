@@ -28,6 +28,35 @@ Copyright_License {
 #include "IO/BufferedOutputStream.hxx"
 #include "LogFile.hpp"
 
+
+// Extension stuff for summarized Flightlogs...
+#include "Engine/Task/TaskManager.hpp"
+
+
+// needed for max/min load and max VIAS
+//#define YALL
+#ifdef YALL
+  #include "Device/Driver/yAll/yAll.h"
+#endif
+
+// needed for nearest airport
+#include "Engine/Task/Unordered/AlternateList.hpp"
+#include "Components.hpp"
+#include "Task/ProtectedTaskManager.hpp"
+
+#include "IO/LineReader.hpp"
+#include "IO/FileLineReader.hpp"
+//#include "Util/Error.hpp"
+#include "IO/TextWriter.hpp"
+#include "Plane/Plane.hpp"
+#include "Interface.hpp"
+#include "LogFile.hpp"
+#include "LocalPath.hpp"
+#include "Engine/Waypoint/Waypoint.hpp"
+
+
+
+
 void
 FlightLogger::Reset()
 {
@@ -73,6 +102,7 @@ FlightLogger::TickInternal(const MoreData &basic,
       seen_on_ground = false;
 
       LogEvent(start_time, "start");
+      LogEvent2(start_time, "start");
 
       start_time.Clear();
     }
@@ -87,6 +117,7 @@ FlightLogger::TickInternal(const MoreData &basic,
       seen_flying = false;
 
       LogEvent(landing_time, "landing");
+      LogEvent2(landing_time, "landing");
 
       landing_time.Clear();
     }
@@ -126,3 +157,4 @@ FlightLogger::Tick(const MoreData &basic, const DerivedInfo &calculated)
 
   last_time = basic.time;
 }
+voidFlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type){  assert(type != nullptr);  LogDebug(_T("logging event %s"), type);  static BrokenDateTime start_time;  const auto logbookpath = LocalPath(_T("flightlog.txt"));  TextWriter writer(logbookpath, true);  if (!writer.IsOpen())  {    /* Shall we log this error?  Not sure, because when this happens,       usually the log file cannot be written either .. */    return;  }  StaticString<64> temp;  const FlyingState &flight = CommonInterface::Calculated().flight;  /* XXX log pilot name, glider, airfield name */  if (strcmp(type, "start") == 0)  {    GetAirfield(true);    if (!flight.flying) {      writer.NewLine();      writer.Write("Logevent start with no state of flying");    }    // save the takeofftime for calculation of flight_time later    start_time = date_time;    start_time.second = 0;    // no seconds needed in logbook    if (flight.flight_time>=0.0) {      sprintf((char*)temp.buffer(), "%02u.%02u.%04u  %02u:%02u ",                        date_time.day, date_time.month, date_time.year,                        date_time.hour, date_time.minute);      writer.NewLine();      writer.Write(temp.buffer());    }  }  else if (strcmp(type, "landing") == 0)  {    GetAirfield(false);    if (!flight.flying && (flight.flight_time > 0.0)) {      sprintf((char*)temp.buffer(), "  %02u:%02u ",                        date_time.hour, date_time.minute);      writer.Write(temp.buffer());      writer.Write("  ");      int seconds = 0;      if (start_time.IsPlausible())      {        seconds = date_time - start_time;      }      sprintf((char*)temp.buffer(), " %02u:%02u",                        seconds / 3600, (seconds / 60) % 60);      writer.Write(temp.buffer());#ifdef YALL      if (MaxValues.max_q > 100)      {        float speed;        speed = sqrt(2.0*MaxValues.max_q/1.225)*3.6;        sprintf((char*)temp.buffer(), " | %4.1fg %4.1fg %4.0fkm/h", 0.01*MaxValues.min_g, 0.01*MaxValues.max_g, speed                          );        writer.Write(temp.buffer());      }#endif      temp.Format(_T(" |  %s  --  %s"), TakeoffInfo.c_str(), LandingInfo.c_str());      writer.Write(temp.buffer());      writer.Flush();      WriteSummary(date_time);    }    else{      writer.Write("Still flying?");    }  }  else  {  writer.FormatLine("%04u-%02u-%02uT%02u:%02u:%02u %s",                    date_time.year, date_time.month, date_time.day,                    date_time.hour, date_time.minute, date_time.second,                    type);  }}boolFlightLogger::GetAirfield(bool takeoff){  ProtectedTaskManager::Lease lease(*protected_task_manager);  const AlternateList &alternates = lease->GetAlternates();  unsigned index = 0;  const AlternatePoint *alternate;  if (!alternates.empty()) {    if (index >= alternates.size())      index = alternates.size() - 1;    alternate = &alternates[index];  } else {    alternate = NULL;  }  if (alternate == NULL) {    return false;  }  if (takeoff)  {    LogDebug(_T("takeoff at Airport %s "),               alternate->waypoint->name.c_str());    TakeoffInfo = alternate->waypoint->name.c_str();  }  else  {    if (alternate->solution.vector.distance < 1500)    {      LogDebug(_T("landing at Airport %s "),                 alternate->waypoint->name.c_str());      LandingInfo = alternate->waypoint->name.c_str();    }    else    {      LandingInfo.Format(_T("Airport %s bearing %.0f° in %.1fkm"),                         alternate->waypoint->name.c_str(),                         alternate->solution.vector.bearing.AbsoluteDegrees(),                         alternate->solution.vector.distance/1000);      LogDebug(_T("%s"), LandingInfo.c_str());    }  }  return true;}voidFlightLogger::WriteSummary(const BrokenDateTime &date_time){  // open logbook for parsing flights  const auto logbookpath = LocalPath(_T("flightlog.txt"));  FileLineReader FlightLog(logbookpath, Charset::AUTO);  const auto out_path = MakeLocalPath(_T("out"));  const auto outfile    = AllocatedPath::Build(out_path, "Flugbuch.log");  TextWriter writer(outfile, false);  if (!writer.IsOpen())  {    LogDebug(_T("can't open %s"), outfile.c_str());    return;  }  Plane plane = CommonInterface::GetComputerSettings().plane;  StaticString<32> registration;  StaticString<32> type;  if (plane.registration.empty())    registration = "D-0000";  else    registration = plane.registration.c_str();  if (plane.type.empty())    type = "type";  else    type = plane.type.c_str();  struct {    int count;    int minutes;  } flight;  flight.count = 0;  flight.minutes = 0;  char *Line;  while ((Line = FlightLog.ReadLine()) != NULL)  {                          //    09.04.2014  15:46   15:47    00:01    int day, month, year, starthour, startminute, landhour, landminute, flighthours, flightminutes;    int result = sscanf(Line, "%02d.%02d.%04d  %02d:%02d   %02d:%02d    %02d:%02d",                        &day, &month, &year, &starthour, &startminute, &landhour, &landminute, &flighthours, &flightminutes);    if (result == 9) {      // valid line with entry of flight      if ((day == date_time.day) && (month == date_time.month) && (year == date_time.year))      {        // it's a flight of today        flight.count++;        flight.minutes += flighthours*60+flightminutes;#if true        writer.WriteLine(Line);#else        writer.FormatLine("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d",                            type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,                            starthour, startminute, landhour, landminute, flighthours, flightminutes);#endif      }    }  }  if (flight.count > 0)  {    writer.NewLine();    writer.FormatLine("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours",                      type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,                      flight.count, flight.minutes/60, flight.minutes%60);  }}
