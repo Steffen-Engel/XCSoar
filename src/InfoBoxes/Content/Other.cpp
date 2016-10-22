@@ -117,8 +117,13 @@ UpdateInfoBoxBattery(InfoBoxData &data)
 void
 UpdateInfoBoxExperimental1(InfoBoxData &data)
 {
+   extern uint32_t crcCounter;  // from Taranis-Driver
   // Set Value
-  data.SetInvalid();
+//  data.SetInvalid();
+  data.SetValue(_T("%.0f"), (double)crcCounter);
+//  data.SetValue(_T("%2.2f"), CommonInterface::Basic().acceleration.g_load);
+
+
 }
 
 void
