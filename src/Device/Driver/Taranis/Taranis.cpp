@@ -229,7 +229,7 @@ void cTaranis::parse(uint8_t c, struct NMEAInfo &info)
       ((uint8_t*)&data)[3] = byte;
       state = CRC;
     }                // DATA fourth byte collected, store DATA and look for CRC
-    else if ((state == CRC))        // read CRC and compare with calculated one.
+    else if (state == CRC)        // read CRC and compare with calculated one.
     { // If OK, send data to registered sensors for decoding and restart the state machine.
       crc += byte;
       crc += crc >> 8;
