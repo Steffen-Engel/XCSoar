@@ -26,6 +26,8 @@ package org.xcsoar;
 import java.util.HashMap;
 import android.media.MediaPlayer;
 import android.content.Context;
+import java.io.IOException;
+
 
 public class SoundUtil {
   private static HashMap<String, Integer> resources = new HashMap();
@@ -42,7 +44,30 @@ public class SoundUtil {
   public static boolean play(Context context, String name) {
     Integer id = resources.get(name);
     if (id == null)
+    {
+      // no internal resource, try to load external file
+      try 
+      {
+        MediaPlayer mp = new MediaPlayer();
+        mp.setDataSource(name);
+        mp.prepare();
+        mp.start();
+        return true;
+      }
+      catch (IllegalArgumentException e) 
+      {
+        // dummy, we actually do not care
+      }
+      catch (IllegalStateException e) 
+      {
+        // dummy, we actually do not care
+      }
+      catch (IOException e)
+      {
+        // dummy, we actually do not care
+      }
       return false;
+    }
 
     MediaPlayer mp = MediaPlayer.create(context, id);
     if (mp == null)
