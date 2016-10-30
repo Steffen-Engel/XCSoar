@@ -299,7 +299,7 @@ AircraftRenderer::Draw(Canvas &canvas, const MapSettings &settings_map,
   case AircraftSymbol::PARAGLIDER:
     DrawParaGlider(canvas, look, angle, aircraft_pos,
                    inverse);
-
+    break;
   case AircraftSymbol::ARROW:
     DrawArrow(canvas, look, angle, aircraft_pos,
                    inverse);
