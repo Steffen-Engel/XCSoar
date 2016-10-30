@@ -27,6 +27,10 @@ Copyright_License {
 
 #include "LogFile.hpp"
 #include "ResourceLoader.hpp"
+#include <windef.h> // for MAX_PATH
+#include "Util/StringFormat.hpp"
+#include "OS/FileUtil.hpp"
+#include "LocalPath.hpp"
 
 #include <utility>
 
@@ -42,6 +46,15 @@ PCMResourcePlayer::PlayResource(const TCHAR *resource_name)
       PCMBufferDataSource::PCMData::FromVoid(
           ResourceLoader::Load(resource_name, _T("WAVE")));
   if (pcm_data.IsNull()) {
+    // load external file if existent
+    // check local path for file
+    AllocatedPath sndfile = LocalPath(resource_name);
+    if (File::Exists(sndfile)) {
+      TCHAR command[MAX_PATH];
+      StringFormat(command, MAX_PATH, "aplay %s &", sndfile.c_str());
+      system(command);
+      return true;
+    }
     LogFormat(_T("PCM resource \"%s\" not found!"), resource_name);
     return false;
   }
