@@ -1058,6 +1058,16 @@ static constexpr MetaData meta_data[] = {
     N_("Pie chart of time circling and climbing, circling and descending, and climbing non-circling."),
     IBFHelper<InfoBoxContentClimbPercent>::Create,
   },
+
+  // e_Startline_Distance
+  {
+    N_("Startline Distance"),
+    N_("Startline"),
+    N_("Distance and arrival altitudes to the startline."
+       "arrival altitudes for actual McCready and maximum allowed startspeed are calculated and colored "
+       "by warning level."),
+    IBFHelper<InfoBoxStartlineDistance>::Create,
+  },
 };
 
 static_assert(ARRAY_SIZE(meta_data) == NUM_TYPES,
