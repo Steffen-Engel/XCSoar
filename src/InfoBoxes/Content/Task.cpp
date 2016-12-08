@@ -956,7 +956,7 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
           else {
 
             // calculate arrival height at start line
-            double speed = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_speed;
+            double speed = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_speed + next_solution.head_wind;
             double startline_alt = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_height;
 
             const AircraftState state = ToAircraftState(CommonInterface::Basic(), CommonInterface::Calculated());
