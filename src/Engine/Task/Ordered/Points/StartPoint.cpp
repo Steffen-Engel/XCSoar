@@ -25,6 +25,7 @@
 #include "Task/ObservationZones/Boundary.hpp"
 #include "Task/TaskBehaviour.hpp"
 #include "Geo/Math.hpp"
+#include "Task/ObservationZones/LineSectorZone.hpp"
 
 #include <assert.h>
 
@@ -73,6 +74,7 @@ StartPoint::find_best_start(const AircraftState &state,
                             const OrderedTaskPoint &next,
                             const FlatProjection &projection)
 {
+
   /* check which boundary point results in the smallest distance to
      fly */
 
@@ -94,6 +96,19 @@ StartPoint::find_best_start(const AircraftState &state,
       best_location = *i;
       best_distance = distance;
     }
+  }
+
+  // Are we in the sector and is it a startline/BGA-start? Get the closest point on the startline
+  if (OrderedTaskPoint::IsInSector(state)
+        && ((GetObservationZone().GetShape() == ObservationZone::Shape::LINE)
+            || (GetObservationZone().GetShape() == ObservationZone::Shape::BGA_START))
+           ){
+    // the closest point to the start line is in direction of the first leg
+    GeoVector to_startline = GetNextLegVector();
+    // the actual distance to the start line
+    to_startline.distance = ProjectedDistance(state.location, to_startline.EndPoint(state.location), GetWaypoint().location);
+    // best start location is in direction of first leg in this distance...
+    best_location = to_startline.EndPoint(state.location);
   }
 
   SetSearchMin(SearchPoint(best_location, projection));
