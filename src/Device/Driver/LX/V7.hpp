@@ -42,7 +42,11 @@ namespace V7 {
   static inline bool
   ModeDirect(Port &port, OperationEnvironment &env)
   {
-    return PortWriteNMEA(port, "PLXV0,CONNECTION,W,DIRECT", env);
+    bool result = PortWriteNMEA(port, "PLXV0,CONNECTION,W,DIRECT", env);
+    // sleep for 0.2 seconds to settle serial port passthrough
+    if (result)
+      env.Sleep(200);
+    return result;
   }
 
   /**
