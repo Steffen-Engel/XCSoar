@@ -24,6 +24,8 @@ Copyright_License {
 #ifndef XCSOAR_INFOBOX_CONTENT_AIRSPACE_HPP
 #define XCSOAR_INFOBOX_CONTENT_AIRSPACE_HPP
 
+#include "InfoBoxes/Content/Base.hpp"
+
 struct InfoBoxData;
 
 void
@@ -31,5 +33,27 @@ UpdateInfoBoxNearestAirspaceHorizontal(InfoBoxData &data);
 
 void
 UpdateInfoBoxNearestAirspaceVertical(InfoBoxData &data);
+
+class InfoBoxContentAirspaces_Distance : public InfoBoxContent
+{
+ public:
+  virtual void Update(InfoBoxData &data) override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
+};
+
+class InfoBoxContentAirspaces_Name : public InfoBoxContent
+{
+ public:
+  virtual void Update(InfoBoxData &data) override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
+};
+
+class InfoBoxContentAirspaces_Altitude : public InfoBoxContent
+{
+ public:
+  virtual void Update(InfoBoxData &data) override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
+};
+
 
 #endif
