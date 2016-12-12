@@ -37,6 +37,18 @@ Copyright_License {
 #include "Renderer/NextArrowRenderer.hpp"
 #include "UIGlobals.hpp"
 #include "Look/Look.hpp"
+#include "Screen/Canvas.hpp"
+
+#include "LogFile.hpp"
+#include "Engine/Task/Ordered/OrderedTask.hpp"
+#include "Engine/Task/Ordered/Points/StartPoint.hpp"
+#include "Engine/Task/TaskManager.hpp"
+#include "Engine/GlideSolvers/MacCready.hpp"
+#include "Task/ObservationZones/LineSectorZone.hpp"
+#include "GlideSolvers/GlideState.hpp"
+#include "NMEA/Aircraft.hpp"
+#include "Formatter/UserUnits.hpp"
+#include "Geo/Math.hpp"
 
 #include <tchar.h>
 
@@ -884,6 +896,172 @@ UpdateInfoBoxStartOpenArrival(InfoBoxData &data)
     data.SetValueColor(2);
     data.SetComment(_("Waiting"));
   }
+}
+
+/*
+ * The StartlineDistance infobox contains information about distance and arrival altitudes at the startline
+ * This function updates the text fields in the infobox.
+ */
+void
+InfoBoxStartlineDistance::Update(InfoBoxData &data)
+{
+  data.SetCustom();
+}
+
+/*
+ * The StartlineDistance infobox contains information about distance and arrival altitudes at the startline
+ * This function renders the arrow.
+ */
+void
+InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
+{
+#define ALT_RED 0
+#define ALT_YELLOW -50
+#define ALT_GREEN -100
+
+  const Look &look = UIGlobals::GetLook();
+
+
+  // get the data to be displayed
+  StaticString<32> text1, text2, text3;
+  text1 = "---";
+  text2 = "---";
+  text3 = "---";
+
+  Color color1, color2, color3;
+  color1 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
+  color2 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
+  color3 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
+
+
+  const auto way_point =
+      protected_task_manager != nullptr ? protected_task_manager->GetActiveWaypoint() :
+                                          nullptr;
+
+
+  if (protected_task_manager != nullptr) {
+    ProtectedTaskManager::Lease task_manager(*protected_task_manager);
+    const OrderedTask &task = task_manager->GetOrderedTask();
+
+    if (task.TaskSize() > 0) {
+      const OrderedTaskPoint &start = task.GetTaskPoint(0);
+      const StartPoint *taskpoint_start;
+
+      taskpoint_start =
+          start.GetType() == TaskPointType::START ? (const StartPoint *)&start :
+                                                    nullptr;
+      if (taskpoint_start != nullptr) {
+        if ((taskpoint_start->GetObservationZone().GetShape() == ObservationZone::Shape::LINE)
+            || (taskpoint_start->GetObservationZone().GetShape() == ObservationZone::Shape::BGA_START)) {
+          const MoreData &basic = CommonInterface::Basic();
+          const TaskStats &task_stats = CommonInterface::Calculated().task_stats;
+          const GlideResult next_solution = task_stats.current_leg.solution_remaining;
+          if (!basic.NavAltitudeAvailable() || !task_stats.task_valid
+              || !next_solution.IsAchievable()) {
+          }
+          else {
+
+            // calculate arrival height at start line
+            double speed = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_speed + next_solution.head_wind;
+            double startline_alt = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_height;
+
+            const AircraftState state = ToAircraftState(CommonInterface::Basic(), CommonInterface::Calculated());
+
+//            GeoVector to_startline = start.GetNextLegVector();
+//            // the actual distance to the start line
+//            to_startline.distance = ProjectedDistance(state.location, to_startline.EndPoint(state.location), start.GetLocation());
+//
+//            LogDebug(_T("%f"), to_startline.distance);
+
+            const GlideState gs = GlideState::Remaining(start, state, startline_alt);
+            GlideSettings settings;
+            settings.SetDefaults();
+            MacCready mc(settings, CommonInterface::GetComputerSettings().polar.glide_polar_task);
+
+            // all data collected to calculate arrival altitudes at start line
+            GlideResult solve = mc.SolveGlide(gs, speed, false);
+            double alt_vmax = solve.altitude_difference;
+            double alt_MCact = mc.SolveGlide(gs, CommonInterface::Calculated().common_stats.V_block, false).altitude_difference;
+
+            // now fill the text for the fields
+            StaticString<32> buffer, buffer2;
+            FormatUserDistance(task_stats.current_leg.vector_remaining.distance, buffer.buffer(), true, 2);
+            text1.Format(_T("%s"), buffer.c_str());
+
+            FormatUserAltitude(startline_alt+alt_MCact, buffer.buffer(), true);
+            FormatUserSpeed(CommonInterface::Calculated().common_stats.V_block, buffer2.buffer(), !true);
+            text2.Format(_T("%s @ %s"), buffer.c_str(), buffer2.c_str());
+
+            FormatUserAltitude(startline_alt+alt_vmax, buffer.buffer(), true);
+            FormatUserSpeed(speed, buffer2.buffer(), !true);
+            text3.Format(_T("%s @ %s"), buffer.c_str(), buffer2.c_str());
+
+            color1 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);
+
+            if (alt_MCact > ALT_RED)
+              color2 = COLOR_RED;
+            else if (alt_MCact > ALT_YELLOW)
+              color2 = COLOR_YELLOW;
+            else if (alt_MCact > ALT_GREEN)
+              color2 = COLOR_GREEN;
+            else
+              color2 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);
+
+            if (alt_vmax > ALT_RED)
+              color3 = COLOR_RED;
+            else if (alt_vmax > ALT_YELLOW)
+              color3 = COLOR_YELLOW;
+            else if (alt_vmax > ALT_GREEN)
+              color3 = COLOR_GREEN;
+            else
+              color3 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);
+          }
+
+        }
+      }
+
+    }
+  }
+  else {
+  }
+
+
+
+
+  const auto center = rc.GetCenter();
+
+  unsigned w = rc.GetWidth();
+  unsigned h = rc.GetHeight()+5;
+
+  unsigned strip_h = h/3;
+  unsigned l = center.x-w/2;
+  unsigned r = center.x+w/2+1;
+
+  unsigned y1 = center.y-strip_h*3/2;
+  unsigned y2 = center.y-strip_h*1/2;
+  unsigned y3 = center.y+strip_h*1/2;
+  unsigned y4 = center.y+strip_h*3/2+1;
+
+  unsigned text_y1 = (y1+y2)/2-(canvas.GetFontHeight()/2);
+  unsigned text_y2 = (y2+y3)/2-(canvas.GetFontHeight()/2);
+  unsigned text_y3 = (y3+y4)/2-(canvas.GetFontHeight()/2);
+
+
+  // upper line for distance to startline
+  canvas.DrawFilledRectangle(l,  y1, r, y2, color1);
+  canvas.SetTextColor((color1==COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK);
+  canvas.DrawText(center.x-canvas.CalcTextWidth(text1)/2, text_y1, text1);
+
+  // middle line for arrival altitude at actual MC
+  canvas.DrawFilledRectangle(l,  y2, r, y3, color2);
+  canvas.SetTextColor((color2==COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK);
+  canvas.DrawText(center.x-canvas.CalcTextWidth(text2)/2, text_y2, text2);
+
+  // bottom line for arrival altitude at maximum allowed speed
+  canvas.DrawFilledRectangle(l,  y3, r, y4, color3);
+  canvas.SetTextColor((color3==COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK);
+  canvas.DrawText(center.x-canvas.CalcTextWidth(text3)/2, text_y3, text3);
+
 }
 
 /*
