@@ -20,13 +20,13 @@
 }
 */
 
-package org.xcsoar.testing;
+package org.xcsoar.yall;
 
 import android.os.Bundle;
 
 /**
  * Wrapper class to move org.xcsoar.XCSoar forward to package
- * org.xcsoar.testing.
+ * org.xcsoar.yall.
  */
 public class XCSoar extends org.xcsoar.XCSoar {
   @Override protected void onCreate(Bundle savedInstanceState) {

@@ -59,7 +59,8 @@ DRAWABLE_DIR = $(ANDROID_BUILD)/res/drawable
 RAW_DIR = $(ANDROID_BUILD)/res/raw
 
 ifeq ($(TESTING),y)
-ICON_SVG = $(topdir)/Data/graphics/logo_red.svg
+#ICON_SVG = $(topdir)/Data/graphics/logo_red.svg
+ICON_SVG = $(topdir)/Data/graphics/logo_yall.svg
 else
 ICON_SVG = $(topdir)/Data/graphics/logo.svg
 endif
