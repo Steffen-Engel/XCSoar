@@ -22,8 +22,8 @@ glibc = AutotoolsProject(
 )
 
 openssl = OpenSSLProject(
-    'https://www.openssl.org/source/openssl-1.0.2j.tar.gz',
-    '96322138f0b69e61b7212bc53d5e912b',
+    'https://www.openssl.org/source/openssl-1.0.2k.tar.gz',
+    '6b3977c61f2aedf0f96367dcfb5c6e578cf37e7b8d913b4ecb6643c3cb88d8c0',
     'include/openssl/ossl_typ.h',
 )
 
@@ -62,8 +62,8 @@ zlib = ZlibProject(
 )
 
 freetype = FreeTypeProject(
-    'http://download.savannah.gnu.org/releases/freetype/freetype-2.7.tar.bz2',
-    'be4601619827b7935e1d861745923a68',
+    'http://download.savannah.gnu.org/releases/freetype/freetype-2.7.1.tar.bz2',
+    '3a3bb2c4e15ffb433f2032f50a5b5a92558206822e22bfe8cbe339af4aa82f88',
     'lib/libfreetype.a',
     [
         '--disable-shared', '--enable-static',
@@ -73,8 +73,8 @@ freetype = FreeTypeProject(
 )
 
 curl = AutotoolsProject(
-    'http://curl.haxx.se/download/curl-7.50.3.tar.lzma',
-    '6080c1eb3e72d5da6c892ba72a074ad2',
+    'http://curl.haxx.se/download/curl-7.52.1.tar.lzma',
+    '44286d4b825936e2430fc44ad730ce899afb736a5d328cbb8b5d42462f3f2365',
     'lib/libcurl.a',
     [
         '--disable-shared', '--enable-static',
@@ -109,8 +109,8 @@ proj = AutotoolsProject(
 )
 
 libpng = AutotoolsProject(
-    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.26.tar.xz',
-    'faed9bb495d2e12dd0c9ec561ca60cd8',
+    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.28.tar.xz',
+    'd8d3ec9de6b5db740fefac702c37ffcf96ae46cb17c18c1544635a3852f78f7a',
     'lib/libpng.a',
     [
         '--disable-shared', '--enable-static',
@@ -128,8 +128,8 @@ libjpeg = AutotoolsProject(
 )
 
 libtiff = AutotoolsProject(
-    'http://download.osgeo.org/libtiff/tiff-4.0.6.tar.gz',
-    'd1d2e940dea0b5ad435f21f03d96dd72',
+    'http://download.osgeo.org/libtiff/tiff-4.0.7.tar.gz',
+    '9f43a2cfb9589e5cecaa66e16bf87f814c945f22df7ba600d63aac4632c4f019',
     'lib/libtiff.a',
     [
         '--disable-shared', '--enable-static',
@@ -181,8 +181,8 @@ sdl2 = SDL2Project(
 )
 
 lua = LuaProject(
-    'http://www.lua.org/ftp/lua-5.3.3.tar.gz',
-    '703f75caa4fdf4a911c1a72e67a27498',
+    'http://www.lua.org/ftp/lua-5.3.4.tar.gz',
+    '79790cfd40e09ba796b01a571d4d63b52b1cd950',
     'lib/liblua.a',
     patches=abspath('lib/lua/patches'),
 )
