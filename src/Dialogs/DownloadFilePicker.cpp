@@ -261,8 +261,11 @@ try {
 
   const auto path = LocalPath(_T("repository"));
   FileLineReaderA reader(path);
-
   ParseFileRepository(repository, reader);
+
+  const auto path2 = LocalPath(_T("repository2"));
+  FileLineReaderA reader2(path2);
+  ParseFileRepository(repository, reader2);
 
   for (auto &i : repository)
     if (i.type == file_type)
