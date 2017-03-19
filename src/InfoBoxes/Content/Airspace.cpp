@@ -124,18 +124,24 @@ static void paintAirspace(Canvas &canvas, const PixelRect &rc, float dist1, cons
   color = WarnColor(dist1, above_ok, above_warn, above_alert);
   canvas.DrawFilledRectangle(l,  y1, r, y2, color);
   canvas.SetTextColor((color==COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK);
+  if (color == COLOR_RED)
+    canvas.SetTextColor(COLOR_WHITE);
   canvas.DrawText(center.x-canvas.CalcTextWidth(text1)/2, text_y1, text1);
 
   // middle line for airspace aside
   color = WarnColor(dist2, h_ok, h_warn, h_alert);
   canvas.DrawFilledRectangle(l,  y2, r, y3, color);
   canvas.SetTextColor((color==COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK);
+  if (color == COLOR_RED)
+    canvas.SetTextColor(COLOR_WHITE);
   canvas.DrawText(center.x-canvas.CalcTextWidth(text2)/2, text_y2, text2);
 
   // middle line for airspace below
   color = WarnColor(dist3, below_ok, below_warn, below_alert);
   canvas.DrawFilledRectangle(l,  y3, r, y4, color);
   canvas.SetTextColor((color==COLOR_BLACK) ? COLOR_WHITE : COLOR_BLACK);
+  if (color == COLOR_RED)
+    canvas.SetTextColor(COLOR_WHITE);
   canvas.DrawText(center.x-canvas.CalcTextWidth(text3)/2, text_y3, text3);
 }
 
