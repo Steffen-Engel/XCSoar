@@ -116,6 +116,8 @@ static void paintAirspace(Canvas &canvas, const PixelRect &rc, float dist1, cons
   unsigned text_y2 = (y2+y3)/2-(canvas.GetFontHeight()/2);
   unsigned text_y3 = (y3+y4)/2-(canvas.GetFontHeight()/2);
 
+  const Look &look = UIGlobals::GetLook();
+  canvas.Select(look.info_box.mid_value_font);
   Color color;
 
   // upper line for airspace above
@@ -200,6 +202,7 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   if (nearest.IsDefined()) {
     dist2 = nearest.distance;
     name2 = nearest.airspace->GetName();
+    name2.Truncate(11);
   }
 
   nearest = NearestAirspace::FindAbove(CommonInterface::Basic(),
@@ -209,6 +212,7 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   if (nearest.IsDefined()) {
     dist1 = abs(nearest.distance);
     name1 = nearest.airspace->GetName();
+    name1.Truncate(11);
   }
 
   nearest = NearestAirspace::FindBelow(CommonInterface::Basic(),
@@ -218,7 +222,9 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   if (nearest.IsDefined()) {
     dist3 = abs(nearest.distance);
     name3 = nearest.airspace->GetName();
+    name3.Truncate(11);
   }
+
 
   paintAirspace(canvas, rc, dist1, name1, dist2, name2, dist3, name3);
 }
@@ -274,7 +280,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
                                                             airspace_database);
   if (nearest.IsDefined()) {
     dist2 = nearest.distance;
-    name2.Format(_T("%s - %s"),
+    name2.Format(_T("%s-%s"),
                  GetAltitudeStr(nearest.airspace->GetBase()).c_str(),
                  GetAltitudeStr(nearest.airspace->GetTop()).c_str());
   }
@@ -285,7 +291,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
                                                           airspace_database);
   if (nearest.IsDefined()) {
     dist1 = abs(nearest.distance);
-    name1.Format(_T("%s - %s"),
+    name1.Format(_T("%s-%s"),
                  GetAltitudeStr(nearest.airspace->GetBase()).c_str(),
                  GetAltitudeStr(nearest.airspace->GetTop()).c_str());
   }
@@ -296,7 +302,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
                                                           airspace_database);
   if (nearest.IsDefined()) {
     dist3 = abs(nearest.distance);
-    name3.Format(_T("%s - %s"),
+    name3.Format(_T("%s-%s"),
                  GetAltitudeStr(nearest.airspace->GetBase()).c_str(),
                  GetAltitudeStr(nearest.airspace->GetTop()).c_str());
   }
