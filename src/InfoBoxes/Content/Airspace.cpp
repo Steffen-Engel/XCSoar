@@ -208,7 +208,9 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   if (nearest.IsDefined()) {
     dist2 = nearest.distance;
     name2 = nearest.airspace->GetName();
-    name2.Truncate(11);
+    if (name2.length()>11) {
+      name2.Truncate(11);
+    }
   }
 
   nearest = NearestAirspace::FindAbove(CommonInterface::Basic(),
@@ -218,7 +220,9 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   if (nearest.IsDefined()) {
     dist1 = abs(nearest.distance);
     name1 = nearest.airspace->GetName();
-    name1.Truncate(11);
+    if (name1.length()>11) {
+      name1.Truncate(11);
+    }
   }
 
   nearest = NearestAirspace::FindBelow(CommonInterface::Basic(),
@@ -228,7 +232,9 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   if (nearest.IsDefined()) {
     dist3 = abs(nearest.distance);
     name3 = nearest.airspace->GetName();
-    name3.Truncate(11);
+    if (name3.length()>11) {
+      name3.Truncate(11);
+    }
   }
 
 
