@@ -88,7 +88,7 @@ InfoBoxLook::ReinitialiseLayout(unsigned width)
   small_value_font.Load(small_value_font_d);
 
   FontDescription mid_value_font_d(8);
-  AutoSizeFont(mid_value_font_d, width, _T("1234567890123"));
+  AutoSizeFont(mid_value_font_d, width, _T("123456789012"));
   mid_value_font_d.SetBold(true);
   mid_value_font.Load(mid_value_font_d);
 
