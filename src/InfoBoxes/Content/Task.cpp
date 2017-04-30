@@ -914,6 +914,8 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
 #define ALT_GREEN -100
 
   const Look &look = UIGlobals::GetLook();
+  const double max_speed = protected_task_manager != nullptr ? protected_task_manager->GetOrderedTaskSettings().start_constraints.max_speed : 0;
+  const double startline_alt = protected_task_manager != nullptr ? protected_task_manager->GetOrderedTaskSettings().start_constraints.max_height : 0;
 
 
   // get the data to be displayed
@@ -956,8 +958,7 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
           else {
 
             // calculate arrival height at start line
-            double speed = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_speed + next_solution.head_wind;
-            double startline_alt = protected_task_manager->GetOrderedTaskSettings().start_constraints.max_height;
+            double speed = max_speed + next_solution.head_wind;
 
             const AircraftState state = ToAircraftState(CommonInterface::Basic(), CommonInterface::Calculated());
 
