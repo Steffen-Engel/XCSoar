@@ -935,6 +935,10 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   color2 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
   color3 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
 
+#ifdef mid_value_font
+  canvas.Select(look.info_box.mid_value_font);
+#endif
+
 
   const auto way_point =
       protected_task_manager != nullptr ? protected_task_manager->GetActiveWaypoint() :
