@@ -250,23 +250,44 @@ DrawArrow(Canvas &canvas, const AircraftLook &look,
                const Angle angle, const PixelPoint aircraft_pos, bool inverse)
 {
   static constexpr BulkPixelPoint aircraft[] = {
-    {0, -8},
-    {5, 8},
+    // right
     {0, 5},
     {-5, 8},
     {0, -8},
-   };
 
-  Pen pen;
-  Brush brush;
-  brush.Create(Color(0xdf, 0x00, 0x00));
-  pen.Create(2, Color(0x00, 0x00, 0x00));
 
-  canvas.Select(brush);
-  canvas.Select(pen);
+    // left
+    {0, -8},
+    {5, 8},
+    {0, 5},
+  };
+
   const RotatedPolygonRenderer renderer(aircraft, ARRAY_SIZE(aircraft),
                                         aircraft_pos, angle);
-  renderer.Draw(canvas, 0, ARRAY_SIZE(aircraft));
+
+  Pen pen1, pen2, pen3;
+  Brush brush1, brush2;
+  brush1.Create(Color(0x8f, 0x00, 0x00));
+  pen1.Create(2, Color(0x00, 0x00, 0x00));
+  brush2.Create(Color(0xf8, 0x00, 0x00));
+  pen2.Create(2, Color(0x00, 0x00, 0x00));
+  pen3.Create(3, Color(0xef, 0x00, 0x00));
+
+
+  canvas.Select(pen3);
+  canvas.SelectHollowBrush();
+  canvas.DrawCircle(0, 0, 12);
+
+  canvas.Select(brush1);
+  canvas.Select(pen1);
+
+  renderer.Draw(canvas, 0, ARRAY_SIZE(aircraft) - 3);
+
+  canvas.Select(brush2);
+  canvas.SelectNullPen();
+
+  renderer.Draw(canvas, ARRAY_SIZE(aircraft) - 3, 3);
+
 }
 
 
