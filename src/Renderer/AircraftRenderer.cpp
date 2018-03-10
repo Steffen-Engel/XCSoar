@@ -269,7 +269,7 @@ DrawArrow(Canvas &canvas, const AircraftLook &look,
   Brush brush1, brush2;
   brush1.Create(Color(0x8f, 0x00, 0x00));
   pen1.Create(2, Color(0x00, 0x00, 0x00));
-  brush2.Create(Color(0xf8, 0x00, 0x00));
+  brush2.Create(Color(0xff, 0x00, 0x00));
   pen2.Create(2, Color(0x00, 0x00, 0x00));
   pen3.Create(3, Color(0xef, 0x00, 0x00));
 
