@@ -64,10 +64,10 @@ typedef struct
 } tStatus;
 
 
-#define ETA_FLAP  0
-#define ETA_QR    1
-#define ETA_HR    2
-#define ETA_SR    3
+#define ETA_QR    0
+#define ETA_HR    1
+#define ETA_SR    2
+#define ETA_FLAP  3
 
 
 // Answerdata for MSP_LOGGER_SET
@@ -81,7 +81,7 @@ typedef struct
   /*12*/	int16_t 	angle[3];			// x-axis(bank), y-axis(pitch), z-axis(course) (1/10 degree)
   /*18*/	int16_t 	rot[3];				// x-axis(roll), y-axis(pitch), z-axis(yaw)
   /*24*/	int32_t 	pressure[3];	// cabin, static, differential in Pa
-  /*36*/	int16_t 	eta[4];				// flap, aileron, elevator, rudder
+  /*36*/	int16_t 	eta[4];				// aileron, elevator, rudder, flap
   /*44*/	uint8_t 	GPS_FIX;
   /*45*/	uint8_t		GPS_numSat;
   /*46*/	int32_t  	GPS_latitude;
