@@ -27,6 +27,9 @@ Copyright_License {
 #include "InfoBoxes/Content/Base.hpp"
 
 void
+UpdateInfoBoxEmpty(InfoBoxData &data);
+
+void
 UpdateInfoBoxGLoad(InfoBoxData &data);
 
 void
