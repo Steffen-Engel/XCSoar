@@ -149,6 +149,14 @@ UpdateInfoBoxStartOpen(InfoBoxData &data);
 void
 UpdateInfoBoxStartOpenArrival(InfoBoxData &data);
 
+class InfoBoxStartlineDistance : public InfoBoxContent
+{
+ public:
+  virtual void Update(InfoBoxData &data) override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
+};
+
+
 class InfoBoxContentNextArrow: public InfoBoxContent
 {
 public:
