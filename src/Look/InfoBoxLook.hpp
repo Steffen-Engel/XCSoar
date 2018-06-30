@@ -55,6 +55,8 @@ struct InfoBoxLook {
    */
   Font unit_font;
 
+  Font mid_value_font;
+
   Pen unit_fraction_pen;
 
   Font title_font;
