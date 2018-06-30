@@ -120,6 +120,8 @@ void
 UpdateInfoBoxAltitudeBaro(InfoBoxData &data)
 {
   const NMEAInfo &basic = CommonInterface::Basic();
+  const ComputerSettings &settings_computer =
+    CommonInterface::GetComputerSettings();
 
   if (!basic.baro_altitude_available) {
     data.SetInvalid();
@@ -131,7 +133,35 @@ UpdateInfoBoxAltitudeBaro(InfoBoxData &data)
   }
 
   data.SetValueFromAltitude(basic.baro_altitude);
-  data.SetCommentFromAlternateAltitude(basic.baro_altitude);
+
+  auto Altitude = Units::ToUserUnit(basic.baro_altitude, Unit::FEET);
+  if (basic.pressure_altitude_available) {
+    auto FlightLevel = Units::ToUserUnit(basic.pressure_altitude, Unit::FEET);
+
+    // Title color black
+    data.SetTitleColor(0);
+
+    // Set Value
+    data.UnsafeFormatComment(_T("%dft/FL%03d"),
+                             iround(Altitude),
+                             iround(FlightLevel / 100));
+  } else if (basic.gps_altitude_available &&
+              settings_computer.pressure_available) {
+     // Take gps altitude as baro altitude. This is inaccurate but still fits our needs.
+     const AtmosphericPressure &qnh = settings_computer.pressure;
+     auto FlightLevel = Units::ToUserUnit(qnh.QNHAltitudeToPressureAltitude(basic.gps_altitude), Unit::FEET);
+
+     // Title color red
+     data.SetTitleColor(1);
+     // Set Value
+     data.UnsafeFormatComment(_T("%dft/FL%03d"),
+                              iround(Altitude),
+                              iround(FlightLevel / 100));
+  } else {
+    // Set Value
+    data.UnsafeFormatComment(_T("%dft/FL---"),
+                             iround(Altitude));
+  }
 }
 
 void
