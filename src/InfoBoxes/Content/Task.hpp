@@ -156,4 +156,7 @@ public:
   virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
 };
 
+void
+UpdateInfoBoxClimbAltitude(InfoBoxData &data);
+
 #endif
