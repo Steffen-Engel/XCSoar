@@ -32,6 +32,37 @@
 
 namespace bgi = boost::geometry::index;
 
+struct AirspacePredicateAdapter {
+  const AirspacePredicate &predicate;
+
+  bool operator()(const Airspace &as) const {
+    return predicate(as.GetAirspace());
+  }
+};
+
+
+void
+Airspaces::VisitWithinRange(const GeoPoint &location, double range,
+                            AirspaceVisitor &visitor,
+                            const AirspacePredicate &predicate) const
+{
+  if (IsEmpty())
+    // nothing to do
+    return;
+
+  const auto flat_location = task_projection.ProjectInteger(location);
+  int projected_range = task_projection.ProjectRangeInteger(location, range);
+  const FlatBoundingBox box(flat_location, projected_range);
+
+  const auto _begin =
+    airspace_tree.qbegin(bgi::intersects(box) &&
+                         bgi::satisfies(AirspacePredicateAdapter{predicate}));
+  const auto _end = airspace_tree.qend();
+
+  for (auto i = _begin; i != _end; ++i)
+    visitor.Visit(i->GetAirspace());
+}
+
 Airspaces::const_iterator_range
 Airspaces::QueryWithinRange(const GeoPoint &location, double range) const
 {

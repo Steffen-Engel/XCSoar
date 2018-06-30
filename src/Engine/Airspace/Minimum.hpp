@@ -25,6 +25,7 @@ Copyright_License {
 #define AIRSPACE_MINIMUM_HPP
 
 #include "Airspaces.hpp"
+#include "AirspaceVisitor.hpp"
 
 template<class Func,
          typename Result=decltype(((Func *)nullptr)->operator()(*(const AbstractAirspace *)nullptr)),
@@ -36,15 +37,22 @@ FindMinimum(const Airspaces &airspaces, const GeoPoint &location, double range,
             Func &&func,
             Cmp &&cmp=Cmp())
 {
-  Result minimum;
-  for (const auto &i : airspaces.QueryWithinRange(location, range)) {
-    const AbstractAirspace &aa = i.GetAirspace();
-    Result result = func(aa);
-    if (cmp(result, minimum))
-      minimum = result;
-  }
+  struct FindMinimumVisitor final : AirspaceVisitor, Func, Cmp {
+    Result minimum;
 
-  return minimum;
+    FindMinimumVisitor(Func &&_func, Cmp &&_cmp)
+      :Func(std::move(_func)), Cmp(std::move(_cmp)) {}
+
+    void Visit(const AbstractAirspace &aa) override {
+      Result result = Func::operator()(aa);
+      if (Cmp::operator()(result, minimum))
+        minimum = result;
+    }
+  };
+
+  FindMinimumVisitor visitor(std::move(func), std::move(cmp));
+  airspaces.VisitWithinRange(location, range, visitor, predicate);
+  return visitor.minimum;
 }
 
 #endif

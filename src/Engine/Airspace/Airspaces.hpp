@@ -25,6 +25,7 @@
 
 #include "AirspacesInterface.hpp"
 #include "AirspaceActivity.hpp"
+#include "Predicate/AirspacePredicate.hpp"
 #include "Util/Serial.hpp"
 #include "Geo/Flat/TaskProjection.hpp"
 #include "Atmosphere/Pressure.hpp"
@@ -33,6 +34,7 @@
 #include <deque>
 
 class RasterTerrain;
+class AirspaceVisitor;
 class AirspaceIntersectionVisitor;
 class AirspacePredicate;
 
@@ -143,6 +145,19 @@ public:
    * @param days Mask of activity (a particular or range of days matching this day)
    */
   void SetActivity(const AirspaceActivity mask);
+
+  /**
+   * Call visitor class on airspaces within range of location.
+   * Note that the visitor is not instantiated separately for each match
+   *
+   * @param loc location of origin of search
+   * @param range distance in meters of search radius
+   * @param visitor visitor class to call on airspaces within range
+   */
+  void VisitWithinRange(const GeoPoint &location, double range,
+                        AirspaceVisitor &visitor,
+                        const AirspacePredicate &predicate =
+                              AirspacePredicate::always_true) const;
 
   gcc_pure
   const_iterator_range QueryAll() const {
