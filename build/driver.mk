@@ -75,6 +75,11 @@ VEGA_SOURCES = \
 	$(DRIVER_SRC_DIR)/Vega/Volatile.cpp \
 	$(DRIVER_SRC_DIR)/Vega/Register.cpp
 
+yall_SOURCES = \
+	$(DRIVER_SRC_DIR)/yAll/yAllDriver.cpp \
+	$(DRIVER_SRC_DIR)/yAll/yAll.cpp \
+	$(DRIVER_SRC_DIR)/yAll/CmdBuffer.cpp
+
 BLUEFLY_SOURCES = \
 	$(DRIVER_SRC_DIR)/BlueFly/Misc.cpp \
 	$(DRIVER_SRC_DIR)/BlueFly/Parser.cpp \
@@ -98,6 +103,7 @@ DRIVER_SOURCES = \
 	$(FLARM_SOURCES) \
 	$(FLYTEC_SOURCES) \
 	$(VEGA_SOURCES) \
+	$(yall_SOURCES) \
 	$(BLUEFLY_SOURCES) \
 	$(XCTRACER_SOURCES) \
 	$(THERMALEXPRESS_SOURCES) \
