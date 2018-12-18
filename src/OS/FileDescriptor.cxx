@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2016 Max Kellermann <max@duempel.org>
+ * Copyright 2012-2018 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,26 +29,17 @@
 
 #include "FileDescriptor.hxx"
 
+#include <assert.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#ifdef __BIONIC__
-#include <sys/syscall.h>
-#endif
-
-#ifdef HAVE_POSIX
+#ifndef _WIN32
 #include <poll.h>
 #endif
 
-#if defined(HAVE_EVENTFD) && !defined(__BIONIC__)
+#ifdef __linux__
 #include <sys/eventfd.h>
-#endif
-
-#if defined(HAVE_SIGNALFD) && !defined(__BIONIC__)
 #include <sys/signalfd.h>
-#endif
-
-#ifdef HAVE_INOTIFY
 #include <sys/inotify.h>
 #endif
 
@@ -60,41 +51,104 @@
 #define O_CLOEXEC 0
 #endif
 
+#ifndef _WIN32
+
 bool
-FileDescriptor::Open(const char *pathname, int flags, mode_t mode)
+FileDescriptor::IsValid() const noexcept
+{
+	return IsDefined() && fcntl(fd, F_GETFL) >= 0;
+}
+
+bool
+FileDescriptor::IsPipe() const noexcept
+{
+	struct stat st;
+	return IsDefined() && fstat(fd, &st) == 0 && S_ISFIFO(st.st_mode);
+}
+
+bool
+FileDescriptor::IsSocket() const noexcept
+{
+	struct stat st;
+	return IsDefined() && fstat(fd, &st) == 0 && S_ISSOCK(st.st_mode);
+}
+
+#endif
+
+#ifdef __linux
+
+bool
+FileDescriptor::Open(FileDescriptor dir, const char *pathname,
+		     int flags, mode_t mode) noexcept
+{
+	fd = ::openat(dir.Get(), pathname, flags | O_NOCTTY | O_CLOEXEC, mode);
+	return IsDefined();
+}
+
+#endif
+
+bool
+FileDescriptor::Open(const char *pathname, int flags, mode_t mode) noexcept
 {
 	fd = ::open(pathname, flags | O_NOCTTY | O_CLOEXEC, mode);
 	return IsDefined();
 }
 
+#ifdef _WIN32
+
 bool
-FileDescriptor::OpenReadOnly(const char *pathname)
+FileDescriptor::Open(const wchar_t *pathname, int flags, mode_t mode) noexcept
+{
+	fd = ::_wopen(pathname, flags | O_NOCTTY | O_CLOEXEC, mode);
+	return IsDefined();
+}
+
+#endif
+
+bool
+FileDescriptor::OpenReadOnly(const char *pathname) noexcept
 {
 	return Open(pathname, O_RDONLY);
 }
 
-#ifdef HAVE_POSIX
+#ifndef _WIN32
 
 bool
-FileDescriptor::OpenNonBlocking(const char *pathname)
+FileDescriptor::OpenNonBlocking(const char *pathname) noexcept
 {
 	return Open(pathname, O_RDWR | O_NONBLOCK);
 }
 
-bool
-FileDescriptor::CreatePipe(FileDescriptor &r, FileDescriptor &w)
-{
-	int fds[2];
+#endif
 
 #ifdef __linux__
-	const int flags = O_CLOEXEC;
-#ifdef __BIONIC__
-	/* Bionic provides the pipe2() function only since Android 2.3,
-	   therefore we must roll our own system call here */
-	const int result = syscall(__NR_pipe2, fds, flags);
-#else
+
+bool
+FileDescriptor::CreatePipe(FileDescriptor &r, FileDescriptor &w,
+			   int flags) noexcept
+{
+	int fds[2];
 	const int result = pipe2(fds, flags);
+	if (result < 0)
+		return false;
+
+	r = FileDescriptor(fds[0]);
+	w = FileDescriptor(fds[1]);
+	return true;
+}
+
 #endif
+
+bool
+FileDescriptor::CreatePipe(FileDescriptor &r, FileDescriptor &w) noexcept
+{
+#ifdef __linux__
+	return CreatePipe(r, w, O_CLOEXEC);
+#else
+	int fds[2];
+
+#ifdef _WIN32
+	const int result = _pipe(fds, 512, _O_BINARY);
 #else
 	const int result = pipe(fds);
 #endif
@@ -105,10 +159,29 @@ FileDescriptor::CreatePipe(FileDescriptor &r, FileDescriptor &w)
 	r = FileDescriptor(fds[0]);
 	w = FileDescriptor(fds[1]);
 	return true;
+#endif
+}
+
+#ifndef _WIN32
+
+bool
+FileDescriptor::CreatePipeNonBlock(FileDescriptor &r,
+				   FileDescriptor &w) noexcept
+{
+#ifdef __linux__
+	return CreatePipe(r, w, O_CLOEXEC|O_NONBLOCK);
+#else
+	if (!CreatePipe(r, w))
+		return false;
+
+	r.SetNonBlocking();
+	w.SetNonBlocking();
+	return true;
+#endif
 }
 
 void
-FileDescriptor::SetNonBlocking()
+FileDescriptor::SetNonBlocking() noexcept
 {
 	assert(IsDefined());
 
@@ -117,7 +190,7 @@ FileDescriptor::SetNonBlocking()
 }
 
 void
-FileDescriptor::SetBlocking()
+FileDescriptor::SetBlocking() noexcept
 {
 	assert(IsDefined());
 
@@ -126,7 +199,7 @@ FileDescriptor::SetBlocking()
 }
 
 void
-FileDescriptor::EnableCloseOnExec()
+FileDescriptor::EnableCloseOnExec() noexcept
 {
 	assert(IsDefined());
 
@@ -135,7 +208,7 @@ FileDescriptor::EnableCloseOnExec()
 }
 
 void
-FileDescriptor::DisableCloseOnExec()
+FileDescriptor::DisableCloseOnExec() noexcept
 {
 	assert(IsDefined());
 
@@ -144,9 +217,9 @@ FileDescriptor::DisableCloseOnExec()
 }
 
 bool
-FileDescriptor::CheckDuplicate(int new_fd)
+FileDescriptor::CheckDuplicate(FileDescriptor new_fd) noexcept
 {
-	if (fd == new_fd) {
+	if (*this == new_fd) {
 		DisableCloseOnExec();
 		return true;
 	} else
@@ -155,34 +228,19 @@ FileDescriptor::CheckDuplicate(int new_fd)
 
 #endif
 
-#ifdef HAVE_EVENTFD
+#ifdef __linux__
 
 bool
-FileDescriptor::CreateEventFD(unsigned initval)
+FileDescriptor::CreateEventFD(unsigned initval) noexcept
 {
-#ifdef __BIONIC__
-	/* Bionic provides the eventfd() function only since Android 2.3,
-	   therefore we must roll our own system call here */
-	fd = syscall(__NR_eventfd2, initval, O_NONBLOCK|O_CLOEXEC);
-#else
 	fd = ::eventfd(initval, EFD_NONBLOCK|EFD_CLOEXEC);
-#endif
 	return fd >= 0;
 }
 
-#endif
-
-#ifdef HAVE_SIGNALFD
-
 bool
-FileDescriptor::CreateSignalFD(const sigset_t *mask)
+FileDescriptor::CreateSignalFD(const sigset_t *mask) noexcept
 {
-#ifdef __BIONIC__
-	int new_fd = syscall(__NR_signalfd4, fd, mask, sizeof(*mask),
-			     O_NONBLOCK|O_CLOEXEC);
-#else
 	int new_fd = ::signalfd(fd, mask, SFD_NONBLOCK|SFD_CLOEXEC);
-#endif
 	if (new_fd < 0)
 		return false;
 
@@ -190,25 +248,12 @@ FileDescriptor::CreateSignalFD(const sigset_t *mask)
 	return true;
 }
 
-#endif
-
-#ifdef HAVE_INOTIFY
-
 bool
-FileDescriptor::CreateInotify()
+FileDescriptor::CreateInotify() noexcept
 {
-#ifdef __BIONIC__
-	/* Bionic doesn't have inotify_init1() */
-	int new_fd = inotify_init();
-#else
 	int new_fd = inotify_init1(IN_CLOEXEC|IN_NONBLOCK);
-#endif
 	if (new_fd < 0)
 		return false;
-
-#ifdef __BIONIC__
-	SetNonBlocking();
-#endif
 
 	fd = new_fd;
 	return true;
@@ -217,7 +262,7 @@ FileDescriptor::CreateInotify()
 #endif
 
 bool
-FileDescriptor::Rewind()
+FileDescriptor::Rewind() noexcept
 {
 	assert(IsDefined());
 
@@ -225,7 +270,7 @@ FileDescriptor::Rewind()
 }
 
 off_t
-FileDescriptor::GetSize() const
+FileDescriptor::GetSize() const noexcept
 {
 	struct stat st;
 	return ::fstat(fd, &st) >= 0
@@ -233,10 +278,10 @@ FileDescriptor::GetSize() const
 		: -1;
 }
 
-#ifdef HAVE_POSIX
+#ifndef _WIN32
 
 int
-FileDescriptor::Poll(short events, int timeout) const
+FileDescriptor::Poll(short events, int timeout) const noexcept
 {
 	assert(IsDefined());
 
@@ -250,15 +295,21 @@ FileDescriptor::Poll(short events, int timeout) const
 }
 
 int
-FileDescriptor::WaitReadable(int timeout) const
+FileDescriptor::WaitReadable(int timeout) const noexcept
 {
 	return Poll(POLLIN, timeout);
 }
 
 int
-FileDescriptor::WaitWritable(int timeout) const
+FileDescriptor::WaitWritable(int timeout) const noexcept
 {
 	return Poll(POLLOUT, timeout);
+}
+
+bool
+FileDescriptor::IsReadyForWriting() const noexcept
+{
+	return WaitWritable(0) > 0;
 }
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2012 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,7 +39,7 @@
 class EventPipe {
   UniqueFileDescriptor r;
 
-#ifndef HAVE_EVENTFD
+#ifndef __linux__
   UniqueFileDescriptor w;
 #endif
 
@@ -59,7 +59,7 @@ public:
    * Returns the file descriptor that should be polled on.
    */
   FileDescriptor GetReadFD() const {
-    return r.ToFileDescriptor();
+    return r;
   }
 
   /**

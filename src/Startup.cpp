@@ -201,20 +201,13 @@ Startup()
 
 #ifdef ENABLE_OPENGL
   LogFormat("OpenGL: "
-#ifdef ANDROID
-#ifdef USE_EGL
-            "egl=native "
-#else
-            "egl=no "
-#endif
-#endif
 #ifdef HAVE_OES_DRAW_TEXTURE
             "oesdt=%d "
 #endif
 #ifdef HAVE_DYNAMIC_MULTI_DRAW_ARRAYS
             "mda=%d "
 #endif
-            "npot=%d vbo=%d fbo=%d stencil=%#x",
+            "npot=%d fbo=%d stencil=%#x",
 #ifdef HAVE_OES_DRAW_TEXTURE
             OpenGL::oes_draw_texture,
 #endif
@@ -222,7 +215,6 @@ Startup()
             GLExt::HaveMultiDrawElements(),
 #endif
              OpenGL::texture_non_power_of_two,
-             OpenGL::vertex_buffer_object,
             OpenGL::frame_buffer_object,
             OpenGL::render_buffer_stencil);
 #endif
@@ -665,6 +657,7 @@ Shutdown()
   LogFormat("Close Windows - main");
   main_window->Destroy();
   delete main_window;
+  CommonInterface::main_window = nullptr;
 
   CloseLanguageFile();
 

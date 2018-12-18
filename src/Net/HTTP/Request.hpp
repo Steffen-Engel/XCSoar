@@ -24,7 +24,8 @@ Copyright_License {
 #ifndef NET_REQUEST_HPP
 #define NET_REQUEST_HPP
 
-#include "Easy.hpp"
+#include "Easy.hxx"
+#include "Slist.hxx"
 
 #include <curl/curl.h>
 
@@ -37,7 +38,7 @@ namespace Net {
   class MultiPartFormData;
 
   class Request {
-#ifndef WIN32
+#ifndef _WIN32
     static constexpr unsigned INFINITE = (unsigned)-1;
 #endif
 
@@ -45,7 +46,7 @@ namespace Net {
 
     CurlEasy handle;
 
-    struct curl_slist *request_headers = nullptr;
+    CurlSlist request_headers;
 
     ResponseHandler &handler;
 

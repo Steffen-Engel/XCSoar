@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2013-2017 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -52,16 +52,22 @@ class Manual {
 	char data[sizeof(T)];
 
 #ifndef NDEBUG
-	bool initialized;
+	bool initialized = false;
 #endif
 
 public:
 #ifndef NDEBUG
-	Manual():initialized(false) {}
 	~Manual() {
 		assert(!initialized);
 	}
 #endif
+
+	/**
+	 * Cast a value reference to the containing Manual instance.
+	 */
+	static constexpr Manual<T> &Cast(T &value) {
+		return reinterpret_cast<Manual<T> &>(value);
+	}
 
 	template<typename... Args>
 	void Construct(Args&&... args) {

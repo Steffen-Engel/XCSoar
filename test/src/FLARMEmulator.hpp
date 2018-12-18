@@ -158,11 +158,11 @@ private:
     switch (header.type) {
     case FLARM::MT_PING:
     case FLARM::MT_SELECTRECORD:
-      SendACK(header.GetSequenceNumber());
+      SendACK(header.sequence_number);
       break;
 
     case FLARM::MT_EXIT:
-      SendACK(header.GetSequenceNumber());
+      SendACK(header.sequence_number);
       binary = false;
       break;
     }
@@ -176,7 +176,7 @@ private:
     do {
       /* append new data to buffer, as much as fits there */
       auto range = binary_buffer.Write();
-      if (range.IsEmpty()) {
+      if (range.empty()) {
         /* overflow: reset buffer to recover quickly */
         binary_buffer.Clear();
         continue;
@@ -189,7 +189,7 @@ private:
 
       while (true) {
         range = binary_buffer.Read();
-        if (range.IsEmpty())
+        if (range.empty())
           break;
 
         size_t nbytes = HandleBinary(range.data, range.size);

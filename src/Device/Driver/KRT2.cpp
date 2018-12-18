@@ -28,7 +28,7 @@ Copyright_License {
 #include "RadioFrequency.hpp"
 #include "Thread/Cond.hxx"
 #include "Thread/Mutex.hpp"
-#include "Util/CharUtil.hpp"
+#include "Util/CharUtil.hxx"
 #include "Util/StaticFifoBuffer.hxx"
 
 #include <stdint.h>
@@ -215,7 +215,7 @@ KRT2Device::DataReceived(const void *_data, size_t length,
     for (;;) {
       // Read data from buffer to handle the messages
       range = rx_buf.Read();
-      if (range.IsEmpty())
+      if (range.empty())
         break;
 
       if (range.size < expected_msg_length)

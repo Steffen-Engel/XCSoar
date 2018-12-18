@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2011 Max Kellermann <max@duempel.org>
+ * Copyright 2010-2018 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -44,34 +44,37 @@ namespace Java {
 	 */
 	class String : public LocalRef<jstring> {
 	public:
-		String(JNIEnv *env, jstring value)
+		String(JNIEnv *env, jstring value) noexcept
 			:LocalRef<jstring>(env, value) {}
 
-		String(JNIEnv *_env, const char *_value)
+		String(JNIEnv *_env, const char *_value) noexcept
 			:LocalRef<jstring>(_env, _env->NewStringUTF(_value)) {}
 
 		/**
-		 * Copy the value to the specified buffer.  Truncates the value if
-		 * it does not fit into the buffer.
+		 * Copy the value to the specified buffer.  Truncates
+		 * the value if it does not fit into the buffer.
 		 *
-		 * @return a pointer to the terminating null byte, nullptr on error
+		 * @return a pointer to the terminating null byte,
+		 * nullptr on error
 		 */
 		static char *CopyTo(JNIEnv *env, jstring value,
-				    char *buffer, size_t max_size);
+				    char *buffer, size_t max_size) noexcept;
 
 		/**
-		 * Copy the value to the specified buffer.  Truncates the value if
-		 * it does not fit into the buffer.
+		 * Copy the value to the specified buffer.  Truncates
+		 * the value if it does not fit into the buffer.
 		 *
-		 * @return a pointer to the terminating null byte, nullptr on error
+		 * @return a pointer to the terminating null byte,
+		 * nullptr on error
 		 */
-		char *CopyTo(char *buffer, size_t max_size) {
-			return CopyTo(GetEnv(), Get(), buffer, max_size);
+		char *CopyTo(JNIEnv *env,
+			     char *buffer, size_t max_size) noexcept {
+			return CopyTo(env, Get(), buffer, max_size);
 		}
 
-		static std::string ToString(JNIEnv *env, jstring s);
+		static std::string ToString(JNIEnv *env, jstring s) noexcept;
 
-		std::string ToString() const {
+		std::string ToString() const noexcept {
 			return ToString(GetEnv(), Get());
 		}
 	};

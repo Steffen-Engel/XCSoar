@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009-2015 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2009-2015 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,13 +34,6 @@
 
 #include "WindowsSharedMutex.hxx"
 using FastSharedMutex = WindowsSharedMutex;
-
-#elif defined(ANDROID) && ANDROID_MIN_SDK_VERSION < 9
-
-#include "FallbackSharedMutex.hxx"
-
-class FastSharedMutex : public FallbackSharedMutex {
-};
 
 #else
 

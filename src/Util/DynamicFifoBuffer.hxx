@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2003-2015 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2003-2015 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -55,7 +55,7 @@ public:
 
 	using ForeignFifoBuffer<T>::GetCapacity;
 	using ForeignFifoBuffer<T>::Clear;
-	using ForeignFifoBuffer<T>::IsEmpty;
+	using ForeignFifoBuffer<T>::empty;
 	using ForeignFifoBuffer<T>::IsFull;
 	using ForeignFifoBuffer<T>::GetAvailable;
 	using ForeignFifoBuffer<T>::Read;

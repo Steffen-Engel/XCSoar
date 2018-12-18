@@ -1,5 +1,5 @@
 /*
- * Copyright 2003-2016 The Music Player Daemon Project
+ * Copyright 2003-2017 The Music Player Daemon Project
  * http://www.musicpd.org
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,11 +24,11 @@
 #include "OS/Path.hpp"
 #include "Compiler.h"
 
-#ifndef WIN32
+#ifndef _WIN32
 #include "OS/FileDescriptor.hxx"
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -37,38 +37,36 @@ class Path;
 class FileReader final : public Reader {
 	AllocatedPath path;
 
-#ifdef WIN32
+#ifdef _WIN32
 	HANDLE handle;
 #else
 	FileDescriptor fd;
 #endif
 
 public:
-	FileReader(Path _path);
+	explicit FileReader(Path _path);
 
-#ifdef WIN32
-	FileReader(FileReader &&other)
+#ifdef _WIN32
+	FileReader(FileReader &&other) noexcept
 		:path(std::move(other.path)),
-		 handle(other.handle) {
-		other.handle = INVALID_HANDLE_VALUE;
-	}
+		 handle(std::exchange(other.handle, INVALID_HANDLE_VALUE)) {}
 #else
-	FileReader(FileReader &&other)
+	FileReader(FileReader &&other) noexcept
 		:path(std::move(other.path)),
 		 fd(other.fd) {
 		other.fd.SetUndefined();
 	}
 #endif
 
-	~FileReader() {
+	~FileReader() noexcept {
 		if (IsDefined())
 			Close();
 	}
 
 
 protected:
-	bool IsDefined() const {
-#ifdef WIN32
+	bool IsDefined() const noexcept {
+#ifdef _WIN32
 		return handle != INVALID_HANDLE_VALUE;
 #else
 		return fd.IsDefined();
@@ -76,17 +74,17 @@ protected:
 	}
 
 public:
-#ifndef WIN32
-	FileDescriptor GetFD() const {
+#ifndef _WIN32
+	FileDescriptor GetFD() const noexcept {
 		return fd;
 	}
 #endif
 
-	void Close();
+	void Close() noexcept;
 
 	gcc_pure
-	uint64_t GetSize() const {
-#ifdef WIN32
+	uint64_t GetSize() const noexcept {
+#ifdef _WIN32
 		LARGE_INTEGER size;
 		return GetFileSizeEx(handle, &size)
 			? size.QuadPart
@@ -97,8 +95,8 @@ public:
 	}
 
 	gcc_pure
-	uint64_t GetPosition() const {
-#ifdef WIN32
+	uint64_t GetPosition() const noexcept {
+#ifdef _WIN32
 		LARGE_INTEGER zero;
 		zero.QuadPart = 0;
 		LARGE_INTEGER position;

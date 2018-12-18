@@ -27,6 +27,7 @@ Copyright_License {
 #include "Java/Object.hxx"
 #include "Java/Class.hxx"
 #include "Java/String.hxx"
+#include "OS/Path.hpp"
 
 #ifndef NO_SCREEN
 #include "Screen/Point.hpp"
@@ -46,13 +47,17 @@ class NativeView {
   static jfieldID textureNonPowerOfTwo_field;
   static jmethodID init_surface_method, deinit_surface_method;
   static jmethodID setRequestedOrientationID;
-  static jmethodID swap_method;
   static jmethodID loadResourceBitmap_method;
   static jmethodID loadFileBitmap_method;
   static jmethodID bitmapToTexture_method;
   static jmethodID open_file_method;
   static jmethodID getNetState_method;
 
+  static Java::TrivialClass clsBitmap;
+  static jmethodID createBitmap_method;
+
+  static Java::TrivialClass clsBitmapConfig;
+  static jmethodID bitmapConfigValueOf_method;
 public:
   /**
    * @see http://developer.android.com/reference/android/R.attr.html#screenOrientation
@@ -70,9 +75,6 @@ public:
     // see http://developer.android.com/reference/android/content/pm/ActivityInfo.html#SCREEN_ORIENTATION_REVERSE_LANDSCAPE
     REVERSE_LANDSCAPE = 8,
     REVERSE_PORTRAIT = 9,
-    // HACK for Galaxy Tab (FROYO = 2.2 = API level 8)
-    REVERSE_LANDSCAPE_GT = 7,
-    REVERSE_PORTRAIT_GT = 8,
   };
 
   static void Initialise(JNIEnv *env);
@@ -122,19 +124,14 @@ public:
     return env->CallBooleanMethod(obj, setRequestedOrientationID, (jint)so);
   }
 
-  void swap() {
-    env->CallVoidMethod(obj, swap_method);
-  }
-
   jobject loadResourceBitmap(const char *name) {
     Java::String name2(env, name);
     return env->CallObjectMethod(obj, loadResourceBitmap_method, name2.Get());
   }
 
-  jobject loadFileBitmap(const char *path) {
-    Java::String path2(env, path);
-    return env->CallObjectMethod(obj, loadFileBitmap_method, path2.Get());
-  }
+  jobject loadFileTiff(Path path);
+
+  jobject loadFileBitmap(Path path);
 
   bool bitmapToTexture(jobject bmp, bool alpha, jint *result) {
     jintArray result2 = env->NewIntArray(5);

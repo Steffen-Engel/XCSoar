@@ -184,7 +184,10 @@ endif
 ifeq ($(TARGET),PI)
   override TARGET = UNIX
   TCPREFIX := arm-linux-gnueabihf-
-  PI ?= /opt/pi/root
+  ifeq ($(HOST_IS_PI),n)
+    PI ?= /opt/pi/root
+  endif
+  TARGET_IS_LINUX = y
   TARGET_IS_PI = y
   TARGET_IS_ARM = y
   TARGET_IS_ARMHF = y
@@ -193,7 +196,9 @@ endif
 
 ifeq ($(TARGET),PI2)
   override TARGET = NEON
-  PI ?= /opt/pi/root
+  ifeq ($(HOST_IS_PI),n)
+    PI ?= /opt/pi/root
+  endif
   TARGET_IS_PI = y
 endif
 
@@ -211,17 +216,18 @@ ifeq ($(TARGET),KOBO)
 endif
 
 ifeq ($(TARGET),NEON)
-  # Experimental target for generic ARMv7 with NEON
+  # Experimental target for generic ARMv7 with NEON on Linux
   override TARGET = UNIX
   ifeq ($(USE_CROSSTOOL_NG),y)
-    HOST_TRIPLET = arm-unknown-linux-gnueabihf
+    HOST_TRIPLET ?= arm-unknown-linux-gnueabihf
   else
-    HOST_TRIPLET = arm-linux-gnueabihf
+    HOST_TRIPLET ?= arm-linux-gnueabihf
   endif
-  TCPREFIX = $(HOST_TRIPLET)-
-  ifneq ($(CLANG),y)
+  TCPREFIX ?= $(HOST_TRIPLET)-
+  ifeq ($(CLANG),n)
     TARGET_ARCH += -mcpu=cortex-a8
   endif
+  TARGET_IS_LINUX = y
   TARGET_IS_ARM = y
   TARGET_IS_ARMHF = y
   ARMV7 := y
@@ -244,12 +250,11 @@ ifeq ($(TARGET),IOS32)
   override TARGET = UNIX
   TARGET_IS_DARWIN = y
   TARGET_IS_IOS = y
-  IOS_MIN_SUPPORTED_VERSION = 5.1
+  IOS_MIN_SUPPORTED_VERSION = 9.0
   HOST_TRIPLET = armv7-apple-darwin
   LLVM_TARGET = $(HOST_TRIPLET)
   ifeq ($(HOST_IS_DARWIN),y)
-    DARWIN_SDK_VERSION = 9.3
-    DARWIN_SDK ?= /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${DARWIN_SDK_VERSION}.sdk
+    DARWIN_SDK ?= /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
   endif
   LIBCXX = y
   CLANG = y
@@ -260,12 +265,11 @@ ifeq ($(TARGET),IOS64)
   override TARGET = UNIX
   TARGET_IS_DARWIN = y
   TARGET_IS_IOS = y
-  IOS_MIN_SUPPORTED_VERSION = 7.0
+  IOS_MIN_SUPPORTED_VERSION = 9.0
   HOST_TRIPLET = aarch64-apple-darwin
   LLVM_TARGET = $(HOST_TRIPLET)
   ifeq ($(HOST_IS_DARWIN),y)
-    DARWIN_SDK_VERSION = 9.1
-    DARWIN_SDK ?= /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS${DARWIN_SDK_VERSION}.sdk
+    DARWIN_SDK ?= /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
   endif
   LIBCXX = y
   CLANG = y
@@ -277,12 +281,7 @@ ifeq ($(TARGET),UNIX)
   ifeq ($(HOST_IS_LINUX)$(TARGET_IS_DARWIN),yn)
     TARGET_IS_LINUX := y
   endif
-  ifeq ($(HOST_IS_DARWIN),y)
-    TARGET_IS_DARWIN := y
-  endif
-endif
 
-ifeq ($(TARGET),UNIX)
   HAVE_POSIX := y
   HAVE_WIN32 := n
   HAVE_MSVCRT := n
@@ -317,19 +316,18 @@ ifeq ($(TARGET),UNIX)
 
   ifeq ($(TARGET_IS_ARM)$(TARGET_IS_LINUX),yy)
     ifeq ($(TARGET_IS_ARMHF),y)
-      LLVM_TARGET = arm-linux-gnueabihf
+      LLVM_TARGET ?= arm-linux-gnueabihf
     else
-      LLVM_TARGET = arm-linux-gnueabi
+      LLVM_TARGET ?= arm-linux-gnueabi
     endif
   endif
 endif
 
 ifeq ($(TARGET),ANDROID)
-  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r13b
+  ANDROID_NDK ?= $(HOME)/opt/android-ndk-r18-beta2
 
   ANDROID_SDK_PLATFORM = android-22
-  ANDROID_NDK_PLATFORM = android-19
-  ANDROID_NDK_PLATFORM_64 = android-21
+  ANDROID_NDK_PLATFORM = android-21
 
   ANDROID_ARCH = arm
   ANDROID_ABI2 = arm-linux-androideabi
@@ -341,11 +339,6 @@ ifeq ($(TARGET),ANDROID)
   ifeq ($(ARMV7),y)
     ANDROID_ABI3 = armeabi-v7a
     ANDROID_ABI5 = armeabi-v7a
-
-    ifeq ($(NEON),y)
-      # ARMv7+NEON builds are assumed to be run on at least Android 2.3
-      ANDROID_MIN_SDK_VERSION = 9
-    endif
   endif
 
   ifeq ($(X86),y)
@@ -353,22 +346,18 @@ ifeq ($(TARGET),ANDROID)
     ANDROID_ABI2 = x86
     ANDROID_ABI3 = x86
     HOST_TRIPLET = i686-linux-android
-    ANDROID_MIN_SDK_VERSION = 9
   endif
 
   ifeq ($(MIPS),y)
     ANDROID_ARCH = mips
     ANDROID_ABI2 = mipsel-linux-android
     ANDROID_ABI3 = mips
-    ANDROID_MIN_SDK_VERSION = 9
   endif
 
   ifeq ($(AARCH64),y)
     ANDROID_ARCH = arm64
     ANDROID_ABI2 = aarch64-linux-android
     ANDROID_ABI3 = arm64-v8a
-    ANDROID_NDK_PLATFORM = $(ANDROID_NDK_PLATFORM_64)
-    ANDROID_MIN_SDK_VERSION = 21
   endif
 
   ifeq ($(X64),y)
@@ -376,18 +365,15 @@ ifeq ($(TARGET),ANDROID)
     ANDROID_ABI2 = x86_64
     ANDROID_ABI3 = x86_64
     HOST_TRIPLET = x86_64-linux-android
-    ANDROID_NDK_PLATFORM = $(ANDROID_NDK_PLATFORM_64)
-    ANDROID_MIN_SDK_VERSION = 21
   endif
 
   ifeq ($(MIPS64),y)
     ANDROID_ARCH = mips64
     ANDROID_ABI2 = mips64el-linux-android
     ANDROID_ABI3 = mips64
-    ANDROID_NDK_PLATFORM = $(ANDROID_NDK_PLATFORM_64)
-    ANDROID_MIN_SDK_VERSION = 21
   endif
 
+  ANDROID_SYSROOT = $(ANDROID_NDK)/sysroot
   ANDROID_NDK_PLATFORM_DIR = $(ANDROID_NDK)/platforms/$(ANDROID_NDK_PLATFORM)
   ANDROID_TARGET_ROOT = $(ANDROID_NDK_PLATFORM_DIR)/arch-$(ANDROID_ARCH)
 
@@ -505,8 +491,10 @@ ifeq ($(HAVE_WIN32),n)
   TARGET_INCLUDES += -I$(SRC)/unix
 endif
 
-ifeq ($(HOST_IS_PI)$(TARGET_IS_PI),ny)
-  TARGET_CPPFLAGS += --sysroot=$(PI) -isystem $(PI)/usr/include/arm-linux-gnueabihf -isystem $(PI)/usr/include
+ifeq ($(TARGET_IS_PI),y)
+  ifneq ($(PI),)
+    TARGET_CPPFLAGS += --sysroot=$(PI) -isystem $(PI)/usr/include/arm-linux-gnueabihf -isystem $(PI)/usr/include
+  endif
 endif
 
 ifeq ($(HOST_IS_ARM)$(TARGET_HAS_MALI),ny)
@@ -517,20 +505,54 @@ endif
 
 ifeq ($(TARGET_IS_KOBO),y)
   TARGET_CPPFLAGS += -DKOBO
+
+  # Use Thumb instructions (which is the default in Debian's arm-linux-gnueabihf
+  # toolchain, but this might be different when using another toolchain, or
+  # Clang instead of GCC).
+  TARGET_ARCH += -mthumb
+
+  # At least in Debian's arm-linux-gnueabihf GCC, PIE is enabled by default.
+  # PIE brings no benefit for us, and we can get smaller binaries when disabling
+  # it.
+  TARGET_ARCH += -fno-PIE
+
+  ifeq ($(CLANG),y)
+    # Always use -fomit-frame-pointer for now, to circumvent Clang bug #34165.
+    # https://bugs.llvm.org/show_bug.cgi?id=34165
+    # http://www.openwall.com/lists/musl/2017/10/07/3
+    TARGET_ARCH += -fomit-frame-pointer
+  endif
+
+  # We are using a GNU toolchain (triplet arm-linux-gnueabihf) by default, but
+  # the actual host triplet is different.
+  ACTUAL_HOST_TRIPLET = armv7a-a8neon-linux-musleabihf
+
+  ifeq ($(USE_CROSSTOOL_NG),y)
+    HOST_TRIPLET = $(ACTUAL_HOST_TRIPLET)
+    LLVM_TARGET = $(ACTUAL_HOST_TRIPLET)
+    KOBO_TOOLCHAIN = $(HOME)/x-tools/$(HOST_TRIPLET)
+    KOBO_SYSROOT = $(KOBO_TOOLCHAIN)/$(HOST_TRIPLET)/sysroot
+    TCPREFIX = $(KOBO_TOOLCHAIN)/bin/$(HOST_TRIPLET)-
+
+    ifeq ($(CLANG),y)
+      TARGET_CPPFLAGS += -B$(KOBO_TOOLCHAIN)
+      TARGET_CPPFLAGS += --sysroot=$(KOBO_SYSROOT)
+    endif
+  else
+    LIBSTDCXX_HEADERS_DIR = $(abspath $(THIRDPARTY_LIBS_ROOT)/include/libstdc++)
+    TARGET_CXXFLAGS += \
+      -nostdinc++ \
+      -isystem $(LIBSTDCXX_HEADERS_DIR) \
+      -isystem $(LIBSTDCXX_HEADERS_DIR)/$(ACTUAL_HOST_TRIPLET)
+  endif
 endif
 
 ifeq ($(TARGET),ANDROID)
-  TARGET_CPPFLAGS += --sysroot=$(ANDROID_TARGET_ROOT)
+  TARGET_CPPFLAGS += --sysroot=$(ANDROID_SYSROOT)
+  TARGET_CPPFLAGS += -isystem $(ANDROID_SYSROOT)/usr/include/$(HOST_TRIPLET)
   TARGET_CPPFLAGS += -DANDROID
+  TARGET_CPPFLAGS += -D__ANDROID_API__=21
   CXXFLAGS += -D__STDC_VERSION__=199901L
-
-  ANDROID_MIN_SDK_VERSION ?= 4
-  TARGET_CPPFLAGS += -DANDROID_MIN_SDK_VERSION=$(ANDROID_MIN_SDK_VERSION)
-
-  ifeq ($(shell test $(ANDROID_MIN_SDK_VERSION) -ge 9 && echo y),y)
-    # native EGL is available since Android 2.3
-    EGL = y
-  endif
 
   ifeq ($(X86),y)
     # On NDK r6, the macro _BYTE_ORDER never gets defined - workaround:
@@ -597,21 +619,26 @@ ifeq ($(HOST_IS_ARM)$(TARGET_HAS_MALI),ny)
 endif
 
 ifeq ($(TARGET_IS_KOBO),y)
-  TARGET_LDFLAGS += -static-libstdc++
-
-  # use our glibc version and its ld.so on the Kobo, not the one from
-  # the stock Kobo firmware, as it may be incompatible
-  TARGET_LDFLAGS += -Wl,--dynamic-linker=/opt/xcsoar/lib/ld-linux-armhf.so.3
-  TARGET_LDFLAGS += -Wl,--rpath=/opt/xcsoar/lib
+  TARGET_LDFLAGS += --static
+  ifeq ($(USE_CROSSTOOL_NG),y)
+    ifeq ($(CLANG),y)
+     TARGET_LDFLAGS += -B$(KOBO_TOOLCHAIN)
+     TARGET_LDFLAGS += -B$(KOBO_TOOLCHAIN)/bin
+     TARGET_LDFLAGS += --sysroot=$(KOBO_SYSROOT)
+    endif
+  else
+    TARGET_LDFLAGS += -specs=$(abspath $(THIRDPARTY_LIBS_ROOT)/lib/musl-gcc.specs)
+  endif
 endif
 
 ifeq ($(TARGET),ANDROID)
   TARGET_LDFLAGS += -Wl,--no-undefined
-  TARGET_LDFLAGS += --sysroot=$(ANDROID_TARGET_ROOT)
   ifeq ($(call bool_or,$(X64),$(MIPS64)),y)
     TARGET_LDFLAGS += -L$(ANDROID_TARGET_ROOT)/usr/lib64
+    TARGET_LDFLAGS += -B$(ANDROID_TARGET_ROOT)/usr/lib64
   else
     TARGET_LDFLAGS += -L$(ANDROID_TARGET_ROOT)/usr/lib
+    TARGET_LDFLAGS += -B$(ANDROID_TARGET_ROOT)/usr/lib
   endif
 
   ifeq ($(ARMV7),y)

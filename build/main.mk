@@ -639,8 +639,6 @@ XCSOAR_SOURCES := \
 	\
 	$(SRC)/RateLimiter.cpp \
 	\
-	$(SRC)/Tracking/TrackingSettings.cpp \
-	\
 	$(SRC)/Math/Screen.cpp \
 	$(SRC)/Math/SunEphemeris.cpp \
 	\
@@ -650,7 +648,6 @@ XCSOAR_SOURCES := \
 	\
 	$(SRC)/Look/FontDescription.cpp \
 	$(SRC)/Look/GlobalFonts.cpp \
-	$(SRC)/Look/AutoFont.cpp \
 	$(SRC)/Look/DefaultFonts.cpp \
 	\
 	$(SRC)/Polar/PolarGlue.cpp \

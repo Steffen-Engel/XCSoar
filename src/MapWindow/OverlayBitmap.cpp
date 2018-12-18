@@ -49,7 +49,7 @@ using ClippedPolygon = boost::geometry::model::polygon<DoublePoint2D>;
 using ClippedMultiPolygon =
   boost::geometry::model::multi_polygon<ClippedPolygon>;
 
-MapOverlayBitmap::MapOverlayBitmap(Path path) throw(std::runtime_error)
+MapOverlayBitmap::MapOverlayBitmap(Path path)
   :label((path.GetBase() != nullptr ? path.GetBase() : path).c_str())
 {
   bounds = bitmap.LoadGeoFile(path);
@@ -155,15 +155,9 @@ MapOverlayBitmap::Draw(Canvas &canvas,
 
   const ScopeTextureConstantAlpha blend(use_bitmap_alpha, alpha);
 
-#ifdef USE_GLSL
   glEnableVertexAttribArray(OpenGL::Attribute::TEXCOORD);
   glVertexAttribPointer(OpenGL::Attribute::TEXCOORD, 2, GL_FLOAT, GL_FALSE,
                         0, coord);
-#else
-  const GLEnable<GL_TEXTURE_2D> scope;
-  glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-  glTexCoordPointer(2, GL_FLOAT, 0, coord);
-#endif
 
   for (const auto &polygon : clipped) {
     const auto &ring = polygon.outer();
@@ -188,9 +182,5 @@ MapOverlayBitmap::Draw(Canvas &canvas,
     glDrawArrays(GL_TRIANGLE_FAN, 0, n);
   }
 
-#ifdef USE_GLSL
   glDisableVertexAttribArray(OpenGL::Attribute::TEXCOORD);
-#else
-  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
 }

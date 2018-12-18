@@ -25,7 +25,7 @@ Copyright_License {
 #include "Compatibility/path.h"
 #include "Util/StringCompare.hxx"
 #include "Util/StringAPI.hxx"
-#include "Util/CharUtil.hpp"
+#include "Util/CharUtil.hxx"
 
 #ifdef _UNICODE
 #include "Util/ConvertString.hpp"
@@ -53,7 +53,7 @@ Path::ToUTF8() const
 }
 
 AllocatedPath
-Path::operator+(const_pointer other) const
+Path::operator+(const_pointer_type other) const
 {
   assert(!IsNull());
   assert(other != nullptr);
@@ -68,11 +68,11 @@ Path::operator+(const_pointer other) const
   return AllocatedPath::Donate(result);
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 
 gcc_pure gcc_nonnull_all
 static constexpr bool
-IsDrive(Path::const_pointer p)
+IsDrive(Path::const_pointer_type p)
 {
   return IsAlphaASCII(p[0]) && p[1] == ':';
 }
@@ -84,7 +84,7 @@ Path::IsAbsolute() const
 {
   assert(!IsNull());
 
-#ifdef WIN32
+#ifdef _WIN32
   if (IsDrive(c_str()) && IsDirSeparator(c_str()[2]))
     return true;
 #endif
@@ -97,7 +97,7 @@ Path::IsBase() const
 {
   assert(!IsNull());
 
-#ifdef WIN32
+#ifdef _WIN32
   return _tcspbrk(c_str(), _T("/\\")) == nullptr;
 #else
   return StringFind(c_str(), _T('/')) == nullptr;
@@ -105,11 +105,11 @@ Path::IsBase() const
 }
 
 gcc_pure
-static Path::const_pointer
-LastSeparator(Path::const_pointer path)
+static Path::const_pointer_type
+LastSeparator(Path::const_pointer_type path)
 {
   const auto *p = StringFindLast(path, _T('/'));
-#ifdef WIN32
+#ifdef _WIN32
   const auto *backslash = StringFindLast(path, _T('\\'));
   if (p == nullptr || backslash > p)
     p = backslash;
@@ -122,8 +122,8 @@ Path::GetParent() const
 {
   assert(!IsNull());
 
-  const const_pointer v = c_str();
-  const const_pointer p = LastSeparator(v);
+  const const_pointer_type v = c_str();
+  const const_pointer_type p = LastSeparator(v);
   if (p == nullptr || p == v)
     return AllocatedPath(_T("."));
 
@@ -135,8 +135,8 @@ Path::GetBase() const
 {
   assert(!IsNull());
 
-  const_pointer result = c_str();
-  const_pointer p = LastSeparator(result);
+  const_pointer_type result = c_str();
+  const_pointer_type p = LastSeparator(result);
   if (p != nullptr)
     result = p + 1;
 
@@ -167,7 +167,7 @@ Path::RelativeTo(Path parent) const
 }
 
 bool
-Path::MatchesExtension(const_pointer extension) const
+Path::MatchesExtension(const_pointer_type extension) const
 {
   size_t filename_length = StringLength(c_str());
   size_t extension_length = StringLength(extension);
@@ -177,7 +177,7 @@ Path::MatchesExtension(const_pointer extension) const
                             extension);
 }
 
-Path::const_pointer
+Path::const_pointer_type
 Path::GetExtension() const
 {
   auto base = GetBase();
@@ -190,7 +190,7 @@ Path::GetExtension() const
 }
 
 AllocatedPath
-Path::WithExtension(const_pointer new_extension) const
+Path::WithExtension(const_pointer_type new_extension) const
 {
   assert(new_extension != nullptr);
   assert(*new_extension == _T('.'));
@@ -202,7 +202,7 @@ Path::WithExtension(const_pointer new_extension) const
 }
 
 AllocatedPath
-AllocatedPath::Build(const_pointer a, const_pointer b)
+AllocatedPath::Build(const_pointer_type a, const_pointer_type b)
 {
   size_t a_length = StringLength(a);
   size_t b_length = StringLength(b);

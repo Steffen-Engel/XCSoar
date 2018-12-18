@@ -59,7 +59,7 @@ public class XCSoar extends Activity {
 
   PowerManager.WakeLock wakeLock;
 
-  BatteryReceiver batteryReceiver = new BatteryReceiver();
+  BatteryReceiver batteryReceiver;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     if (serviceClass == null)
@@ -93,13 +93,9 @@ public class XCSoar extends Activity {
 
     IOIOHelper.onCreateContext(this);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ECLAIR)
-      // Bluetooth suppoert was added in Android 2.0 "Eclair"
-      BluetoothHelper.Initialize(this);
+    BluetoothHelper.Initialize(this);
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD)
-      // the DownloadManager was added in Android 2.3 "Gingerbread"
-      DownloadUtil.Initialise(this);
+    DownloadUtil.Initialise(this);
 
     // fullscreen mode
     requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -109,12 +105,10 @@ public class XCSoar extends Activity {
     /* Workaround for layout problems in Android KitKat with immersive full
        screen mode: Sometimes the content view was not initialized with the
        correct size, which caused graphics artifacts. */
-    if (android.os.Build.VERSION.SDK_INT >= 19) {
-      getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|
-                           WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
-                           WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
-                           WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-    }
+    getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN|
+                         WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS|
+                         WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR|
+                         WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
 
     enableImmersiveModeIfSupported();
 
@@ -122,6 +116,7 @@ public class XCSoar extends Activity {
     tv.setText("Loading XCSoar...");
     setContentView(tv);
 
+    batteryReceiver = new BatteryReceiver();
     registerReceiver(batteryReceiver,
                      new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
   }
@@ -215,8 +210,7 @@ public class XCSoar extends Activity {
 
   private void enableImmersiveModeIfSupported() {
     // Set / Reset the System UI visibility flags for Immersive Full Screen Mode, if supported
-    if (android.os.Build.VERSION.SDK_INT >= 19)
-      ImmersiveFullScreenMode.enable(getWindow().getDecorView());
+    ImmersiveFullScreenMode.enable(getWindow().getDecorView());
   }
 
   @Override protected void onResume() {
@@ -235,10 +229,12 @@ public class XCSoar extends Activity {
   {
     Log.d(TAG, "in onDestroy()");
 
-    unregisterReceiver(batteryReceiver);
+    if (batteryReceiver != null) {
+      unregisterReceiver(batteryReceiver);
+      batteryReceiver = null;
+    }
 
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD)
-      DownloadUtil.Deinitialise(this);
+    DownloadUtil.Deinitialise(this);
 
     if (nativeView != null) {
       nativeView.exitApp();

@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_LOG_ERROR_HPP
 #define XCSOAR_LOG_ERROR_HPP
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #include <tchar.h>
 
@@ -34,19 +34,6 @@ Copyright_License {
  */
 void
 LogLastError(const TCHAR *fmt, ...);
-
-#endif
-
-#ifdef HAVE_POSIX
-
-#include <tchar.h>
-
-/**
- * Logs a message followed by the error message described by
- * errno.
- */
-void
-LogErrno(const TCHAR *fmt, ...);
 
 #endif
 

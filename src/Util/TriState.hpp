@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2014 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,8 +32,10 @@
 
 #include <stdint.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
+#elif defined(__APPLE__)
+#import <Foundation/Foundation.h>
 #endif
 
 /* TRUE and FALSE are macros on some platforms (at least on Win32, iOS and

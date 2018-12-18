@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2015 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2010-2015 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,7 +34,7 @@
 
 #include <stdio.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <string.h>
 #endif
 
@@ -45,7 +45,7 @@ StringFormat(wchar_t *buffer, size_t size, const wchar_t *fmt, Args&&... args)
   /* unlike snprintf(), _sntprintf() does not guarantee that the
      destination buffer is terminated */
 
-#ifdef WIN32
+#ifdef _WIN32
   /* usually, it would be enough to clear the last byte in the output
      buffer after the _sntprintf() call, but unfortunately WINE 1.4.1
      has a bug that applies the wrong limit in the overflow branch

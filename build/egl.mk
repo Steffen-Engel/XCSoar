@@ -19,10 +19,7 @@ else ifeq ($(ENABLE_SDL),y)
 # no EGL if SDL was enabled explicitly
 EGL = n
 else ifeq ($(TARGET),ANDROID)
-# Android uses Java-EGL
-EGL ?= n
-else ifeq ($(GLES),y)
-# use EGL if GLES1 was chosen explicitly
+# Android uses EGL
 EGL = y
 else ifeq ($(GLES2),y)
 # use EGL if GLES2 was chosen explicitly
@@ -46,7 +43,12 @@ ENABLE_SDL = n
 
 EGL_CPPFLAGS =
 EGL_FEATURE_CPPFLAGS = -DUSE_EGL
+
+ifeq ($(TARGET_IS_PI),y)
+EGL_LDLIBS = -lbrcmEGL
+else
 EGL_LDLIBS = -lEGL
+endif
 
 ifeq ($(TARGET_IS_PI),y)
 # Raspberry Pi detected

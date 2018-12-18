@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2016 Max Kellermann <max@duempel.org>
+ * Copyright 2012-2018 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,54 +27,48 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef UNIQUE_FILE_DESCRIPTOR_HPP
-#define UNIQUE_FILE_DESCRIPTOR_HPP
+#ifndef UNIQUE_FILE_DESCRIPTOR_HXX
+#define UNIQUE_FILE_DESCRIPTOR_HXX
 
 #include "FileDescriptor.hxx"
 
 #include <utility>
 
+#include <assert.h>
+
 /**
  * An OO wrapper for a UNIX file descriptor.
  */
-class UniqueFileDescriptor : protected FileDescriptor {
+class UniqueFileDescriptor : public FileDescriptor {
 public:
-	UniqueFileDescriptor():FileDescriptor(FileDescriptor::Undefined()) {}
+	UniqueFileDescriptor() noexcept
+		:FileDescriptor(FileDescriptor::Undefined()) {}
 
 protected:
-	explicit UniqueFileDescriptor(int _fd):FileDescriptor(_fd) {
+	explicit UniqueFileDescriptor(int _fd) noexcept:FileDescriptor(_fd) {
 		assert(IsDefined());
 	}
 
 public:
-	explicit UniqueFileDescriptor(FileDescriptor _fd)
+	explicit UniqueFileDescriptor(FileDescriptor _fd) noexcept
 		:FileDescriptor(_fd) {}
 
-	UniqueFileDescriptor(UniqueFileDescriptor &&other)
+	UniqueFileDescriptor(const UniqueFileDescriptor &) = delete;
+
+	UniqueFileDescriptor(UniqueFileDescriptor &&other) noexcept
 		:FileDescriptor(other.Steal()) {}
 
-	~UniqueFileDescriptor() {
+	~UniqueFileDescriptor() noexcept {
 		Close();
 	}
 
-	UniqueFileDescriptor &operator=(UniqueFileDescriptor &&other) {
+	UniqueFileDescriptor &operator=(UniqueFileDescriptor &&other) noexcept {
 		std::swap(fd, other.fd);
 		return *this;
 	}
 
-	/**
-	 * Convert this object to its #FileDescriptor base type.
-	 */
-	const FileDescriptor &ToFileDescriptor() const {
-		return *this;
-	}
-
-	using FileDescriptor::IsDefined;
-	using FileDescriptor::Get;
-	using FileDescriptor::Steal;
-
 protected:
-	void Set(int _fd) {
+	void Set(int _fd) noexcept {
 		assert(!IsDefined());
 		assert(_fd >= 0);
 
@@ -82,53 +76,17 @@ protected:
 	}
 
 public:
-	using FileDescriptor::Open;
-	using FileDescriptor::OpenReadOnly;
-
-#ifdef HAVE_POSIX
-	using FileDescriptor::OpenNonBlocking;
-
-	static bool CreatePipe(UniqueFileDescriptor &r, UniqueFileDescriptor &w) {
+#ifndef _WIN32
+	static bool CreatePipe(UniqueFileDescriptor &r, UniqueFileDescriptor &w) noexcept {
 		return FileDescriptor::CreatePipe(r, w);
 	}
 
-	using FileDescriptor::SetNonBlocking;
-	using FileDescriptor::SetBlocking;
-	using FileDescriptor::EnableCloseOnExec;
-	using FileDescriptor::DisableCloseOnExec;
-	using FileDescriptor::Duplicate;
-	using FileDescriptor::CheckDuplicate;
-
-	static bool CreatePipe(FileDescriptor &r, FileDescriptor &w);
+	static bool CreatePipe(FileDescriptor &r, FileDescriptor &w) noexcept;
 #endif
 
-#ifdef HAVE_EVENTFD
-	using FileDescriptor::CreateEventFD;
-#endif
-
-#ifdef HAVE_SIGNALFD
-	using FileDescriptor::CreateSignalFD;
-#endif
-
-#ifdef HAVE_INOTIFY
-	using FileDescriptor::CreateInotify;
-#endif
-
-	void Close() {
-		if (IsDefined())
-			FileDescriptor::Close();
+	bool Close() noexcept {
+		return IsDefined() && FileDescriptor::Close();
 	}
-
-	using FileDescriptor::Rewind;
-	using FileDescriptor::GetSize;
-	using FileDescriptor::Read;
-	using FileDescriptor::Write;
-
-#ifdef HAVE_POSIX
-	using FileDescriptor::Poll;
-	using FileDescriptor::WaitReadable;
-	using FileDescriptor::WaitWritable;
-#endif
 };
 
 #endif

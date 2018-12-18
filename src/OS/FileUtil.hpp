@@ -108,7 +108,7 @@ namespace File
   gcc_pure
   bool Exists(Path path);
 
-#if defined(WIN32) && defined(UNICODE)
+#if defined(_WIN32) && defined(UNICODE)
   gcc_pure
   bool Exists(const char *path);
 #endif
@@ -171,6 +171,13 @@ namespace File
    */
   gcc_pure
   uint64_t GetLastModification(Path path);
+
+  /**
+   * Get a timestamp that can be used to compare to file timestamps
+   * @return a timestamp for comparison
+   */
+  gcc_pure
+  uint64_t Now();
 
   /**
    * Sets the modification timestamp of the file to the current system time

@@ -22,7 +22,7 @@
 
 #include <assert.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 
 FileReader::FileReader(Path _path)
 	:path(_path),
@@ -68,7 +68,7 @@ FileReader::Skip(off_t offset)
 }
 
 void
-FileReader::Close()
+FileReader::Close() noexcept
 {
 	assert(IsDefined());
 
@@ -120,7 +120,7 @@ FileReader::Skip(off_t offset)
 }
 
 void
-FileReader::Close()
+FileReader::Close() noexcept
 {
 	assert(IsDefined());
 

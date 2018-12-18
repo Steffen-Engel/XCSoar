@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2015 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
 
 #include "Compiler.h"
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <winsock2.h>
 #else
 #include <errno.h>
@@ -42,7 +42,7 @@ gcc_pure
 static inline int
 GetSocketError()
 {
-#ifdef WIN32
+#ifdef _WIN32
   return WSAGetLastError();
 #else
   return errno;
@@ -53,7 +53,7 @@ gcc_const
 static inline bool
 IsSocketBlockingError(int e)
 {
-#ifdef WIN32
+#ifdef _WIN32
   return e == WSAEWOULDBLOCK;
 #else
   return e == EAGAIN;

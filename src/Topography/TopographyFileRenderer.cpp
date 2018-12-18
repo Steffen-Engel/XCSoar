@@ -38,12 +38,10 @@ Copyright_License {
 
 #ifdef ENABLE_OPENGL
 #include "Screen/OpenGL/VertexPointer.hpp"
-#include "Screen/OpenGL/FallbackBuffer.hpp"
+#include "Screen/OpenGL/Buffer.hpp"
 #include "Screen/OpenGL/Dynamic.hpp"
 #include "Screen/OpenGL/Geo.hpp"
-#endif
 
-#ifdef USE_GLSL
 #include "Screen/OpenGL/Program.hpp"
 #include "Screen/OpenGL/Shaders.hpp"
 
@@ -114,7 +112,7 @@ inline void
 TopographyFileRenderer::UpdateArrayBuffer()
 {
   if (array_buffer == nullptr)
-    array_buffer = new GLFallbackArrayBuffer();
+    array_buffer = new GLArrayBuffer();
   else if (file.GetSerial() == array_buffer_serial)
     return;
 
@@ -213,14 +211,12 @@ TopographyFileRenderer::Paint(Canvas &canvas,
   if (visible_shapes.empty())
     return;
 
-#ifdef USE_GLSL
-  OpenGL::solid_shader->Use();
-#endif
-
 #ifdef ENABLE_OPENGL
+  OpenGL::solid_shader->Use();
+
   UpdateArrayBuffer();
-  const ShapePoint *const buffer = (const ShapePoint *)
-    array_buffer->BeginRead();
+  array_buffer->Bind();
+  const ShapePoint *const buffer = nullptr;
 
   pen.Bind();
 
@@ -247,13 +243,8 @@ TopographyFileRenderer::Paint(Canvas &canvas,
   glGetFloatv(GL_MODELVIEW_MATRIX, opengl_matrix);
 #endif
 
-#ifdef USE_GLSL
   glUniformMatrix4fv(OpenGL::solid_modelview, 1, GL_FALSE,
                      glm::value_ptr(ToGLM(projection, file.GetCenter())));
-#else
-  glPushMatrix();
-  ApplyProjection(projection, file.GetCenter());
-#endif /* !USE_GLSL */
 #else // !ENABLE_OPENGL
   const GeoClip clip(projection.GetScreenBounds().Scale(1.1));
   AllocatedArray<GeoPoint> geo_points;
@@ -286,19 +277,15 @@ TopographyFileRenderer::Paint(Canvas &canvas,
 
     case MS_SHAPE_POINT:
 #ifdef ENABLE_OPENGL
-#ifdef USE_GLSL
       /* disable the ScopeVertexPointer instance because PaintPoint()
          uses that attribute */
       glDisableVertexAttribArray(OpenGL::Attribute::POSITION);
-#endif
 
       PaintPoint(canvas, projection, shape, opengl_matrix);
 
-#ifdef USE_GLSL
       /* reenable the ScopeVertexPointer instance because PaintPoint()
          left it disabled */
       glEnableVertexAttribArray(OpenGL::Attribute::POSITION);
-#endif
 #else // !ENABLE_OPENGL
       PaintPoint(canvas, projection, lines.begin(), lines.end(), points);
 #endif
@@ -423,18 +410,14 @@ TopographyFileRenderer::Paint(Canvas &canvas,
   }
 #endif
 
-#ifdef USE_GLSL
   glUniformMatrix4fv(OpenGL::solid_modelview, 1, GL_FALSE,
-                     glm::value_ptr(glm::mat4()));
-#else
-  glPopMatrix();
-#endif
+                     glm::value_ptr(glm::mat4(1)));
   if (!pen.GetColor().IsOpaque())
     glDisable(GL_BLEND);
 
   pen.Unbind();
 
-  array_buffer->EndRead();
+  array_buffer->Unbind();
 #else
   shape_renderer.Commit();
 #endif
