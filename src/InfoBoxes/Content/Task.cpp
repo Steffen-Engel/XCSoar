@@ -920,9 +920,9 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
 
   // get the data to be displayed
   StaticString<32> text1, text2, text3;
-  text1 = "---";
-  text2 = "---";
-  text3 = "---";
+  text1 = _T("---");
+  text2 = _T("---");
+  text3 = _T("---");
 
   Color color1, color2, color3;
   color1 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
