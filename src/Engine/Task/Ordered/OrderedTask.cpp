@@ -528,7 +528,7 @@ OrderedTask::CheckTransitions(const AircraftState &state,
     stats.start.SetStarted(start_state);
 
     if (taskpoint_finish != nullptr)
-      taskpoint_finish->set_fai_finish_height(start_state.altitude - 1000);
+      taskpoint_finish->SetFaiFinishHeight(start_state.altitude - 1000);
   }
 
   if (task_events != nullptr) {
@@ -1228,22 +1228,6 @@ OrderedTask::HasTargets() const
   return false;
 }
 
-GeoPoint
-OrderedTask::GetTaskCenter() const
-{
-  return task_points.empty()
-    ? GeoPoint::Invalid()
-    : task_projection.GetCenter();
-}
-
-double
-OrderedTask::GetTaskRadius() const
-{
-  return task_points.empty()
-    ? 0
-    : task_projection.ApproxRadius();
-}
-
 OrderedTask*
 OrderedTask::Clone(const TaskBehaviour &tb) const
 {
@@ -1474,9 +1458,7 @@ OrderedTask::Clear()
 void
 OrderedTask::RotateOptionalStarts()
 {
-  if (!TaskSize())
-    return;
-  if (!optional_start_points.size())
+  if (IsEmpty() || optional_start_points.empty())
     return;
 
   SelectOptionalStart(0);

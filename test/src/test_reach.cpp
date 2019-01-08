@@ -41,36 +41,33 @@
 #include <string.h>
 
 static void
-test_reach(const RasterMap &map, double mwind, double mc)
+test_reach(const RasterMap &map, double mwind, double mc, double height_min_working)
 {
   GlideSettings settings;
   settings.SetDefaults();
+  RoutePlannerConfig config;
+  config.SetDefaults();
+
   GlidePolar polar(mc);
   SpeedVector wind(Angle::Degrees(0), mwind);
   TerrainRoute route;
-  route.UpdatePolar(settings, polar, polar, wind);
+  route.UpdatePolar(settings, config, polar, polar, wind, height_min_working);
   route.SetTerrain(&map);
 
   GeoPoint origin(map.GetMapCenter());
-
-  double pd = map.PixelDistance(origin, 1);
-  printf("# pixel size %g\n", (double)pd);
 
   bool retval= true;
 
   int horigin = map.GetHeight(origin).GetValueOr0() + 1000;
   AGeoPoint aorigin(origin, horigin);
 
-  RoutePlannerConfig config;
-  config.SetDefaults();
-  retval = route.SolveReach(aorigin, config, INT_MAX);
+  retval = route.SolveReachTerrain(aorigin, config, INT_MAX);
+  ok(retval, "reach terrain", 0);
+  PrintHelper::print_reach_terrain_tree(route);
 
-  ok(retval, "reach solve", 0);
-
-  PrintHelper::print_reach_tree(route);
-
-  GeoPoint dest(origin.longitude-Angle::Degrees(0.02),
-                origin.latitude-Angle::Degrees(0.02));
+  retval = route.SolveReachWorking(aorigin, config, INT_MAX);
+  ok(retval, "reach working", 0);
+  PrintHelper::print_reach_working_tree(route);
 
   {
     Directory::Create(Path(_T("output/results")));
@@ -89,7 +86,7 @@ test_reach(const RasterMap &map, double mwind, double mc)
         route.FindPositiveArrival(adest, reach);
         if ((i % 5 == 0) && (j % 5 == 0)) {
           AGeoPoint ao2(x, h + 1000);
-          route.SolveReach(ao2, config, INT_MAX);
+          route.SolveReachTerrain(ao2, config, INT_MAX);
         }
         fout << x.longitude.Degrees() << " "
              << x.latitude.Degrees() << " "
@@ -99,6 +96,9 @@ test_reach(const RasterMap &map, double mwind, double mc)
     }
     fout << "\n";
   }
+
+  //  double pd = map.PixelDistance(origin, 1);
+  //  printf("# pixel size %g\n", (double)pd);
 }
 
 int main(int argc, char** argv) {
@@ -125,6 +125,8 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
 
+  map.UpdateProjection();
+
   SharedMutex mutex;
   do {
     UpdateTerrainTiles(dir, map.GetTileCache(), mutex,
@@ -133,8 +135,11 @@ int main(int argc, char** argv) {
   } while (map.IsDirty());
   zzip_dir_close(dir);
 
-  plan_tests(1);
-  test_reach(map, 0, 0.1);
+  plan_tests(8);
+  test_reach(map, 0, 0.1, 0);
+  test_reach(map, 0, 0.1, 750);
+  test_reach(map, 0, 0.1, 500);
+  test_reach(map, 0, 0.1, 250);
 
   return exit_status();
 }

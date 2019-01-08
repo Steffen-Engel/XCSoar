@@ -28,29 +28,33 @@ Copyright_License {
 #include "NameFile.hpp"
 #include "Components.hpp"
 #include "MergeThread.hpp"
+#include "LocalPath.hpp"
 #include "IO/DataFile.hpp"
 #include "IO/LineReader.hpp"
-#include "IO/TextWriter.hpp"
+#include "IO/FileOutputStream.hxx"
+#include "IO/BufferedOutputStream.hxx"
 #include "Profile/FlarmProfile.hpp"
 #include "Profile/Current.hpp"
 #include "LogFile.hpp"
-#include "Util/Error.hxx"
+#include "Profile/Profile.hpp"
+#include "Profile/ProfileKeys.hpp"
 
 /**
  * Loads the FLARMnet file
  */
 static void
 LoadFLARMnet(FlarmNetDatabase &db)
-{
-  NLineReader *reader = OpenDataTextFileA(_T("data.fln"), IgnoreError());
-  if (reader == NULL)
+try {
+  auto path = Profile::GetPath(ProfileKeys::FlarmFile);
+  if (path.IsNull()) {
     return;
+  }
 
-  unsigned num_records = FlarmNetReader::LoadFile(*reader, db);
-  delete reader;
-
+  unsigned num_records = FlarmNetReader::LoadFile(path, db);
   if (num_records > 0)
     LogFormat("%u FLARMnet ids found", num_records);
+} catch (const std::runtime_error &e) {
+  LogError(e);
 }
 
 /**
@@ -60,15 +64,13 @@ LoadFLARMnet(FlarmNetDatabase &db)
  */
 static void
 LoadSecondary(FlarmNameDatabase &db)
-{
+try {
   LogFormat("OpenFLARMDetails");
 
-  TLineReader *reader = OpenDataTextFile(_T("xcsoar-flarm.txt"),
-                                         IgnoreError());
-  if (reader != NULL) {
-    LoadFlarmNameFile(*reader, db);
-    delete reader;
-  }
+  auto reader = OpenDataTextFile(_T("xcsoar-flarm.txt"));
+  LoadFlarmNameFile(*reader, db);
+} catch (const std::runtime_error &e) {
+  LogError(e);
 }
 
 void
@@ -77,6 +79,12 @@ LoadFlarmDatabases()
   if (traffic_databases != nullptr)
     return;
 
+  ReloadFlarmDatabases();
+}
+
+void
+ReloadFlarmDatabases()
+{
   traffic_databases = new TrafficDatabases();
 
   /* the MergeThread must be suspended, because it reads the FLARM
@@ -103,13 +111,14 @@ SaveFlarmColors()
    */
 static void
 SaveSecondary(FlarmNameDatabase &flarm_names)
-{
-  TextWriter *writer = CreateDataTextFile(_T("xcsoar-flarm.txt"));
-  if (writer == NULL)
-    return;
-
-  SaveFlarmNameFile(*writer, flarm_names);
-  delete writer;
+try {
+  FileOutputStream fos(LocalPath(_T("xcsoar-flarm.txt")));
+  BufferedOutputStream bos(fos);
+  SaveFlarmNameFile(bos, flarm_names);
+  bos.Flush();
+  fos.Commit();
+} catch (const std::runtime_error &e) {
+  LogError(e);
 }
 
 void
@@ -125,4 +134,3 @@ DeinitTrafficGlobals()
   delete traffic_databases;
   traffic_databases = nullptr;
 }
-

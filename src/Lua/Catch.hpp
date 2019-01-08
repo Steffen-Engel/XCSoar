@@ -25,22 +25,26 @@ Copyright_License {
 #define XCSOAR_LUA_CATCH_HPP
 
 struct lua_State;
-class Domain;
-class Error;
 
 namespace Lua {
-  typedef void (*CatchCallback)(Error &&error);
 
-  /**
-   * Register the function that will be called by ThrowError().  It is
-   * responsible for logging or showing the error.
-   */
-  void SetCatchCallback(lua_State *L, CatchCallback callback);
+class Error;
 
-  /**
-   * Invoke the CatchCallback.
-   */
-  void ThrowError(lua_State *L, Error &&error);
+typedef void (*CatchCallback)(Error &&error);
+
+/**
+ * Register the function that will be called by ThrowError().  It is
+ * responsible for logging or showing the error.
+ */
+void
+SetCatchCallback(lua_State *L, CatchCallback callback);
+
+/**
+ * Invoke the CatchCallback.
+ */
+void
+ThrowError(lua_State *L, Error &&error);
+
 }
 
 #endif

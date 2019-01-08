@@ -28,8 +28,8 @@ Copyright_License {
 #include "RadioFrequency.hpp"
 #include "Thread/Cond.hxx"
 #include "Thread/Mutex.hpp"
-#include "Util/CharUtil.hpp"
-#include "Util/StaticFifoBuffer.hpp"
+#include "Util/CharUtil.hxx"
+#include "Util/StaticFifoBuffer.hxx"
 
 #include <stdint.h>
 #include <stdio.h>

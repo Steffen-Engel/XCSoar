@@ -41,8 +41,11 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "Language/LanguageGlue.hpp"
 #include "Simulator.hpp"
+#include "Audio/GlobalPCMMixer.hpp"
+#include "Audio/GlobalPCMResourcePlayer.hpp"
+#include "Audio/GlobalVolumeController.hpp"
 #include "OS/Args.hpp"
-#include "IO/Async/GlobalIOThread.hpp"
+#include "IO/Async/GlobalAsioThread.hpp"
 
 #ifndef NDEBUG
 #include "Thread/Thread.hpp"
@@ -89,6 +92,47 @@ static const char *const Usage = "\n"
 #endif
   ;
 
+static int
+Main()
+{
+  ScreenGlobalInit screen_init;
+
+#if defined(__APPLE__) && !TARGET_OS_IPHONE
+  // We do not want the ugly non-localized main menu which SDL creates
+  [NSApp setMainMenu: [[NSMenu alloc] init]];
+#endif
+
+#ifdef WIN32
+  /* try to make the UI most responsive */
+  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+#endif
+
+  AllowLanguage();
+  InitLanguage();
+
+  ScopeGlobalAsioThread global_asio_thread;
+
+  ScopeGlobalPCMMixer global_pcm_mixer;
+  ScopeGlobalPCMResourcePlayer global_pcm_resouce_player;
+  ScopeGlobalVolumeController global_volume_controller;
+
+  // Perform application initialization and run loop
+  int ret = EXIT_FAILURE;
+  if (Startup())
+    ret = CommonInterface::main_window->RunEventLoop();
+
+  Shutdown();
+
+  DisallowLanguage();
+
+  Fonts::Deinitialize();
+
+  DeinitialiseDataPath();
+  Net::Deinitialise();
+
+  return ret;
+}
+
 /**
  * Main entry point for the whole XCSoar application
  */
@@ -123,38 +167,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     CommandLine::Parse(args);
   }
 
-  ScreenGlobalInit screen_init;
-
-#if defined(__APPLE__) && !TARGET_OS_IPHONE
-  // We do not want the ugly non-localized main menu which SDL creates
-  [NSApp setMainMenu: [[NSMenu alloc] init]];
-#endif
-
-#ifdef WIN32
-  /* try to make the UI most responsive */
-  SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-#endif
-
-  AllowLanguage();
-  InitLanguage();
-
-  InitialiseIOThread();
-
-  // Perform application initialization and run loop
-  int ret = EXIT_FAILURE;
-  if (Startup())
-    ret = CommonInterface::main_window->RunEventLoop();
-
-  Shutdown();
-
-  DeinitialiseIOThread();
-
-  DisallowLanguage();
-
-  Fonts::Deinitialize();
-
-  DeinitialiseDataPath();
-  Net::Deinitialise();
+  int ret = Main();
 
   assert(!ExistsAnyThread());
 

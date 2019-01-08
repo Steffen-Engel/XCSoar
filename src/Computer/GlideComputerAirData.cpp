@@ -33,6 +33,11 @@ Copyright_License {
 #include "NMEA/MoreData.hpp"
 
 static constexpr double THERMAL_TIME_MIN = 45;
+static constexpr double THERMAL_SHEAR_RATIO_MAX = 10;
+static constexpr double DEFAULT_TAKEOFF_SPEED = 10;
+static constexpr double CLIMB_RATE_G_MIN = 0.25;
+static constexpr double LOW_PASS_FILTER_VARIO_LD_ALPHA = 0.3;
+static constexpr double LOW_PASS_FILTER_THERMAL_AVERAGE_ALPHA = 0.3;
 
 GlideComputerAirData::GlideComputerAirData(const Waypoints &_way_points)
   :waypoints(_way_points),
@@ -104,7 +109,7 @@ GlideComputerAirData::ProcessVertical(const MoreData &basic,
   wind_computer.Select(settings.wind, basic, calculated);
   wind_computer.ComputeHeadWind(basic, calculated);
 
-  thermallocator.Process(calculated.circling,
+  thermallocator.Process(calculated.circling && calculated.turning,
                          basic.time, basic.location,
                          basic.netto_vario,
                          calculated.GetWindOrZero(),
@@ -125,6 +130,8 @@ GlideComputerAirData::ProcessVertical(const MoreData &basic,
 
   if (calculated.circling)
     CurrentThermal(basic, calculated, calculated.current_thermal);
+  else
+    calculated.current_thermal = calculated.last_thermal;
 
   lift_database_computer.Compute(calculated.lift_database,
                                  calculated.trace_history.CirclingAverage,
@@ -162,7 +169,7 @@ GlideComputerAirData::AverageClimbRate(const NMEAInfo &basic,
       !calculated.circling &&
       (!basic.acceleration.available ||
        !basic.acceleration.real ||
-       fabs(basic.acceleration.g_load - 1) <= 0.25)) {
+       fabs(basic.acceleration.g_load - 1) <= CLIMB_RATE_G_MIN)) {
     // TODO: Check this is correct for TAS/IAS
     auto ias_to_tas = basic.indicated_airspeed / basic.true_airspeed;
     auto w_tas = basic.total_energy_vario * ias_to_tas;
@@ -186,6 +193,7 @@ GlideComputerAirData::CurrentThermal(const MoreData &basic,
     current_thermal.Clear();
 }
 
+
 inline void
 GlideComputerAirData::GR(const MoreData &basic, const FlyingState &flying,
                          VarioInfo &vario_info)
@@ -195,7 +203,7 @@ GlideComputerAirData::GR(const MoreData &basic, const FlyingState &flying,
       flying.flying) {
     vario_info.ld_vario =
       UpdateGR(vario_info.ld_vario, basic.indicated_airspeed,
-               -basic.total_energy_vario, 0.3);
+               -basic.total_energy_vario, LOW_PASS_FILTER_VARIO_LD_ALPHA);
   } else {
     vario_info.ld_vario = INVALID_GR;
   }
@@ -279,7 +287,7 @@ GlideComputerAirData::FlightState(const NMEAInfo &basic,
     ? glide_polar.GetVTakeoff()
     /* if there's no valid polar, assume 10 m/s (36 km/h); that's an
        arbitrary value, but better than nothing */
-    : 10;
+    : DEFAULT_TAKEOFF_SPEED;
 
   flying_computer.Compute(v_takeoff, basic,
                           calculated, flying);
@@ -296,10 +304,11 @@ GlideComputerAirData::Turning(const MoreData &basic,
                             settings.circling);
 
   // Calculate circling time percentage and call thermal band calculation
-  circling_computer.PercentCircling(basic, calculated);
+  circling_computer.PercentCircling(basic, calculated.flight, calculated);
 
   thermal_band_computer.Compute(basic, calculated,
-                                calculated.thermal_band,
+                                calculated.thermal_encounter_band,
+                                calculated.thermal_encounter_collection,
                                 settings);
 }
 
@@ -310,12 +319,11 @@ GlideComputerAirData::ThermalSources(const MoreData &basic,
 {
   if (!thermal_locator.estimate_valid ||
       !basic.NavAltitudeAvailable() ||
-      !calculated.last_thermal.IsDefined() ||
-      calculated.last_thermal.lift_rate < 0)
+      !calculated.last_thermal.IsDefined())
     return;
 
   if (calculated.wind_available &&
-      calculated.wind.norm / calculated.last_thermal.lift_rate > 10.0) {
+      calculated.wind.norm / calculated.last_thermal.lift_rate > THERMAL_SHEAR_RATIO_MAX) {
     // thermal strength is so weak compared to wind that source estimate
     // is unlikely to be reliable, so don't calculate or remember it
     return;
@@ -365,7 +373,9 @@ GlideComputerAirData::LastThermalStats(const MoreData &basic,
   calculated.last_thermal.end_time = calculated.cruise_start_time;
   calculated.last_thermal.gain = gain;
   calculated.last_thermal.duration = duration;
+  calculated.last_thermal.start_altitude = calculated.climb_start_altitude_te + (basic.nav_altitude-basic.TE_altitude);
   calculated.last_thermal.CalculateLiftRate();
+  assert(calculated.last_thermal.lift_rate > 0);
 
   if (!was_defined)
     calculated.last_thermal_average_smooth =
@@ -373,7 +383,7 @@ GlideComputerAirData::LastThermalStats(const MoreData &basic,
   else
     calculated.last_thermal_average_smooth =
         LowPassFilter(calculated.last_thermal_average_smooth,
-                      calculated.last_thermal.lift_rate, 0.3);
+                      calculated.last_thermal.lift_rate, LOW_PASS_FILTER_THERMAL_AVERAGE_ALPHA);
 
   ThermalSources(basic, calculated, calculated.thermal_locator);
 }

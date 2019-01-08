@@ -24,8 +24,9 @@ Copyright_License {
 #include "Lua/Basic.hpp"
 #include "Lua/Log.hpp"
 #include "Lua/RunFile.hpp"
+#include "Lua/Ptr.hpp"
 #include "OS/Args.hpp"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
 
 extern "C" {
 #include <lua.h>
@@ -41,24 +42,20 @@ l_alert(lua_State *L)
 }
 
 int main(int argc, char **argv)
-{
+try {
   Args args(argc, argv, "FILE.lua");
   const auto path = args.ExpectNextPath();
   args.ExpectEnd();
 
-  int result = EXIT_SUCCESS;
+  Lua::StatePtr state(Lua::NewBasicState());
+  Lua::InitLog(state.get());
 
-  lua_State *L = Lua::NewBasicState();
-  Lua::InitLog(L);
+  lua_register(state.get(), "alert", l_alert);
 
-  lua_register(L, "alert", l_alert);
+  Lua::RunFile(state.get(), path);
 
-  Error error;
-  if (!Lua::RunFile(L, path, error)) {
-    fprintf(stderr, "%s\n", error.GetMessage());
-    result = EXIT_FAILURE;
-  }
-
-  lua_close(L);
-  return result;
+  return EXIT_SUCCESS;
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }

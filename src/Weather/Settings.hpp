@@ -28,17 +28,7 @@ Copyright_License {
 
 #ifdef HAVE_PCMET
 
-#include "Util/StaticString.hxx"
-
-struct PCMetSettings {
-  StaticString<64> username;
-  StaticString<64> password;
-
-  void SetDefaults() {
-    username.clear();
-    password.clear();
-  }
-};
+#include "PCMet/Settings.hpp"
 
 #endif
 

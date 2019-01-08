@@ -24,95 +24,83 @@ Copyright_License {
 #include "ConfiguredFile.hpp"
 #include "MapFile.hpp"
 #include "FileLineReader.hpp"
+#include "ZipArchive.hpp"
 #include "ZipLineReader.hpp"
+#include "ConvertLineReader.hpp"
 #include "Profile/Profile.hpp"
 #include "LogFile.hpp"
 #include "OS/Path.hpp"
-#include "Util/Error.hxx"
 
 #include <zzip/zzip.h>
+
+#include <stdexcept>
 
 #include <assert.h>
 #include <string.h>
 
-NLineReader *
+std::unique_ptr<NLineReader>
 OpenConfiguredTextFileA(const char *profile_key)
-{
+try {
   assert(profile_key != nullptr);
 
   const auto path = Profile::GetPath(profile_key);
   if (path.IsNull())
     return nullptr;
 
-  Error error;
-  FileLineReaderA *reader = new FileLineReaderA(path, error);
-  if (reader->error()) {
-    delete reader;
-    LogError(error);
-    return nullptr;
-  }
-
-  return reader;
+  return std::make_unique<FileLineReaderA>(path);
+} catch (const std::runtime_error &e) {
+  LogError(e);
+  return nullptr;
 }
 
-TLineReader *
+std::unique_ptr<TLineReader>
 OpenConfiguredTextFile(const char *profile_key, Charset cs)
 {
   assert(profile_key != nullptr);
 
-  const auto path = Profile::GetPath(profile_key);
-  if (path.IsNull())
+  auto reader = OpenConfiguredTextFileA(profile_key);
+  if (!reader)
     return nullptr;
 
-  Error error;
-  FileLineReader *reader = new FileLineReader(path, error, cs);
-  if (reader == nullptr) {
-    LogError(error);
-    return nullptr;
-  }
-
-  if (reader->error()) {
-    delete reader;
-    return nullptr;
-  }
-
-  return reader;
+  return std::make_unique<ConvertLineReader>(std::move(reader), cs);
 }
 
-static TLineReader *
+static std::unique_ptr<NLineReader>
+OpenMapTextFileA(const char *in_map_file)
+try {
+  assert(in_map_file != nullptr);
+
+  auto archive = OpenMapFile();
+  if (!archive)
+    return nullptr;
+
+  return std::make_unique<ZipLineReaderA>(archive->get(), in_map_file);
+} catch (const std::runtime_error &e) {
+  LogError(e);
+  return nullptr;
+}
+
+static std::unique_ptr<TLineReader>
 OpenMapTextFile(const char *in_map_file, Charset cs)
 {
   assert(in_map_file != nullptr);
 
-  auto dir = OpenMapFile();
-  if (dir == nullptr)
+  auto reader = OpenMapTextFileA(in_map_file);
+  if (!reader)
     return nullptr;
 
-  Error error;
-  ZipLineReader *reader = new ZipLineReader(dir, in_map_file, error, cs);
-  zzip_dir_close(dir);
-  if (reader == nullptr) {
-    LogError(error);
-    return nullptr;
-  }
-
-  if (reader->error()) {
-    delete reader;
-    return nullptr;
-  }
-
-  return reader;
+  return std::make_unique<ConvertLineReader>(std::move(reader), cs);
 }
 
-TLineReader *
+std::unique_ptr<TLineReader>
 OpenConfiguredTextFile(const char *profile_key, const char *in_map_file,
                        Charset cs)
 {
   assert(profile_key != nullptr);
   assert(in_map_file != nullptr);
 
-  TLineReader *reader = OpenConfiguredTextFile(profile_key, cs);
-  if (reader == nullptr)
+  auto reader = OpenConfiguredTextFile(profile_key, cs);
+  if (!reader)
     reader = OpenMapTextFile(in_map_file, cs);
 
   return reader;

@@ -24,13 +24,18 @@
 #include "Task/Stats/TaskStats.hpp"
 
 void
-TaskStatsComputer::reset(TaskStats &data)
+TaskStatsComputer::Reset(TaskStats &data)
 {
   total.Reset(data.total);
   current_leg.Reset(data.current_leg);
 
   data.last_hour.Reset();
   window.Reset();
+
+  inst_speed_slow.Design(180, false);
+  inst_speed_fast.Design(15, false);
+  inst_speed_slow.Reset(0);
+  inst_speed_fast.Reset(0);
 }
 
 void

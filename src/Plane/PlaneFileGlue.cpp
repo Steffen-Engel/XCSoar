@@ -26,10 +26,10 @@ Copyright_License {
 #include "Polar/Parser.hpp"
 #include "IO/KeyValueFileReader.hpp"
 #include "IO/KeyValueFileWriter.hpp"
-#include "IO/TextWriter.hpp"
+#include "IO/FileOutputStream.hxx"
+#include "IO/BufferedOutputStream.hxx"
 #include "IO/FileLineReader.hpp"
 #include "Util/NumberParser.hpp"
-#include "Util/Error.hxx"
 #include "LogFile.hpp"
 
 static bool
@@ -140,16 +140,13 @@ PlaneGlue::Read(Plane &plane, KeyValueFileReader &reader)
 
 bool
 PlaneGlue::ReadFile(Plane &plane, Path path)
-{
-  Error error;
-  FileLineReaderA reader(path, error);
-  if (reader.error()) {
-    LogError("Failed to parse plane file", error);
-    return false;
-  }
-
+try {
+  FileLineReaderA reader(path);
   KeyValueFileReader kvreader(reader);
   return Read(plane, kvreader);
+} catch (const std::runtime_error &e) {
+  LogError(e);
+  return false;
 }
 
 void
@@ -183,14 +180,13 @@ PlaneGlue::Write(const Plane &plane, KeyValueFileWriter &writer)
   writer.Write("WingArea", tmp);
 }
 
-bool
+void
 PlaneGlue::WriteFile(const Plane &plane, Path path)
 {
-  TextWriter writer(path);
-  if (!writer.IsOpen())
-    return false;
-
-  KeyValueFileWriter kvwriter(writer);
+  FileOutputStream file(path);
+  BufferedOutputStream buffered(file);
+  KeyValueFileWriter kvwriter(buffered);
   Write(plane, kvwriter);
-  return true;
+  buffered.Flush();
+  file.Commit();
 }

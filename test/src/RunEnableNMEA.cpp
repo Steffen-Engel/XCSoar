@@ -29,7 +29,10 @@ Copyright_License {
 #include "Device/Parser.hpp"
 #include "Device/Config.hpp"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "IO/Async/GlobalIOThread.hpp"
+#include "IO/Async/GlobalAsioThread.hpp"
+#include "IO/Async/AsioThread.hpp"
+#include "IO/NullDataHandler.hpp"
+#include "Util/PrintException.hxx"
 
 #define MORE_USAGE
 #include "OS/Args.hpp"
@@ -73,21 +76,18 @@ NMEAParser::TimeHasAdvanced(double this_time, double &last_time,
 }
 
 int main(int argc, char **argv)
-{
+try {
   Args args(argc, argv, "DRIVER PORT BAUD");
 
   tstring _driver_name = args.ExpectNextT();
   const TCHAR *driver_name = _driver_name.c_str();
-  const DeviceConfig config = ParsePortArgs(args);
+  DebugPort debug_port(args);
   args.ExpectEnd();
 
-  InitialiseIOThread();
+  ScopeGlobalAsioThread global_asio_thread;
 
-  Port *port = OpenPort(config, nullptr, *(DataHandler *)nullptr);
-  if (port == NULL) {
-    fprintf(stderr, "Failed to open COM port\n");
-    return EXIT_FAILURE;
-  }
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   const struct DeviceRegister *driver = FindDriverByName(driver_name);
   if (driver == NULL) {
@@ -98,21 +98,20 @@ int main(int argc, char **argv)
   ConsoleOperationEnvironment env;
 
   if (!port->WaitConnected(env)) {
-    delete port;
-    DeinitialiseIOThread();
     fprintf(stderr, "Failed to connect the port\n");
     return EXIT_FAILURE;
   }
 
   assert(driver->CreateOnPort != NULL);
-  Device *device = driver->CreateOnPort(config, *port);
+  Device *device = driver->CreateOnPort(debug_port.GetConfig(), *port);
   assert(device != NULL);
 
   device->EnableNMEA(env);
 
   delete device;
-  delete port;
-  DeinitialiseIOThread();
 
   return EXIT_SUCCESS;
+} catch (const std::exception &exception) {
+  PrintException(exception);
+  return EXIT_FAILURE;
 }

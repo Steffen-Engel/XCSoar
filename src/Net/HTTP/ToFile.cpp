@@ -22,8 +22,8 @@ Copyright_License {
 */
 
 #include "ToFile.hpp"
-#include "Features.hpp"
 #include "Request.hpp"
+#include "Handler.hpp"
 #include "Operation/Operation.hpp"
 #include "OS/FileUtil.hpp"
 #include "Logger/MD5.hpp"
@@ -31,52 +31,74 @@ Copyright_License {
 #include <assert.h>
 #include <stdio.h>
 
+class CancelDownloadToFile {};
+
+class DownloadToFileHandler final : public Net::ResponseHandler {
+  FILE *file;
+
+  MD5 md5;
+
+  size_t received = 0;
+
+  OperationEnvironment &env;
+
+  bool do_md5;
+
+public:
+  DownloadToFileHandler(FILE *_file, bool _do_md5, OperationEnvironment &_env)
+    :file(_file), env(_env), do_md5(_do_md5) {
+    if (do_md5)
+      md5.Initialise();
+  }
+
+  void GetDigest(char *digest) {
+    assert(do_md5);
+
+    md5.Finalize();
+    md5.GetDigest(digest);
+  }
+
+  void ResponseReceived(int64_t content_length) override {
+    if (content_length > 0)
+      env.SetProgressRange(content_length);
+  };
+
+  void DataReceived(const void *data, size_t length) override {
+    if (do_md5)
+      md5.Append(data, length);
+
+    size_t written = fwrite(data, 1, length, file);
+    if (written != (size_t)length)
+      throw CancelDownloadToFile();
+
+    received += length;
+
+    env.SetProgressRange(received);
+  };
+};
+
 static bool
 DownloadToFile(Net::Session &session, const char *url,
                const char *username, const char *password,
                FILE *file, char *md5_digest,
                OperationEnvironment &env)
 {
-  assert(url != NULL);
-  assert(file != NULL);
+  assert(url != nullptr);
+  assert(file != nullptr);
 
-  Net::Request request(session, url, 10000);
+  DownloadToFileHandler handler(file, md5_digest != nullptr, env);
+  Net::Request request(session, handler, url);
   if (username != nullptr)
     request.SetBasicAuth(username, password);
-  request.Send(10000);
 
-  int64_t total = request.GetLength();
-  if (total >= 0)
-    env.SetProgressRange(total);
-  total = 0;
-
-  MD5 md5;
-  md5.Initialise();
-
-  uint8_t buffer[4096];
-  while (true) {
-    if (env.IsCancelled())
-      return false;
-
-    size_t nbytes = request.Read(buffer, sizeof(buffer), 5000);
-    if (nbytes == 0)
-      break;
-
-    if (md5_digest != NULL)
-      md5.Append(buffer, nbytes);
-
-    size_t written = fwrite(buffer, 1, nbytes, file);
-    if (written != (size_t)nbytes)
-      return false;
-
-    total += nbytes;
-    env.SetProgressPosition(total);
+  try {
+    request.Send(10000);
+  } catch (CancelDownloadToFile) {
+    return false;
   }
 
-  if (md5_digest != NULL) {
-    md5.Finalize();
-    md5.GetDigest(md5_digest);
-  }
+  if (md5_digest != nullptr)
+    handler.GetDigest(md5_digest);
 
   return true;
 }
@@ -87,8 +109,8 @@ Net::DownloadToFile(Session &session, const char *url,
                     Path path, char *md5_digest,
                     OperationEnvironment &env)
 {
-  assert(url != NULL);
-  assert(path != NULL);
+  assert(url != nullptr);
+  assert(path != nullptr);
 
   /* make sure we create a new file */
   if (!File::Delete(path) && File::ExistsAny(path))
@@ -97,7 +119,7 @@ Net::DownloadToFile(Session &session, const char *url,
 
   /* now create the new file */
   FILE *file = _tfopen(path.c_str(), _T("wb"));
-  if (file == NULL)
+  if (file == nullptr)
     return false;
 
   bool success = ::DownloadToFile(session, url, username, password,

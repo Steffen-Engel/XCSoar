@@ -21,6 +21,7 @@ Copyright_License {
 }
 */
 
+#include "Audio/Features.hpp"
 #include "Audio/Sound.hpp"
 
 #ifdef ANDROID
@@ -33,6 +34,9 @@ Copyright_License {
 #include "ResourceLoader.hpp"
 #include <windows.h>
 #include <mmsystem.h>
+#elif defined(HAVE_PCM_PLAYER)
+#include "GlobalPCMResourcePlayer.hpp"
+#include "PCMResourcePlayer.hpp"
 #endif
 
 bool
@@ -40,6 +44,8 @@ PlayResource(const TCHAR *resource_name)
 {
 #ifdef ANDROID
 
+  if (_tcsstr(resource_name, _T(".wav")))
+    return SoundUtil::PlayExternal(Java::GetEnv(), context->Get(), resource_name);
   return SoundUtil::Play(Java::GetEnv(), context->Get(), resource_name);
 
 #elif defined(WIN32)
@@ -51,6 +57,13 @@ PlayResource(const TCHAR *resource_name)
   return !data.IsNull() &&
          sndPlaySound((LPCTSTR)data.data,
                       SND_MEMORY | SND_ASYNC | SND_NODEFAULT);
+
+#elif defined(HAVE_PCM_PLAYER)
+
+  if (nullptr == pcm_resource_player)
+    return false;
+
+  return pcm_resource_player->PlayResource(resource_name);
 
 #else
   return false;

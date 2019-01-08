@@ -24,66 +24,37 @@ Copyright_License {
 #ifndef NET_REQUEST_HPP
 #define NET_REQUEST_HPP
 
-#include "Features.hpp"
-
-#ifdef HAVE_WININET
-#include "Thread/Trigger.hpp"
-#include "WinINet/WinINet.hpp"
-#endif
-
-#ifdef HAVE_CURL
-#include "Util/StaticFifoBuffer.hpp"
-#include "CURL/Easy.hpp"
+#include "Easy.hxx"
+#include "Slist.hxx"
 
 #include <curl/curl.h>
-#endif
-
-#ifdef HAVE_JAVA_NET
-#include <jni.h>
-#endif
 
 #include <stddef.h>
 #include <stdint.h>
-#include <sys/types.h>
 
 namespace Net {
   class Session;
-
-#ifdef HAVE_WININET
-  class Connection;
-#endif
+  class ResponseHandler;
+  class MultiPartFormData;
 
   class Request {
-#ifdef HAVE_WININET
-    /** Internal connection handle */
-    WinINet::HttpRequestHandle handle;
-
-    /** Event handles that are triggered in certain situations */
-    Trigger opened_event, completed_event;
-    /** The last error code that was retrieved by the Callback() function */
-    DWORD last_error;
-#elif defined(ANDROID)
-    static constexpr unsigned INFINITE = 0;
-#else
+#ifndef WIN32
     static constexpr unsigned INFINITE = (unsigned)-1;
 #endif
 
-#ifdef HAVE_CURL
     Session &session;
 
     CurlEasy handle;
 
-    struct curl_slist *request_headers = nullptr;
+    CurlSlist request_headers;
 
-    typedef StaticFifoBuffer<uint8_t, CURL_MAX_WRITE_SIZE> Buffer;
-    Buffer buffer;
-#endif
+    ResponseHandler &handler;
 
-#ifdef HAVE_JAVA_NET
-    JNIEnv *const env;
-
-    jobject connection = nullptr, input_stream = nullptr;
-#endif
+    /**
+     * Was the response metadata already submitted to
+     * ResponseHandler::ResponseReceived().
+     */
+    bool submitted = false;
 
   public:
     /**
@@ -92,26 +63,21 @@ namespace Net {
      * @param url the absolute URL of the request
      * @param timeout_ms Timeout used for creating this request
      */
-    Request(Session &session, const char *url,
-            unsigned timeout_ms=INFINITE);
+    Request(Session &session, ResponseHandler &_handler,
+            const char *url);
 
-#if defined(HAVE_CURL) || defined(HAVE_JAVA_NET)
     ~Request();
-#endif
 
     void AddHeader(const char *name, const char *value);
 
     void SetBasicAuth(const char *username, const char *password);
 
-#ifdef HAVE_CURL
-  protected:
-    size_t ResponseData(const uint8_t *ptr, size_t size);
+    /**
+     * Change the method to POST and use the given request body.  It
+     * must not be destructed until Send() returns.
+     */
+    void SetRequestBody(const MultiPartFormData &body);
 
-    static size_t WriteCallback(char *ptr, size_t size, size_t nmemb,
-                                void *userdata);
-#endif
-
-  public:
     /**
      * Send the request to the server and receive response headers.
      * This function fails if the connection could not be established
@@ -138,11 +104,14 @@ namespace Net {
     size_t Read(void *buffer, size_t buffer_size,
                 unsigned timeout_ms=INFINITE);
 
-#ifdef HAVE_WININET
-    /** Internal callback function. Don't use this manually! */
-    void Callback(DWORD status, LPVOID info, DWORD info_length);
-#endif
-  };
+  private:
+    void SubmitResponse();
+
+    size_t ResponseData(const uint8_t *ptr, size_t size);
+
+    static size_t WriteCallback(char *ptr, size_t size, size_t nmemb,
+                                void *userdata);
+};
 }
 
 #endif

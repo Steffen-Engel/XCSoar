@@ -22,32 +22,26 @@
 
 #include "Logger/GRecord.hpp"
 #include "OS/Args.hpp"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
 
 #include <stdio.h>
 
 int
 main(int argc, char **argv)
-{
+try {
   Args args(argc, argv, "FILE.igc");
   const auto path = args.ExpectNextPath();
   args.ExpectEnd();
 
   GRecord g;
   g.Initialize();
-
-  Error error;
-  if (!g.LoadFileToBuffer(path, error)) {
-    fprintf(stderr, "%s\n", error.GetMessage());
-    return 2;
-  }
-
+  g.LoadFileToBuffer(path);
   g.FinalizeBuffer();
 
-  if (!g.AppendGRecordToFile(path)) {
-    fprintf(stderr, "Failed to write file\n");
-    return 2;
-  }
+  g.AppendGRecordToFile(path);
 
-  return 0;
+  return EXIT_SUCCESS;
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }

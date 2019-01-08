@@ -24,6 +24,7 @@ Copyright_License {
 #include "WaypointCommandsWidget.hpp"
 #include "WaypointDialogs.hpp"
 #include "Dialogs/Message.hpp"
+#include "Dialogs/Error.hpp"
 #include "Form/Form.hpp"
 #include "Language/Language.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
@@ -57,7 +58,13 @@ ReplaceInTask(ProtectedTaskManager &task_manager,
 {
   switch (MapTaskManager::ReplaceInTask(std::move(waypoint))) {
   case MapTaskManager::SUCCESS:
-    task_manager.TaskSaveDefault();
+    try {
+      task_manager.TaskSaveDefault();
+    } catch (const std::runtime_error &e) {
+      ShowError(e, _("Failed to save file."));
+      return false;
+    }
+
     return true;
 
   case MapTaskManager::NOTASK:
@@ -89,7 +96,13 @@ InsertInTask(ProtectedTaskManager &task_manager,
 {
   switch (MapTaskManager::InsertInTask(std::move(waypoint))) {
   case MapTaskManager::SUCCESS:
-    task_manager.TaskSaveDefault();
+    try {
+      task_manager.TaskSaveDefault();
+    } catch (const std::runtime_error &e) {
+      ShowError(e, _("Failed to save file."));
+      return false;
+    }
+
     return true;
 
   case MapTaskManager::NOTASK:
@@ -123,7 +136,13 @@ AppendToTask(ProtectedTaskManager &task_manager,
 {
   switch (MapTaskManager::AppendToTask(std::move(waypoint))) {
   case MapTaskManager::SUCCESS:
-    task_manager.TaskSaveDefault();
+    try {
+      task_manager.TaskSaveDefault();
+    } catch (const std::runtime_error &e) {
+      ShowError(e, _("Failed to save file."));
+      return false;
+    }
+
     return true;
 
   case MapTaskManager::NOTASK:
@@ -157,7 +176,13 @@ RemoveFromTask(ProtectedTaskManager &task_manager,
 {
   switch (MapTaskManager::RemoveFromTask(waypoint)) {
   case MapTaskManager::SUCCESS:
-    task_manager.TaskSaveDefault();
+    try {
+      task_manager.TaskSaveDefault();
+    } catch (const std::runtime_error &e) {
+      ShowError(e, _("Failed to save file."));
+      return false;
+    }
+
     return true;
 
   case MapTaskManager::NOTASK:
@@ -269,8 +294,11 @@ WaypointCommandsWidget::OnAction(int id)
           way_points.Optimise();
         }
 
-        if (!WaypointGlue::SaveWaypoints(way_points))
-          ShowMessageBox(_("Failed to save waypoints"), _("Error"), MB_OK);
+        try {
+          WaypointGlue::SaveWaypoints(way_points);
+        } catch (const std::runtime_error &e) {
+          ShowError(e, _("Failed to save waypoints"));
+        }
       }
     }
     break;
@@ -295,5 +323,7 @@ WaypointCommandsWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
   AddButton(_("Pan to Waypoint"), *this, PAN);
   AddButton(_("Set Active Frequency"), *this, SET_ACTIVE_FREQUENCY);
   AddButton(_("Set Standby Frequency"), *this, SET_STANDBY_FREQUENCY);
-  AddButton(_("Edit"), *this, EDIT);
+
+  if (allow_edit)
+    AddButton(_("Edit"), *this, EDIT);
 }

@@ -63,8 +63,8 @@ LoadFiles(Airspaces &airspace_database)
 {
   NullOperationEnvironment operation;
 
-  std::unique_ptr<TLineReader> reader(OpenConfiguredTextFile(ProfileKeys::AirspaceFile,
-                                                             Charset::AUTO));
+  auto reader = OpenConfiguredTextFile(ProfileKeys::AirspaceFile,
+                                       Charset::AUTO);
   if (reader) {
     AirspaceParser parser(airspace_database);
     parser.Parse(*reader, operation);
@@ -76,7 +76,12 @@ static void
 Main()
 {
   Airspaces airspace_database;
-  AirspaceWarningManager airspace_warning(airspace_database);
+
+  AirspaceWarningConfig airspace_warning_config;
+  airspace_warning_config.SetDefaults();
+
+  AirspaceWarningManager airspace_warning(airspace_warning_config,
+                                          airspace_database);
   airspace_warnings = new ProtectedAirspaceWarningManager(airspace_warning);
 
   LoadFiles(airspace_database);

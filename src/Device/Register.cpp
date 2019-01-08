@@ -48,6 +48,7 @@ Copyright_License {
 #include "Device/Driver/Westerboer.hpp"
 #include "Device/Driver/FLARM.hpp"
 #include "Device/Driver/FlyNet.hpp"
+#include "Device/Driver/ThermalExpress.hpp"
 #include "Device/Driver/CProbe.hpp"
 #include "Device/Driver/LevilAHRS_G.hpp"
 #include "Device/Driver/BlueFlyVario.hpp"
@@ -100,6 +101,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &yall_driver,
   &atr833_driver,
   &xctracer_driver,
+  &thermalexpress_driver,
   nullptr
 };
 

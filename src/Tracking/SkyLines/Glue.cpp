@@ -26,28 +26,19 @@ Copyright_License {
 #include "Queue.hpp"
 #include "Assemble.hpp"
 #include "NMEA/Info.hpp"
+#include "NMEA/Derived.hpp"
 #include "Net/State.hpp"
-#include "Net/IPv4Address.hxx"
-
-#ifdef HAVE_POSIX
-#include "IO/Async/GlobalIOThread.hpp"
-#endif
+#include "OS/ByteOrder.hpp"
 
 #include <assert.h>
 
-SkyLinesTracking::Glue::Glue()
-  :interval(0),
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
-   traffic_enabled(false),
-   near_traffic_enabled(false),
-#endif
-   roaming(true),
-   queue(nullptr)
+static constexpr double CLOUD_INTERVAL = 60;
+
+SkyLinesTracking::Glue::Glue(boost::asio::io_service &io_service,
+                             Handler *_handler)
+  :client(io_service, _handler),
+   cloud_client(io_service, _handler)
 {
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
-  assert(io_thread != nullptr);
-  client.SetIOThread(io_thread);
-#endif
 }
 
 SkyLinesTracking::Glue::~Glue()
@@ -60,6 +51,10 @@ SkyLinesTracking::Glue::IsConnected() const
 {
   switch (GetNetState()) {
   case NetState::UNKNOWN:
+    /* we don't know if we have an internet connection - be
+       optimistic, and assume everything's ok */
+    return true;
+
   case NetState::DISCONNECTED:
     return false;
 
@@ -77,7 +72,7 @@ SkyLinesTracking::Glue::IsConnected() const
 inline void
 SkyLinesTracking::Glue::SendFixes(const NMEAInfo &basic)
 {
-  assert(client.IsDefined());
+  assert(client.IsConnected());
 
   if (!basic.time_available) {
     clock.Reset();
@@ -100,8 +95,7 @@ SkyLinesTracking::Glue::SendFixes(const NMEAInfo &basic)
     unsigned n = 8;
     while (n-- > 0) {
       const auto &packet = queue->Peek();
-      if (!client.SendPacket(packet))
-        break;
+      client.SendPacket(packet);
 
       queue->Pop();
       if (queue->IsEmpty()) {
@@ -117,27 +111,97 @@ SkyLinesTracking::Glue::SendFixes(const NMEAInfo &basic)
 }
 
 void
-SkyLinesTracking::Glue::Tick(const NMEAInfo &basic)
+SkyLinesTracking::Glue::SendCloudFix(const NMEAInfo &basic,
+                                     const DerivedInfo &calculated)
 {
-  if (!client.IsDefined())
+  assert(cloud_client.IsConnected());
+
+  if (!basic.time_available) {
+    cloud_clock.Reset();
+    return;
+  }
+
+  if (!basic.location_available || !calculated.flight.flying)
     return;
 
+  if (!IsConnected())
+    return;
+
+  if (cloud_clock.CheckAdvance(basic.time, CLOUD_INTERVAL))
+    cloud_client.SendFix(basic);
+
+  if (last_climb_time > basic.time)
+    /* recover from time warp */
+    last_climb_time = -1;
+
+  constexpr double min_climb_duration = 30;
+  constexpr double min_height_gain = 100;
+  if (!calculated.circling &&
+      calculated.climb_start_time >= 0 &&
+      calculated.climb_start_time > last_climb_time &&
+      calculated.cruise_start_time > calculated.climb_start_time + min_climb_duration &&
+      calculated.cruise_start_altitude > calculated.climb_start_altitude + min_height_gain &&
+      calculated.cruise_start_altitude_te > calculated.climb_start_altitude_te + min_height_gain) {
+    /* we just stopped circling - send our thermal location to the
+       XCSoar Cloud server */
+    // TODO: use TE altitude?
+    last_climb_time = calculated.cruise_start_time;
+
+    double duration = calculated.cruise_start_time - calculated.climb_start_time;
+    double height_gain = calculated.cruise_start_altitude - calculated.climb_start_altitude;
+    double lift = height_gain / duration;
+
+    cloud_client.SendThermal(ToBE32(uint32_t(basic.time * 1000)),
+                             calculated.climb_start_location,
+                             iround(calculated.climb_start_altitude),
+                             calculated.cruise_start_location,
+                             iround(calculated.cruise_start_altitude),
+                             (double)lift);
+  }
+}
+
+void
+SkyLinesTracking::Glue::Tick(const NMEAInfo &basic,
+                             const DerivedInfo &calculated)
+{
   if (basic.location_available && !basic.gps.real)
     /* disable in simulator/replay */
     return;
 
-  SendFixes(basic);
+  if (client.IsConnected()) {
+    SendFixes(basic);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
-  if (traffic_enabled && traffic_clock.CheckAdvance(basic.clock, 60))
-    client.SendTrafficRequest(true, true, near_traffic_enabled);
-#endif
+    if (traffic_enabled && traffic_clock.CheckAdvance(basic.clock, 60))
+      client.SendTrafficRequest(true, true, near_traffic_enabled);
+  }
+
+  if (cloud_client.IsConnected()) {
+    SendCloudFix(basic, calculated);
+
+    if (thermal_enabled && thermal_clock.CheckAdvance(basic.clock, 60))
+      cloud_client.SendThermalRequest();
+  }
 }
 
 void
 SkyLinesTracking::Glue::SetSettings(const Settings &settings)
 {
+  thermal_enabled = settings.cloud.show_thermals;
+
+  if (settings.cloud.enabled == TriState::TRUE && settings.cloud.key != 0) {
+    cloud_client.SetKey(settings.cloud.key);
+    if (!cloud_client.IsDefined()) {
+      const boost::asio::ip::udp::resolver::query query(boost::asio::ip::udp::v4(),
+                                                        "cloud.xcsoar.net",
+                                                        Client::GetDefaultPortString());
+      cloud_client.Open(query);
+    }
+  } else
+    cloud_client.Close();
+
   if (!settings.enabled || settings.key == 0) {
+    delete queue;
+    queue = nullptr;
     client.Close();
     return;
   }
@@ -146,14 +210,17 @@ SkyLinesTracking::Glue::SetSettings(const Settings &settings)
 
   interval = settings.interval;
 
-  if (!client.IsDefined())
-    // TODO: fix hard-coded IP address:
-    client.Open(IPv4Address(95, 128, 34, 172, Client::GetDefaultPort()));
+  if (!client.IsDefined()) {
+    /* IPv4 only for now, because the official SkyLines tracking server
+       doesn't support IPv6 yet */
+    const boost::asio::ip::udp::resolver::query query(boost::asio::ip::udp::v4(),
+                                                      "tracking.skylines.aero",
+                                                      Client::GetDefaultPortString());
+    client.Open(query);
+  }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
   traffic_enabled = settings.traffic_enabled;
   near_traffic_enabled = settings.near_traffic_enabled;
-#endif
 
   roaming = settings.roaming;
 }

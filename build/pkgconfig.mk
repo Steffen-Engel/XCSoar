@@ -1,7 +1,19 @@
 PKG_CONFIG = pkg-config
 
-ifeq ($(USE_THIRDARTY_LIBS),y)
-  PKG_CONFIG := PKG_CONFIG_LIBDIR=$(THIRDARTY_LIBS_ROOT)/lib/pkgconfig $(PKG_CONFIG) --static
+ifeq ($(USE_THIRDPARTY_LIBS),y)
+  PKG_CONFIG := PKG_CONFIG_LIBDIR=$(THIRDPARTY_LIBS_ROOT)/lib/pkgconfig $(PKG_CONFIG) --static
+endif
+
+ifeq ($(TARGET_IS_DARWIN),y)
+  ifeq ($(DARWIN_LIBS),)
+    PKG_CONFIG := $(PKG_CONFIG) --static
+  else
+    PKG_CONFIG := PKG_CONFIG_LIBDIR=$(DARWIN_LIBS)/lib/pkgconfig $(PKG_CONFIG) --static --define-variable=prefix=$(DARWIN_LIBS)
+  endif
+endif
+
+ifeq ($(HOST_IS_WIN32)$(HAVE_WIN32)$(HAVE_CE),nyn)
+  PKG_CONFIG := PKG_CONFIG_LIBDIR=/usr/local/i686-w64-mingw32/lib/pkgconfig $(PKG_CONFIG)
 endif
 
 ifeq ($(HOST_IS_PI)$(TARGET_IS_PI),ny)
@@ -20,14 +32,6 @@ endef
 
 pkg-config-cppflags-filter = $(patsubst -I%,-isystem %,$(1))
 pkg-config-ldlibs-filter = $(1)
-
-ifeq ($(TARGET)$(ARMV7),ANDROIDy)
-# Android-ARMv7 requires "-lm_hard" instead of "-lm"; some libraries
-# such as libtiff however hard-code "-lm" in their pkg-config file,
-# which causes serious math breakage; therefore, filter out all "-lm"
-# flags.
-pkg-config-ldlibs-filter = $$(filter-out -lm,$(1))
-endif
 
 # Generates a pkg-config lookup for a library.
 #

@@ -39,10 +39,13 @@ public:
   void SetTerrain(const RasterTerrain *terrain);
 
   void UpdatePolar(const GlideSettings &settings,
+                   const RoutePlannerConfig &config,
                    const GlidePolar &polar,
                    const GlidePolar &safety_polar,
-                   const SpeedVector &wind) {
-    planner.UpdatePolar(settings, polar, safety_polar, wind);
+                   const SpeedVector &wind,
+                   const int height_min_working) {
+    planner.UpdatePolar(settings, config, polar, safety_polar,
+                        wind, height_min_working);
   }
 
   void Synchronise(const Airspaces &master,
@@ -50,8 +53,8 @@ public:
                    const AGeoPoint &origin,
                    const AGeoPoint &destination);
 
-  bool IsReachEmpty() const {
-    return planner.IsReachEmpty();
+  bool IsTerrainReachEmpty() const {
+    return planner.IsTerrainReachEmpty();
   }
 
   void ClearReach() {
@@ -75,13 +78,14 @@ public:
 
   bool FindPositiveArrival(const AGeoPoint &dest, ReachResult &result_r) const;
 
-  const FlatProjection &GetReachProjection() const {
-    return planner.GetReachProjection();
+  const FlatProjection &GetTerrainReachProjection() const {
+    return planner.GetTerrainReachProjection();
   }
 
   void AcceptInRange(const GeoBounds &bounds,
-                     FlatTriangleFanVisitor &visitor) const {
-    planner.AcceptInRange(bounds, visitor);
+                     FlatTriangleFanVisitor &visitor,
+                     bool working) const {
+    planner.AcceptInRange(bounds, visitor, working);
   }
 
   gcc_pure

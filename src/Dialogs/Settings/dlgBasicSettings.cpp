@@ -276,11 +276,13 @@ FlightSetupPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
   RowFormWidget::Prepare(parent, rc);
 
   const ComputerSettings &settings = CommonInterface::GetComputerSettings();
+  const Plane &plane = CommonInterface::GetComputerSettings().plane;
 
+  const double db = 5;
   AddFloat(_("Ballast"),
            _("Ballast of the glider.  Increase this value if the pilot/cockpit load is greater than the reference pilot weight of the glide polar (typically 75kg).  Press ENTER on this field to toggle count-down of the ballast volume according to the dump rate specified in the configuration settings."),
            _T("%.0f l"), _T("%.0f"),
-           0, 500, 5, false, 0,
+           0, db*ceil(plane.max_ballast/db), db, false, 0,
            this);
 
   WndProperty *wing_loading = AddFloat(_("Wing loading"), nullptr,
@@ -318,10 +320,10 @@ FlightSetupPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
   wp = AddFloat(_("Max. temp."),
                 _("Set to forecast ground temperature.  Used by convection estimator (temperature trace page of Analysis dialog)"),
                 _T("%.0f %s"), _T("%.0f"),
-                Units::ToUserTemperature(CelsiusToKelvin(-50)),
-                Units::ToUserTemperature(CelsiusToKelvin(60)),
+                Temperature::FromCelsius(-50).ToUser(),
+                Temperature::FromCelsius(60).ToUser(),
                 1, false,
-                Units::ToUserTemperature(settings.forecast_temperature));
+                settings.forecast_temperature.ToUser());
   {
     DataFieldFloat &df = *(DataFieldFloat *)wp->GetDataField();
     df.SetUnits(Units::GetTemperatureName());
@@ -334,8 +336,11 @@ FlightSetupPanel::Save(bool &changed)
 {
   ComputerSettings &settings = CommonInterface::SetComputerSettings();
 
-  changed |= SaveValue(Temperature, UnitGroup::TEMPERATURE,
-                       settings.forecast_temperature);
+  double forecast_temperature = settings.forecast_temperature.ToKelvin();
+  if (SaveValue(Temperature, UnitGroup::TEMPERATURE, forecast_temperature)) {
+    settings.forecast_temperature = Temperature::FromKelvin(forecast_temperature);
+    changed = true;
+  }
 
   return true;
 }

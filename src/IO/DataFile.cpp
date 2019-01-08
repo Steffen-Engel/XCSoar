@@ -22,82 +22,37 @@ Copyright_License {
 */
 
 #include "DataFile.hpp"
-#include "FileSource.hpp"
+#include "FileReader.hxx"
 #include "FileLineReader.hpp"
-#include "TextWriter.hpp"
+#include "ConvertLineReader.hpp"
 #include "LocalPath.hpp"
 #include "OS/Path.hpp"
 #include "Util/StringCompare.hxx"
 
 #include <assert.h>
 
-Source<char> *
-OpenDataFile(const TCHAR *name, Error &error)
+std::unique_ptr<Reader>
+OpenDataFile(const TCHAR *name)
 {
   assert(name != nullptr);
   assert(!StringIsEmpty(name));
 
   const auto path = LocalPath(name);
-
-  FileSource *source = new FileSource(path, error);
-  if (source->error()) {
-    delete source;
-    return nullptr;
-  }
-
-  return source;
+  return std::make_unique<FileReader>(path);
 }
 
-TLineReader *
-OpenDataTextFile(const TCHAR *name, Error &error, Charset cs)
+std::unique_ptr<TLineReader>
+OpenDataTextFile(const TCHAR *name, Charset cs)
 {
-  assert(name != nullptr);
-  assert(!StringIsEmpty(name));
-
-  const auto path = LocalPath(name);
-
-  FileLineReader *reader = new FileLineReader(path, error, cs);
-  if (reader->error()) {
-    delete reader;
-    return nullptr;
-  }
-
-  return reader;
+  return std::make_unique<ConvertLineReader>(OpenDataTextFileA(name), cs);
 }
 
-NLineReader *
-OpenDataTextFileA(const TCHAR *name, Error &error)
+std::unique_ptr<NLineReader>
+OpenDataTextFileA(const TCHAR *name)
 {
   assert(name != nullptr);
   assert(!StringIsEmpty(name));
 
   const auto path = LocalPath(name);
-
-  FileLineReaderA *reader = new FileLineReaderA(path, error);
-  if (reader->error()) {
-    delete reader;
-    return nullptr;
-  }
-
-  return reader;
-}
-
-TextWriter *
-CreateDataTextFile(const TCHAR *name, bool append)
-{
-  assert(name != nullptr);
-  assert(!StringIsEmpty(name));
-
-  const auto path = LocalPath(name);
-
-  TextWriter *writer = new TextWriter(path, append);
-  if (writer == nullptr)
-    return nullptr;
-
-  if (!writer->IsOpen()) {
-    delete writer;
-    return nullptr;
-  }
-
-  return writer;
+  return std::make_unique<FileLineReaderA>(path);
 }

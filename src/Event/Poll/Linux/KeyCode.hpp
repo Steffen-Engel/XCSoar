@@ -24,7 +24,7 @@ Copyright_License {
 #ifndef XCSOAR_EVENT_LINUX_KEY_CODE_HPP
 #define XCSOAR_EVENT_LINUX_KEY_CODE_HPP
 
-#if defined(USE_LINUX_INPUT) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
+#if defined(KOBO) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
 #include <linux/input.h>
 
 /* these macros conflict with Event::Type */
@@ -33,14 +33,16 @@ Copyright_License {
 
 /* wrong meaning */
 #undef KEY_NEXT
+#undef KEY_BACK
 #endif
 
 enum {
-#if defined(USE_LINUX_INPUT) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
+#if defined(KOBO) || defined(USE_LIBINPUT) || defined(USE_WAYLAND)
   KEY_RETURN = KEY_ENTER,
   KEY_ESCAPE = KEY_ESC,
   KEY_PRIOR = KEY_PAGEUP,
   KEY_NEXT = KEY_PAGEDOWN,
+  KEY_BACK = KEY_BACKSPACE,
   KEY_UP = 103,
   KEY_DOWN = 108,
 #else

@@ -58,6 +58,9 @@ void
 UpdateInfoBoxThermalRatio(InfoBoxData &data);
 
 void
+UpdateInfoBoxNonCirclingClimbRatio(InfoBoxData &data);
+
+void
 UpdateInfoBoxVarioDistance(InfoBoxData &data);
 
 void
@@ -73,6 +76,13 @@ class InfoBoxContentThermalAssistant: public InfoBoxContent
 public:
   InfoBoxContentThermalAssistant();
 
+  virtual void Update(InfoBoxData &data) override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
+};
+
+class InfoBoxContentClimbPercent : public InfoBoxContent
+{
+ public:
   virtual void Update(InfoBoxData &data) override;
   virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) override;
 };

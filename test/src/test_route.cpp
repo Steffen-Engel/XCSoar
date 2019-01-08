@@ -143,11 +143,12 @@ test_route(const unsigned n_airspaces, const RasterMap& map)
 
     GlideSettings settings;
     settings.SetDefaults();
-    AirspaceRoute route;
-    route.UpdatePolar(settings, polar, polar, wind);
-    route.SetTerrain(&map);
     RoutePlannerConfig config;
     config.mode = RoutePlannerConfig::Mode::BOTH;
+
+    AirspaceRoute route;
+    route.UpdatePolar(settings, config, polar, polar, wind);
+    route.SetTerrain(&map);
 
     AirspacePredicateTrue predicate;
 
@@ -195,6 +196,8 @@ main(int argc, char** argv)
     zzip_dir_close(dir);
     return EXIT_FAILURE;
   }
+
+  map.UpdateProjection();
 
   SharedMutex mutex;
   do {

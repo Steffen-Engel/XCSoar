@@ -24,7 +24,6 @@ Copyright_License {
 #include "Settings.hpp"
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "OS/Clock.hpp"
-#include "Atmosphere/Temperature.hpp"
 
 void
 PolarSettings::SetDefaults()
@@ -54,7 +53,7 @@ PlacesOfInterestSettings::SetHome(const Waypoint &wp)
 void
 FeaturesSettings::SetDefaults()
 {
-  final_glide_terrain = FinalGlideTerrain::LINE;
+  final_glide_terrain = FinalGlideTerrain::TERRAIN_LINE;
   block_stf_enabled = false;
   nav_baro_altitude_enabled = true;
 }
@@ -73,7 +72,7 @@ ComputerSettings::SetDefaults()
   average_eff_time = ae30seconds;
   set_system_time_from_gps = false;
   utc_offset = RoughTimeDelta::FromSeconds(GetSystemUTCOffset());
-  forecast_temperature = CelsiusToKelvin(25);
+  forecast_temperature = Temperature::FromCelsius(25);
   pressure = AtmosphericPressure::Standard();
   pressure_available.Clear();
   airspace.SetDefaults();

@@ -49,6 +49,7 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include "UIState.hpp"
 #include "Computer/Settings.hpp"
 #include "Dialogs/Dialogs.h"
+#include "Dialogs/Error.hpp"
 #include "Dialogs/Device/Vega/SwitchesDialog.hpp"
 #include "Dialogs/Airspace/Airspace.hpp"
 #include "Dialogs/Task/TaskDialogs.hpp"
@@ -87,6 +88,10 @@ doc/html/advanced/input/ALL		http://xcsoar.sourceforge.net/advanced/input/
 #include <assert.h>
 #include <tchar.h>
 #include <algorithm>
+
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
 
 /**
  * Determine the reference location of the current map display.
@@ -135,7 +140,13 @@ static WaypointPtr
 SuspendAppendSaveWaypoint(Waypoint &&wp)
 {
   auto ptr = SuspendAppendWaypoint(std::move(wp));
-  WaypointGlue::SaveWaypoint(*ptr);
+
+  try {
+    WaypointGlue::SaveWaypoint(*ptr);
+  } catch (const std::runtime_error &e) {
+    ShowError(e, _("Failed to save waypoints"));
+  }
+
   return ptr;
 }
 
@@ -311,6 +322,9 @@ InputEvents::eventWaypointDetails(const TCHAR *misc)
   const NMEAInfo &basic = CommonInterface::Basic();
   WaypointPtr wp;
 
+  bool allow_navigation = true;
+  bool allow_edit = true;
+
   if (StringIsEqual(misc, _T("current"))) {
     if (protected_task_manager == NULL)
       return;
@@ -320,11 +334,19 @@ InputEvents::eventWaypointDetails(const TCHAR *misc)
       Message::AddMessage(_("No active waypoint!"));
       return;
     }
+
+    /* due to a code limitation, we can't currently manipulate
+       Waypoint instances taken from the task, because it would
+       require updating lots of internal task state, and the waypoint
+       editor doesn't know how to do that */
+    allow_navigation = false;
+    allow_edit = false;
   } else if (StringIsEqual(misc, _T("select"))) {
     wp = ShowWaypointListDialog(basic.location);
   }
   if (wp)
-    dlgWaypointDetailsShowModal(std::move(wp));
+    dlgWaypointDetailsShowModal(std::move(wp),
+                                allow_navigation, allow_edit);
 }
 
 void
@@ -539,7 +561,7 @@ InputEvents::eventRun(const TCHAR *misc)
 {
   #ifdef WIN32
   PROCESS_INFORMATION pi;
-  if (!::CreateProcess(misc, NULL, NULL, NULL, FALSE, 0, NULL, NULL, NULL, &pi))
+  if (!::CreateProcess(misc, NULL, NULL, NULL, false, 0, NULL, NULL, NULL, &pi))
     return;
 
   // wait for program to finish!
@@ -547,9 +569,9 @@ InputEvents::eventRun(const TCHAR *misc)
   ::CloseHandle(pi.hProcess);
   ::CloseHandle(pi.hThread);
 
-  #else /* !WIN32 */
+  #elif !defined(__APPLE__) || !TARGET_OS_IPHONE
   system(misc);
-  #endif /* !WIN32 */
+  #endif
 }
 
 void

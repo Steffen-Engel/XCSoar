@@ -22,6 +22,7 @@ Copyright_License {
 */
 
 #include "InputEvents.hpp"
+#include "Dialogs/Error.hpp"
 #include "Language/Language.hpp"
 #include "Interface.hpp"
 #include "ActionInterface.hpp"
@@ -274,8 +275,14 @@ InputEvents::eventProfileLoad(const TCHAR *misc)
 void
 InputEvents::eventProfileSave(const TCHAR *misc)
 {
-  if (!StringIsEmpty(misc))
-    Profile::SaveFile(Path(misc));
+  if (!StringIsEmpty(misc)) {
+      try {
+        Profile::SaveFile(Path(misc));
+      } catch (const std::runtime_error &e) {
+        ShowError(e, _("Failed to save file."));
+        return;
+      }
+  }
 }
 
 // AdjustForecastTemperature
@@ -287,15 +294,14 @@ void
 InputEvents::eventAdjustForecastTemperature(const TCHAR *misc)
 {
   if (StringIsEqual(misc, _T("+")))
-    CommonInterface::SetComputerSettings().forecast_temperature += 1;
+    CommonInterface::SetComputerSettings().forecast_temperature += Temperature::FromKelvin(1);
   else if (StringIsEqual(misc, _T("-")))
-    CommonInterface::SetComputerSettings().forecast_temperature -= 1;
+    CommonInterface::SetComputerSettings().forecast_temperature -= Temperature::FromKelvin(1);
   else if (StringIsEqual(misc, _T("show"))) {
     auto temperature =
       CommonInterface::GetComputerSettings().forecast_temperature;
     TCHAR Temp[100];
-    _stprintf(Temp, _T("%f"),
-              (double)Units::ToUserTemperature(temperature));
+    _stprintf(Temp, _T("%f"), temperature.ToUser());
     Message::AddMessage(_("Forecast temperature"), Temp);
   }
 }

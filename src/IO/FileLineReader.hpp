@@ -24,36 +24,31 @@ Copyright_License {
 #ifndef XCSOAR_IO_FILE_LINE_READER_HPP
 #define XCSOAR_IO_FILE_LINE_READER_HPP
 
-#include "FileSource.hpp"
-#include "LineSplitter.hpp"
+#include "FileReader.hxx"
+#include "BufferedReader.hxx"
 #include "ConvertLineReader.hpp"
 
 /**
- * Glue class which combines FileSource and LineSplitter, and provides
+ * Glue class which combines FileReader and BufferedReader, and provides
  * a public NLineReader interface.
  */
 class FileLineReaderA : public NLineReader {
-protected:
-  FileSource file;
-  LineSplitter splitter;
+  FileReader file;
+  BufferedReader buffered;
 
 public:
-  FileLineReaderA(Path path, Error &error)
-    :file(path, error), splitter(file) {}
-
-  bool error() const {
-    return file.error();
-  }
+  /**
+   * Throws std::runtime_errror on error.
+   */
+  explicit FileLineReaderA(Path path)
+    :file(path), buffered(file) {}
 
   /**
    * Rewind the file to the beginning.
    */
-  bool Rewind() {
-    if (!file.Rewind())
-      return false;
-
-    splitter.ResetBuffer();
-    return true;
+  void Rewind() {
+    file.Rewind();
+    buffered.Reset();
   }
 
 public:
@@ -63,41 +58,20 @@ public:
   long Tell() const override;
 };
 
-/**
- * Glue class which combines FileSource, LineSplitter and
- * ConvertLineReader, and provides a public TLineReader interface.
- */
-class FileLineReader : public TLineReader {
-protected:
-  FileSource file;
-  LineSplitter splitter;
-  ConvertLineReader convert;
-
+class FileLineReader : public ConvertLineReader {
 public:
-  FileLineReader(Path path, Error &error,
-                 Charset cs=Charset::UTF8)
-    :file(path, error), splitter(file), convert(splitter, cs) {}
-
-  bool error() const {
-    return file.error();
-  }
+  /**
+   * Throws std::runtime_errror on error.
+   */
+  FileLineReader(Path path, Charset cs=Charset::UTF8)
+    :ConvertLineReader(std::make_unique<FileLineReaderA>(path), cs) {}
 
   /**
    * Rewind the file to the beginning.
    */
-  bool Rewind() {
-    if (!file.Rewind())
-      return false;
-
-    splitter.ResetBuffer();
-    return true;
+  void Rewind() {
+    ((FileLineReaderA &)GetSource()).Rewind();
   }
-
-public:
-  /* virtual methods from class TLineReader */
-  TCHAR *ReadLine() override;
-  long GetSize() const override;
-  long Tell() const override;
 };
 
 #endif

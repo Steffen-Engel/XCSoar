@@ -81,7 +81,10 @@ DerivedInfo::Reset()
   contest_stats.Reset();
 
   flight.Reset();
-  thermal_band.Clear();
+
+  thermal_encounter_band.Reset();
+  thermal_encounter_collection.Reset();
+
   thermal_locator.Clear();
 
   trace_history.clear();
@@ -111,4 +114,17 @@ DerivedInfo::Expire(double Time)
 
   auto_mac_cready_available.Expire(Time, 3600);
   sun_data_available.Expire(Time, 3600);
+}
+
+
+double
+DerivedInfo::CalculateWorkingFraction(const double h, const double safety_height) const
+{
+  const double h_floor = GetTerrainBaseFallback() + safety_height;
+  const double h_band = (common_stats.height_max_working - h_floor);
+  if (h_band>0) {
+    const double h_actual = h - h_floor;
+    return h_actual / h_band;
+  } else
+    return 1;
 }

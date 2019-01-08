@@ -33,11 +33,9 @@ Copyright_License {
 #include "Screen/Layout.hpp"
 #endif
 
-#ifdef KOBO
-#include "Screen/Memory/Canvas.hpp"
-#endif
-
 #ifdef USE_FB
+
+#include "Screen/Memory/Canvas.hpp"
 
 void
 TopWindow::CheckResize()
@@ -114,7 +112,6 @@ TopWindow::OnEvent(const Event &event)
     Window *w;
 
   case Event::NOP:
-  case Event::TIMER:
   case Event::USER:
   case Event::CALLBACK:
     break;

@@ -34,6 +34,8 @@ enum ControlIndex {
 #ifdef HAVE_PCMET
   PCMET_USER,
   PCMET_PASSWORD,
+  PCMET_FTP_USER,
+  PCMET_FTP_PASSWORD,
 #endif
 };
 
@@ -56,8 +58,15 @@ WeatherConfigPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
 
   RowFormWidget::Prepare(parent, rc);
 
-  AddText(_T("pc_met Username"), _T(""), settings.pcmet.username);
-  AddPassword(_T("pc_met Password"), _T(""), settings.pcmet.password);
+  AddText(_T("pc_met Username"), _T(""),
+          settings.pcmet.www_credentials.username);
+  AddPassword(_T("pc_met Password"), _T(""),
+              settings.pcmet.www_credentials.password);
+
+  AddText(_T("pc_met FTP Username"), _T(""),
+          settings.pcmet.ftp_credentials.username);
+  AddPassword(_T("pc_met FTP Password"), _T(""),
+              settings.pcmet.ftp_credentials.password);
 }
 
 bool
@@ -69,10 +78,16 @@ WeatherConfigPanel::Save(bool &_changed)
 
 #ifdef HAVE_PCMET
   changed |= SaveValue(PCMET_USER, ProfileKeys::PCMetUsername,
-                       settings.pcmet.username);
+                       settings.pcmet.www_credentials.username);
 
   changed |= SaveValue(PCMET_PASSWORD, ProfileKeys::PCMetPassword,
-                       settings.pcmet.password);
+                       settings.pcmet.www_credentials.password);
+
+  changed |= SaveValue(PCMET_FTP_USER, ProfileKeys::PCMetFtpUsername,
+                       settings.pcmet.ftp_credentials.username);
+
+  changed |= SaveValue(PCMET_FTP_PASSWORD, ProfileKeys::PCMetFtpPassword,
+                       settings.pcmet.ftp_credentials.password);
 #endif
 
   _changed |= changed;

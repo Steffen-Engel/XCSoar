@@ -54,8 +54,12 @@ Copyright_License {
 #include "Units/Units.hpp"
 #include "Formatter/UserGeoPointFormatter.hpp"
 #include "InfoBoxes/InfoBoxManager.hpp"
+#include "Audio/Features.hpp"
+#include "Audio/GlobalVolumeController.hpp"
 #include "Audio/VarioGlue.hpp"
+#include "Audio/VolumeController.hpp"
 #include "PageActions.hpp"
+#include "FLARM/Glue.hpp"
 
 #if defined(__BORLANDC__)  // due to compiler bug
   #include "Waypoint/Waypoints.hpp"
@@ -66,6 +70,7 @@ bool MapFileChanged = false;
 bool AirspaceFileChanged = false;
 bool AirfieldFileChanged = false;
 bool WaypointFileChanged = false;
+bool FlarmFileChanged = false;
 bool InputFileChanged = false;
 bool LanguageChanged = false;
 bool require_restart;
@@ -82,6 +87,7 @@ SettingsEnter()
   AirspaceFileChanged = false;
   AirfieldFileChanged = false;
   WaypointFileChanged = false;
+  FlarmFileChanged = false;
   InputFileChanged = false;
   DevicePortChanged = false;
   LanguageChanged = false;
@@ -190,6 +196,10 @@ SettingsLeave(const UISettings &old_ui_settings)
   if (DevicePortChanged)
     devRestart();
 
+  if (FlarmFileChanged) {
+    ReloadFlarmDatabases();
+  }
+
   const UISettings &ui_settings = CommonInterface::GetUISettings();
 
   Units::SetConfig(ui_settings.format.units);
@@ -210,6 +220,10 @@ SettingsLeave(const UISettings &old_ui_settings)
   // allow map and calculations threads to continue
 
   ActionInterface::SendMapSettings(true);
+
+#ifdef HAVE_VOLUME_CONTROLLER
+  volume_controller->SetVolume(ui_settings.sound.master_volume);
+#endif
 
   AudioVarioGlue::Configure(CommonInterface::GetUISettings().sound.vario);
 

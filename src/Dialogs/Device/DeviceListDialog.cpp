@@ -160,6 +160,7 @@ class DeviceListWidget final
   static_assert(sizeof(Item) == 2, "wrong size");
 
   Item items[NUMDEV];
+  tstring error_messages[NUMDEV];
 
   Button *disable_button;
   Button *reconnect_button, *flight_button;
@@ -262,6 +263,12 @@ DeviceListWidget::RefreshList()
 
     if (n != item) {
       item = n;
+      modified = true;
+    }
+
+    auto error_message = (*devices)[i].GetErrorMessage();
+    if (error_message != error_messages[i]) {
+      error_messages[i] = std::move(error_message);
       modified = true;
     }
   }
@@ -408,7 +415,10 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc, unsigned idx)
   } else if (flags.duplicate) {
     status = _("Duplicate");
   } else if (flags.error) {
-    status = _("Error");
+    if (error_messages[idx].empty())
+      status = _("Error");
+    else
+      status = error_messages[idx].c_str();
   } else {
     status = _("Not connected");
   }

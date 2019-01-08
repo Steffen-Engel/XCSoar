@@ -34,10 +34,10 @@ Copyright_License {
 void
 TraceHistoryRenderer::ScaleChart(ChartRenderer &chart,
                                   const TraceVariableHistory& var,
+                                  const double max,
+                                  const double min,
                                   const bool centered) const
 {
-  chart.padding_bottom = 0;
-  chart.padding_left = 0;
   chart.ScaleXFromValue(0);
   chart.ScaleXFromValue(var.capacity() - 1);
 
@@ -56,6 +56,13 @@ TraceHistoryRenderer::ScaleChart(ChartRenderer &chart,
   }
   chart.ScaleYFromValue(vmax);
   chart.ScaleYFromValue(vmin);
+  if (centered) {
+    chart.ScaleYFromValue(std::max(max, -min));
+    chart.ScaleYFromValue(std::min(-max, min));
+  } else {
+    chart.ScaleYFromValue(max);
+    chart.ScaleYFromValue(min);
+  }
 }
 
 void
@@ -67,7 +74,7 @@ TraceHistoryRenderer::RenderAxis(ChartRenderer &chart,
                  look.axis_pen);
 }
 
-void 
+void
 TraceHistoryRenderer::render_filled_posneg(ChartRenderer &chart,
                                            const TraceVariableHistory& var) const
 {
@@ -109,17 +116,19 @@ TraceHistoryRenderer::RenderVario(Canvas& canvas,
                                   const PixelRect rc,
                                   const TraceVariableHistory& var,
                                   const bool centered,
-                                  const double mc) const
+                                  const double mc,
+                                  const double max,
+                                  const double min) const
 {
-  ChartRenderer chart(chart_look, canvas, rc);
-  ScaleChart(chart, var, centered);
+  ChartRenderer chart(chart_look, canvas, rc, false);
+  ScaleChart(chart, var, max, min, centered);
   chart.ScaleYFromValue(mc);
 
   if (mc > 0) {
     canvas.SetBackgroundTransparent();
     chart.DrawLine(0, mc,
                    var.capacity() - 1, mc,
-                   ChartLook::STYLE_DASHGREEN);
+                   ChartLook::STYLE_GREENDASH);
   }
 
   render_filled_posneg(chart, var);

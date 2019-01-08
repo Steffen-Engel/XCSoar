@@ -1,17 +1,20 @@
 Source: xcsoar
 Section: misc
 Priority: extra
-Maintainer: Max Kellermann <max@duempel.org>
-Build-Depends: debhelper (>= 5), g++ (>= 4.8),
- libboost-dev (>= 1.55),
+Maintainer: Max Kellermann <max.kellermann@gmail.com>
+Build-Depends: debhelper (>= 9),
+ g++ (>= 4:4.6),
  libraspberrypi-dev | libegl1-mesa-dev | libsdl1.2-dev,
  libfreetype6-dev,
  libgl-dev,
+ libgl1-mesa-dev,
  libpng-dev, libjpeg-dev,
  libtiff5-dev | libtiff-dev, libgeotiff-dev,
+ libasound2-dev,
  libcurl-dev,
  liblua5.2-dev,
  librsvg2-bin, imagemagick (>= 7:6.4), xsltproc,
+ ffmpeg,
  gettext
 Build-Depends-Indep:  texlive, texlive-latex-extra,
  texlive-luatex,

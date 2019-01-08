@@ -28,12 +28,13 @@
 
 #include "Parser.hpp"
 #include "Node.hpp"
-#include "Util/CharUtil.hpp"
+#include "Util/CharUtil.hxx"
 #include "Util/StringAPI.hxx"
 #include "Util/StringUtil.hpp"
 #include "Util/NumberParser.hpp"
-#include "Util/Error.hxx"
 #include "IO/FileLineReader.hpp"
+
+#include <stdexcept>
 
 #include <assert.h>
 
@@ -352,6 +353,10 @@ XML::GetNextToken(Parser *pXML)
 
     // If we haven't found a short hand closing tag then drop into the
     // text process
+
+#if GCC_CHECK_VERSION(7,0)
+    [[fallthrough]];
+#endif
 
     // Other characters
   default:
@@ -889,12 +894,10 @@ XML::ParseString(const TCHAR *xml_string, Results *pResults)
 
 static bool
 ReadTextFile(Path path, tstring &buffer)
-{
+try {
   /* auto-detect the character encoding, to be able to parse XCSoar
      6.0 task files */
-  FileLineReader reader(path, IgnoreError(), Charset::AUTO);
-  if (reader.error())
-    return false;
+  FileLineReader reader(path, Charset::AUTO);
 
   long size = reader.GetSize();
   if (size > 65536)
@@ -915,6 +918,8 @@ ReadTextFile(Path path, tstring &buffer)
   }
 
   return true;
+} catch (const std::runtime_error &) {
+  return false;
 }
 
 /**

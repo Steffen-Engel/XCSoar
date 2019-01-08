@@ -31,6 +31,7 @@ Copyright_License {
 #include "NMEA/ClimbHistory.hpp"
 #include "Formatter/UserUnits.hpp"
 #include "Util/StaticString.hxx"
+#include "GlidePolarInfoRenderer.hpp"
 
 #include <stdio.h>
 
@@ -69,35 +70,60 @@ RenderGlidePolar(Canvas &canvas, const PixelRect rc,
     return;
   }
 
-  Pen blue_pen(2, COLOR_BLUE);
+  const auto MACCREADY = glide_polar.GetMC();
+  const auto s_min = -glide_polar.GetSMax();
+  const auto vmin = glide_polar.GetVMin();
+  const auto vmax = glide_polar.GetVMax();
 
-  chart.ScaleYFromValue(0);
-  chart.ScaleYFromValue(-glide_polar.GetSMax() * 1.1);
-  chart.ScaleXFromValue(glide_polar.GetVMin() * 0.8);
-  chart.ScaleXFromValue(glide_polar.GetVMax() + 2);
+  chart.ScaleYFromValue(MACCREADY);
+  chart.ScaleYFromValue(s_min);
+  chart.ScaleXFromValue(vmin);
+  chart.ScaleXFromValue(vmax);
 
-  chart.DrawXGrid(Units::ToSysSpeed(10),
-                  ChartLook::STYLE_THINDASHPAPER, 10, true);
-  chart.DrawYGrid(Units::ToSysVSpeed(1),
-                  ChartLook::STYLE_THINDASHPAPER, 1, true);
+  chart.DrawXGrid(Units::ToSysSpeed(10), 10, ChartRenderer::UnitFormat::NUMERIC);
+  chart.DrawYGrid(Units::ToSysVSpeed(1), 1, ChartRenderer::UnitFormat::NUMERIC);
 
+  // draw dolphin speed command
+  auto w = glide_polar.GetSMin()+MACCREADY;
+  bool inrange = true;
+  auto v_dolphin_last = vmin;
+  auto w_dolphin_last = MACCREADY;
+  double v_dolphin_last_l = 0;
+  double w_dolphin_last_l = 0;
+  do {
+    w += s_min*0.05;
+    auto v_dolphin = glide_polar.SpeedToFly(-w, 0);
+    auto w_dolphin = -glide_polar.SinkRate(v_dolphin)+w;
+    inrange = w_dolphin > s_min;
+    if ((v_dolphin > v_dolphin_last) && inrange) {
+      chart.DrawLine(v_dolphin_last, w_dolphin_last, v_dolphin, w_dolphin,
+                     ChartLook::STYLE_REDTHICKDASH);
+      v_dolphin_last = v_dolphin;
+      w_dolphin_last = w_dolphin;
+      if ((w_dolphin < 0.8*s_min) && (w_dolphin_last_l >= 0)) {
+        v_dolphin_last_l = v_dolphin;
+        w_dolphin_last_l = w_dolphin;
+      }
+    }
+  } while (inrange);
+
+  // draw glide polar and climb rate history
   double v0 = 0;
   bool v0valid = false;
-  unsigned i0 = 0;
+  double i0 = 0;
 
-  const unsigned vmin = (unsigned)glide_polar.GetVMin();
-  const unsigned vmax = (unsigned)glide_polar.GetVMax();
-  for (unsigned i = vmin; i <= vmax; ++i) {
+  const auto dv = (vmax-vmin)/50;
+  for (auto i = vmin; i <= vmax; i+= dv) {
     auto sinkrate0 = -glide_polar.SinkRate(i);
-    auto sinkrate1 = -glide_polar.SinkRate(i + 1);
-    chart.DrawLine(i, sinkrate0, i + 1, sinkrate1,
-                   ChartLook::STYLE_MEDIUMBLACK);
+    auto sinkrate1 = -glide_polar.SinkRate(i+dv);
+    chart.DrawLine(i, sinkrate0, i + dv, sinkrate1,
+                   ChartLook::STYLE_BLACK);
 
     if (climb_history.Check(i)) {
       auto v1 = climb_history.Get(i);
 
       if (v0valid)
-        chart.DrawLine(i0, v0, i, v1, blue_pen);
+        chart.DrawLine(i0, v0, i, v1, ChartLook::STYLE_BLUE);
 
       v0 = v1;
       i0 = i;
@@ -105,38 +131,24 @@ RenderGlidePolar(Canvas &canvas, const PixelRect rc,
     }
   }
 
-  auto MACCREADY = glide_polar.GetMC();
+  // draw best L/D line
   auto sb = -glide_polar.GetSBestLD();
-  auto ff = (sb - MACCREADY) / glide_polar.GetVBestLD();
+  auto slope = (sb - MACCREADY) / glide_polar.GetVBestLD();
 
-  chart.DrawLine(0, MACCREADY, glide_polar.GetVMax(),
-                 MACCREADY + ff * glide_polar.GetVMax(),
-                 ChartLook::STYLE_REDTHICK);
+  chart.DrawLine(vmin, MACCREADY + slope * vmin,
+                 vmax, MACCREADY + slope * vmax,
+                 ChartLook::STYLE_BLUETHINDASH);
+
+  // draw labels and other overlays
+
+  double vv = 0.9*vmax+0.1*vmin;
+  chart.DrawLabel(_T("Polar"), vv, -glide_polar.SinkRate(vv));
+  vv = 0.8*vmax+0.2*vmin;
+  chart.DrawLabel(_T("Best glide"), vv, MACCREADY + slope * vv);
+  chart.DrawLabel(_T("Dolphin"), v_dolphin_last_l, w_dolphin_last_l);
 
   chart.DrawXLabel(_T("V"), Units::GetSpeedName());
   chart.DrawYLabel(_T("w"), Units::GetVerticalSpeedName());
 
-  canvas.Select(chart_look.label_font);
-
-  StaticString<80> text;
-  StaticString<20> value;
-  canvas.SetBackgroundTransparent();
-
-  FormatUserMass(glide_polar.GetTotalMass(), value.buffer(), true);
-
-  text.Format(_T("%s: %s"), _("Mass"), value.c_str());
-  canvas.DrawText(rc.left + Layout::Scale(30),
-                  rc.bottom - Layout::Scale(55),
-                  text);
-
-  double wl = glide_polar.GetWingLoading();
-  if (wl != 0) {
-    FormatUserWingLoading(wl, value.buffer(), true);
-
-    text.Format(_T("%s: %s"), _("Wing loading"), value.c_str());
-
-    canvas.DrawText(rc.left + Layout::Scale(30),
-                    rc.bottom - Layout::Scale(40),
-                    text);
-  }
+  RenderGlidePolarInfo(canvas, rc, chart_look, glide_polar);
 }

@@ -157,6 +157,10 @@ CirclingComputer::Turning(CirclingInfo &circling_info,
     if (!force_circling)
       break;
 
+#if GCC_CHECK_VERSION(7,0)
+    [[fallthrough]];
+#endif
+
   case CirclingMode::POSSIBLE_CLIMB:
     if (force_cruise) {
       circling_info.turn_mode = CirclingMode::CRUISE;
@@ -198,6 +202,10 @@ CirclingComputer::Turning(CirclingInfo &circling_info,
     if (!force_cruise)
       break;
 
+#if GCC_CHECK_VERSION(7,0)
+    [[fallthrough]];
+#endif
+
   case CirclingMode::POSSIBLE_CRUISE:
     if (force_circling) {
       circling_info.turn_mode = CirclingMode::CLIMB;
@@ -228,6 +236,7 @@ CirclingComputer::Turning(CirclingInfo &circling_info,
 
 void
 CirclingComputer::PercentCircling(const MoreData &basic,
+                                  const FlyingState &flight,
                                   CirclingInfo &circling_info)
 {
   if (!basic.time_available)
@@ -240,26 +249,44 @@ CirclingComputer::PercentCircling(const MoreData &basic,
   if (dt <= 0)
     return;
 
+  // don't increment the accumulators unless actually flying
+  if (!flight.flying)
+    return;
+
   // if (Circling)
   if (circling_info.circling && circling_info.turning) {
-    // Add one second to the circling time
+    // Add time step to the circling time
     // timeCircling += (Basic->Time-LastTime);
-    circling_info.time_climb += dt;
+    circling_info.time_circling += dt;
 
     // Add the Vario signal to the total climb height
-    circling_info.total_height_gain += basic.gps_vario;
+    circling_info.total_height_gain += basic.gps_vario * dt;
+
+    if (basic.gps_vario>= 0) {
+      circling_info.time_climb_circling += dt;
+    }
   } else {
-    // Add one second to the cruise time
+    // Add time step to the cruise time
     // timeCruising += (Basic->Time-LastTime);
     circling_info.time_cruise += dt;
+
+    if (basic.gps_vario>= 0) {
+      circling_info.time_climb_noncircling += dt;
+    }
   }
 
-  // Calculate the circling percentage
-  if (circling_info.time_cruise + circling_info.time_climb > 1)
-    circling_info.circling_percentage = 100 * circling_info.time_climb /
-        (circling_info.time_cruise + circling_info.time_climb);
-  else
+  const auto time_total = (circling_info.time_cruise + circling_info.time_circling);
+  // Calculate the circling and non-circling percentages
+  if (time_total > 0) {
+    circling_info.circling_percentage = 100 * circling_info.time_circling / time_total;
+    circling_info.circling_climb_percentage = 100 * circling_info.time_climb_circling / time_total;
+    circling_info.noncircling_climb_percentage = 100 * circling_info.time_climb_noncircling /
+        time_total;
+  } else {
     circling_info.circling_percentage = -1;
+    circling_info.circling_climb_percentage = -1;
+    circling_info.noncircling_climb_percentage = -1;
+  }
 }
 
 void

@@ -31,6 +31,7 @@
 #include "Device/RecordedFlight.hpp"
 #include "Components.hpp"
 #include "LocalPath.hpp"
+#include "LogFile.hpp"
 #include "UIGlobals.hpp"
 #include "Operation/MessageOperationEnvironment.hpp"
 #include "Dialogs/JobDialog.hpp"
@@ -42,7 +43,6 @@
 #include "IGC/IGCHeader.hpp"
 #include "Formatter/IGCFilenameFormatter.hpp"
 #include "Time/BrokenDate.hpp"
-#include "Util/Error.hxx"
 
 class DeclareJob {
   DeviceDescriptor &device;
@@ -64,11 +64,14 @@ public:
 static TriStateJobResult
 DoDeviceDeclare(DeviceDescriptor &device, const Declaration &declaration,
                 const Waypoint *home)
-{
+try {
   TriStateJob<DeclareJob> job(device, declaration, home);
   JobDialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
             _T(""), job, true);
   return job.GetResult();
+} catch (const std::runtime_error &e) {
+  LogError(e);
+  return TriStateJobResult::ERROR;
 }
 
 static bool
@@ -145,11 +148,14 @@ public:
 
 static TriStateJobResult
 DoReadFlightList(DeviceDescriptor &device, RecordedFlightList &flight_list)
-{
+try {
   TriStateJob<ReadFlightListJob> job(device, flight_list);
   JobDialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
             _T(""), job, true);
   return job.GetResult();
+} catch (const std::runtime_error &e) {
+  LogError(e);
+  return TriStateJobResult::ERROR;
 }
 
 class DownloadFlightJob {
@@ -170,25 +176,24 @@ public:
 static TriStateJobResult
 DoDownloadFlight(DeviceDescriptor &device,
                  const RecordedFlightInfo &flight, Path path)
-{
+try {
   TriStateJob<DownloadFlightJob> job(device, flight, path);
   JobDialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
             _T(""), job, true);
   return job.GetResult();
+} catch (const std::runtime_error &e) {
+  LogError(e);
+  return TriStateJobResult::ERROR;
 }
 
 static void
 ReadIGCMetaData(Path path, IGCHeader &header, BrokenDate &date)
-{
+try {
   strcpy(header.manufacturer, "XXX");
   strcpy(header.id, "000");
   header.flight = 0;
 
-  FileLineReaderA reader(path, IgnoreError());
-  if (reader.error()) {
-    date = BrokenDate::TodayUTC();
-    return;
-  }
+  FileLineReaderA reader(path);
 
   char *line = reader.ReadLine();
   if (line != nullptr)
@@ -197,6 +202,8 @@ ReadIGCMetaData(Path path, IGCHeader &header, BrokenDate &date)
   line = reader.ReadLine();
   if (line == nullptr || !IGCParseDateRecord(line, date))
     date = BrokenDate::TodayUTC();
+} catch (const std::runtime_error &e) {
+  date = BrokenDate::TodayUTC();
 }
 
 /**

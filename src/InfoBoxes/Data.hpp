@@ -126,6 +126,21 @@ struct InfoBoxData {
   void SetValueFromSpeed(double value, bool precision=true);
 
   /**
+   * Set the InfoBox value to the specified task speed.
+   */
+  void SetValueFromTaskSpeed(double value, bool precision=true);
+
+  /**
+   * Set the InfoBox value to the specified percentage value.
+   */
+  void SetValueFromPercent(double value);
+
+  /**
+   * Set the InfoBox value to the specified voltage value.
+   */
+  void SetValueFromVoltage(double value);
+
+  /**
    * Sets the InfoBox comment to the given Value
    * @param Value New value of the InfoBox comment
    */
@@ -146,6 +161,11 @@ struct InfoBoxData {
   void SetCommentFromSpeed(double value, bool precision=true);
 
   /**
+   * Set the InfoBox comment to the specified task speed.
+   */
+  void SetCommentFromTaskSpeed(double value, bool precision=true);
+
+  /**
    * Set the InfoBox value to the specified altitude in the alternate
    * altitude unit.
    */
@@ -155,6 +175,16 @@ struct InfoBoxData {
    * Set the InfoBox comment value to the specified vertical speed.
    */
   void SetCommentFromVerticalSpeed(double value, bool include_sign=true);
+
+  /**
+   * Set the InfoBox value to time HH:MM and SS
+   */
+  void SetValueFromTimeTwoLines(int dd);
+
+  /**
+   * Set the InfoBox comment to the specified percentage value.
+   */
+  void SetCommentFromPercent(double value);
 
   template<typename... Args>
   void FormatTitle(const TCHAR *fmt, Args&&... args) {

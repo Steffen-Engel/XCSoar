@@ -158,7 +158,7 @@ static constexpr MetaData meta_data[] = {
 
   // e_Bearing
   {
-    N_("Next Bearing"),
+    N_("Next bearing"),
     N_("Bearing"),
     N_("True bearing of the next waypoint.  For AAT tasks, this is the true bearing to the target within the AAT sector."),
     UpdateInfoBoxBearing,
@@ -429,7 +429,7 @@ static constexpr MetaData meta_data[] = {
 
   // e_TimeSinceTakeoff
   {
-    N_("Flight Duration"),
+    N_("Flight duration"),
     N_("Flt Duration"),
     N_("Time elapsed since takeoff was detected."),
     UpdateInfoBoxTimeFlight,
@@ -995,7 +995,7 @@ static constexpr MetaData meta_data[] = {
   },
 
   {
-    N_("Circle Diameter"),
+    N_("Circle diameter"),
     N_("Circle D"),
     N_("Circle diameter. Displays estimated circle diameter and full circle flight time. Useful for evaluating best thermalling mode with a glider at different wing loading."),
     UpdateInfoBoxCircleDiameter,
@@ -1112,6 +1112,30 @@ static constexpr MetaData meta_data[] = {
     N_("Estimated arrival time at next waypoint, assuming current ground speed is maintained."),
     UpdateInfoBoxNextETAVMG,
     next_waypoint_infobox_panels,
+  },
+
+  // e_NonCircling_Climb_Perc
+  {
+    N_("Percentage non-circling climb"),
+    N_("% Str Climb"),
+    N_("Percentage of time spent climbing without circling. These statistics are reset upon starting the task."),
+    UpdateInfoBoxNonCirclingClimbRatio,
+  },
+
+  // e_Climb_Perc_Chart
+  {
+    N_("Percentage climb chart"),
+    N_("Climb %"),
+    N_("Pie chart of time circling and climbing, circling and descending, and climbing non-circling."),
+    IBFHelper<InfoBoxContentClimbPercent>::Create,
+  },
+
+  // NbrSat
+  {
+    N_("Number of used satellites"),
+    N_("Satellites"),
+    N_("The number of actually used (seen) satellites by GPS module. If this information is unavailable, the displayed value is '---'."),
+    UpdateInfoBoxNbrSat,
   },
 
 };

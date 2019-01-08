@@ -79,36 +79,35 @@ return the maximum least squares error:
 void
 LeastSquares::Reset()
 {
-  sum_n = 0;
-  sum_xi = 0.;
-  sum_yi = 0.;
-  sum_xi_2 = 0.;
-  sum_xi_yi = 0.;
+  StoreReset();
+  sum_xxw = 0.;
+  sum_xyw = 0.;
   max_error = 0.;
   sum_error = 0.;
   rms_error = 0.;
-  sum_weights = 0.;
-  y_max = 0.;
-  y_min = 0.;
-  x_min = 0.;
-  x_max = 0.;
-  y_ave = 0.;
-  slots.clear();
+
+  x_mean = y_mean = x_S = y_S = xy_C = x_var = y_var = xy_var = 0.;
 }
 
 void
 LeastSquares::Compute()
 {
-  auto denom = (sum_weights * sum_xi_2 - sum_xi * sum_xi);
+  auto denom = (sum_weights * sum_xxw - sum_xw * sum_xw);
 
   if (fabs(denom) > 0) {
-    m = (sum_weights * sum_xi_yi - sum_xi * sum_yi) / denom;
+    m = (sum_weights * sum_xyw - sum_xw * sum_yw) / denom;
   } else {
     m = 0.;
   }
-  b = (sum_yi - m * sum_xi) / sum_weights;
+  b = (sum_yw - m * sum_xw) / sum_weights;
 
-  y_ave = GetYAt(GetMiddleX());
+  y_ave = sum_yw / sum_weights;
+
+  if (sum_n>1) {
+    x_var = x_S / (sum_n - 1);
+    y_var = y_S / (sum_n - 1);
+    xy_var = xy_C / (sum_n - 1);
+  }
 }
 
 void
@@ -141,34 +140,104 @@ LeastSquares::UpdateError()
 void
 LeastSquares::Add(double x, double y, double weight)
 {
-  // Update maximum/minimum values
-  if (IsEmpty() || y > y_max)
-    y_max = y;
+  StoreAdd(x, y, weight);
 
-  if (IsEmpty() || y < y_min)
-    y_min = y;
+  sum_xxw += Square(x)*weight;
+  sum_xyw += x * y * weight;
 
-  if (IsEmpty() || x > x_max)
-    x_max = x;
+  // See Knuth TAOCP vol 2, 3rd edition, page 232
+  if (sum_n == 1) {
+    x_mean = x;
+    y_mean = y;
+  } else {
+    auto dx = x-x_mean;
+    auto dy = y-y_mean;
 
-  if (IsEmpty() || x < x_min)
-    x_min = x;
+    x_mean += dx / sum_n;
+    x_S += dx * (x - x_mean);
 
-  // Add point
-  // TODO code: really should have a circular buffer here
-  if (!slots.full())
-    slots.append() = Slot(x, y, weight);
+    y_mean += dy / sum_n;
+    y_S += dy * (y - y_mean);
 
-  ++sum_n;
+    xy_C += dx * (y - y_mean);
+  }
+}
 
-  // Add weighted point
-  sum_weights += weight;
+void
+LeastSquares::Remove(const unsigned i)
+{
+  assert(i< sum_n);
 
-  auto xw = x * weight;
-  auto yw = y * weight;
+  const auto &pt = slots[i];
+  // Remove weighted point
+  double weight = 1;
+#ifdef LEASTSQS_WEIGHT_STORE
+  weight = pt.weight;
+#endif
 
-  sum_xi += xw;
-  sum_yi += yw;
-  sum_xi_2 += Square(xw);
-  sum_xi_yi += xw * yw;
+  sum_xxw -= Square(pt.x) * weight;
+  sum_xyw -= (pt.x * pt.y * weight);
+
+  StoreRemove(i);
+
+  // Update calculation
+  Compute();
+}
+
+ErrorEllipse
+LeastSquares::GetErrorEllipse() const
+{
+  /*
+    A = a b = cov(x,x)   cov(x,y)
+    c d   cov(x,y)   cov(y,y)
+
+    T = trace = a + d     = cov(x,x) + cov(y,y)
+    D = det = a*d - b*c   = cov(x,x) * cov(y,y) - cov(x,y)**2
+
+    eigenvalues are L1,2 = T/2 +/-  sqrt(T^2/4 -D)
+    if c is not zero, the eigenvectors are:
+    L1-d    L2-d
+    c       c
+    else if b is not zero then the eigenvectors are:
+    b       b
+    L1-a    L2-a
+
+    else the eigenvectors are
+    1       0
+    0       1
+
+    http://www.visiondummy.com/wp-content/uploads/2014/04/error_ellipse.cpp
+
+  */
+  double a = GetVarX();
+  double b = GetCovXY();
+  double c = b;
+  double d = GetVarY();
+
+  double T = a + d;
+  double D = a*d - b*c;
+  double La = T/2;
+  double Lb = sqrt(T*T/4-D);
+
+  double L1 = La+Lb;
+  double L2 = La-Lb;
+
+  double v1x, v2x;
+  if (b == 0) {
+    v1x = 1;
+    v2x = 0;
+  } else {
+    v1x = L1- GetVarY();
+    v2x = L2- GetVarY();
+  }
+
+  ErrorEllipse ellipse;
+  ellipse.angle = Angle::FromXY(v2x, v1x);
+  ellipse.halfmajor = sqrt(L1);
+  ellipse.halfminor = sqrt(L2);
+  ellipse.x = x_mean;
+  ellipse.y = y_mean;
+
+  //double chisquare_val = 2.4477;
+  return ellipse;
 }

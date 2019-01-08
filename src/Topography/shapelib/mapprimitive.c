@@ -295,7 +295,17 @@ int *msGetInnerList(shapeObj *shape, int r, int *outerlist)
       continue;
     }
 
-    list[i] = msPointInPolygon(&(shape->line[i].point[0]), &(shape->line[r]));
+    /* A valid inner ring may touch its outer ring at most one point. */
+    /* In the case the first point matches a vertex of an outer ring, */
+    /* msPointInPolygon() might return 0 or 1 (depending on coordinate values, */
+    /* see msGetOuterList()), so test a second point if the first test */
+    /* returned that the point is not inside the outer ring. */
+    /* Fixes #5299 */
+    /* Of course all of this assumes that the geometries are indeed valid in */
+    /* OGC terms, otherwise all logic of msIsOuterRing(), msGetOuterList(), */
+    /* and msGetInnerList() has undefined behaviour. */
+    list[i] = msPointInPolygon(&(shape->line[i].point[0]), &(shape->line[r])) ||
+              msPointInPolygon(&(shape->line[i].point[1]), &(shape->line[r]));
   }
 
   return(list);
@@ -1263,6 +1273,8 @@ static int getPolygonCenterOfGravity(shapeObj *p, pointObj *lp)
       sy = s>0?tsy:-tsy;
     }
   }
+  if(largestArea == 0) /*degenerate polygon*/
+    return MS_FAILURE;
 
   lp->x = sx/(6*largestArea);
   lp->y = sy/(6*largestArea);
@@ -1449,7 +1461,7 @@ int msPolygonLabelPoint(shapeObj *p, pointObj *lp, double min_dimension)
       if(len > max_len) {
         max_len = len;
         lp->x = (intersect[i] + intersect[i+1])/2;
-        /* lp->y = y; */
+        lp->y = y;
       }
     }
   } else { /* center vertically, fix x */
@@ -1528,7 +1540,7 @@ int msPolygonLabelPoint(shapeObj *p, pointObj *lp, double min_dimension)
       if(len > max_len) {
         max_len = len;
         lp->y = (intersect[i] + intersect[i+1])/2;
-        /* lp->x = x; */
+        lp->x = x;
       }
     }
   }

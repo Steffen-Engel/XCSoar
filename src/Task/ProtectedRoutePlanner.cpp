@@ -32,12 +32,15 @@ ProtectedRoutePlanner::SetTerrain(const RasterTerrain *terrain)
 
 void
 ProtectedRoutePlanner::SetPolars(const GlideSettings &settings,
+                                 const RoutePlannerConfig &config,
                                  const GlidePolar &glide_polar,
                                  const GlidePolar &safety_polar,
-                                 const SpeedVector &wind)
+                                 const SpeedVector &wind,
+                                 const int height_min_working)
 {
   ExclusiveLease lease(*this);
-  lease->UpdatePolar(settings, glide_polar, safety_polar, wind);
+  lease->UpdatePolar(settings, config, glide_polar, safety_polar,
+                     wind, height_min_working);
 }
 
 void
@@ -70,8 +73,8 @@ ProtectedRoutePlanner::SolveReach(const AGeoPoint &origin,
 }
 
 const FlatProjection
-ProtectedRoutePlanner::GetReachProjection() const
+ProtectedRoutePlanner::GetTerrainReachProjection() const
 {
   Lease lease(*this);
-  return lease->GetReachProjection();
+  return lease->GetTerrainReachProjection();
 }

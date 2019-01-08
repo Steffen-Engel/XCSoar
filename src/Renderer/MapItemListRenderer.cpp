@@ -110,7 +110,7 @@ Draw(Canvas &canvas, PixelRect rc,
 
   bool reachable =
     item.reach.terrain_valid != ReachResult::Validity::UNREACHABLE &&
-    arrival_altitude >= 0;
+    arrival_altitude >= item.safety_height;
 
   // Draw final glide arrow icon
 
@@ -178,14 +178,14 @@ Draw(Canvas &canvas, PixelRect rc,
                         FormatUserAltitude(item.reach.terrain).c_str(),
                         _("MSL"));
   } else if (item.HasElevation() &&
-             item.reach.direct >= item.elevation &&
+             item.reach.direct >= item.elevation + item.safety_height &&
              item.reach.terrain_valid == ReachResult::Validity::UNREACHABLE) {
     buffer.UnsafeFormat(_T("%s "), _("Unreachable due to terrain."));
   } else {
     buffer.clear();
   }
 
-  buffer += _("Arrival altitude incl. safety height");
+  buffer += _("Arrival altitude");
 
   // Draw comment row
 
@@ -380,7 +380,7 @@ Draw(Canvas &canvas, PixelRect rc,
   row_renderer.DrawSecondRow(canvas, rc, info_string);
 }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
 
 /**
  * Calculate how many minutes have passed since #past_ms.
@@ -424,7 +424,7 @@ Draw(Canvas &canvas, PixelRect rc,
   }
 }
 
-#endif /* HAVE_SKYLINES_TRACKING_HANDLER */
+#endif /* HAVE_SKYLINES_TRACKING */
 
 static void
 Draw(Canvas &canvas, PixelRect rc,
@@ -487,7 +487,7 @@ MapItemListRenderer::Draw(Canvas &canvas, const PixelRect rc,
            row_renderer, traffic_look, traffic_list);
     break;
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   case MapItem::SKYLINES_TRAFFIC:
     ::Draw(canvas, rc, (const SkyLinesTrafficMapItem &)item, row_renderer);
     break;

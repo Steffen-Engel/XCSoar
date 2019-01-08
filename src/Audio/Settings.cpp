@@ -30,5 +30,7 @@ SoundSettings::SetDefaults()
   sound_modes_enabled = true;
   sound_deadband = 5;
 
+  master_volume = 50;
+
   vario.SetDefaults();
 }

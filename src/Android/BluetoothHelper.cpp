@@ -28,9 +28,11 @@ Copyright_License {
 #include "PortBridge.hpp"
 #include "Java/String.hxx"
 #include "Java/Class.hxx"
+#include "Java/Exception.hxx"
 
 #include <map>
 #include <string>
+#include <stdexcept>
 
 namespace BluetoothHelper {
   static Java::TrivialClass cls;
@@ -129,12 +131,14 @@ BluetoothHelper::list(JNIEnv *env)
 bool
 BluetoothHelper::HasLe(JNIEnv *env)
 {
-  return env->GetStaticBooleanField(cls, hasLe_field);
+  return cls.IsDefined() && env->GetStaticBooleanField(cls, hasLe_field);
 }
 
 jobject
 BluetoothHelper::StartLeScan(JNIEnv *env, LeScanCallback &_cb)
 {
+  assert(HasLe(env));
+
   jobject cb = NativeLeScanCallback::Create(env, _cb);
   if (cb == nullptr) {
     env->ExceptionClear();
@@ -153,6 +157,8 @@ BluetoothHelper::StartLeScan(JNIEnv *env, LeScanCallback &_cb)
 void
 BluetoothHelper::StopLeScan(JNIEnv *env, jobject cb)
 {
+  assert(HasLe(env));
+
   env->CallStaticVoidMethod(cls, stopLeScan_method, cb);
   env->DeleteLocalRef(cb);
 }
@@ -161,13 +167,14 @@ PortBridge *
 BluetoothHelper::connect(JNIEnv *env, const char *address)
 {
   if (!cls.IsDefined())
-    return nullptr;
+    throw std::runtime_error("Bluetooth not available");
 
   /* call BluetoothHelper.connect() */
 
   const Java::String address2(env, address);
   jobject obj = env->CallStaticObjectMethod(cls, connect_method,
                                             context->Get(), address2.Get());
+  Java::RethrowException(env);
   if (obj == nullptr)
     return nullptr;
 
@@ -181,9 +188,10 @@ PortBridge *
 BluetoothHelper::createServer(JNIEnv *env)
 {
   if (!cls.IsDefined())
-    return nullptr;
+    throw std::runtime_error("Bluetooth not available");
 
   jobject obj = env->CallStaticObjectMethod(cls, createServer_method);
+  Java::RethrowException(env);
   if (obj == nullptr)
     return nullptr;
 

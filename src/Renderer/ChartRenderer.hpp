@@ -34,6 +34,7 @@ Copyright_License {
 #include <tchar.h>
 #include <vector>
 
+class XYDataStore;
 class LeastSquares;
 class Canvas;
 class Brush;
@@ -45,6 +46,8 @@ class ChartRenderer
 
   Canvas &canvas;
   PixelRect rc;
+  PixelRect rc_chart;
+  int minor_tick_size;
 
   ReusableArray<BulkPixelPoint> point_buffer;
 
@@ -57,18 +60,29 @@ class ChartRenderer
     int ToScreen(double value) const;
   } x, y;
 
+  void SetPadding(bool do_pad);
+
 public:
-  int padding_left;
-  int padding_bottom;
+  int padding_text;
+  const PixelRect GetChartRect() const {
+    return rc_chart;
+  }
+
+  enum UnitFormat {
+    NONE,
+    NUMERIC,
+    TIME
+  };
 
 public:
   ChartRenderer(const ChartLook &look, Canvas &the_canvas,
-                const PixelRect the_rc);
+                const PixelRect the_rc,
+                const bool has_padding=true);
 
-  void DrawBarChart(const LeastSquares &lsdata);
-  void DrawFilledLineGraph(const LeastSquares &lsdata);
-  void DrawLineGraph(const LeastSquares &lsdata, const Pen &pen);
-  void DrawLineGraph(const LeastSquares &lsdata, ChartLook::Style style);
+  void DrawBarChart(const XYDataStore &lsdata);
+  void DrawFilledLineGraph(const XYDataStore &lsdata, bool swap=false);
+  void DrawLineGraph(const XYDataStore &lsdata, const Pen &pen, bool swap=false);
+  void DrawLineGraph(const XYDataStore &lsdata, ChartLook::Style style, bool swap=false);
   void DrawTrend(const LeastSquares &lsdata, ChartLook::Style style);
   void DrawTrendN(const LeastSquares &lsdata, ChartLook::Style style);
   void DrawLine(double xmin, double ymin,
@@ -81,6 +95,9 @@ public:
   void DrawFilledY(const std::vector<std::pair<double, double>> &vals, const Brush &brush,
                    const Pen *pen=nullptr);
   void DrawDot(double x, double y, const unsigned width);
+  void DrawImpulseGraph(const XYDataStore &lsdata, const Pen &pen);
+  void DrawImpulseGraph(const XYDataStore &lsdata, ChartLook::Style style);
+  void DrawWeightBarGraph(const XYDataStore &lsdata);
 
   void ScaleYFromData(const LeastSquares &lsdata);
   void ScaleXFromData(const LeastSquares &lsdata);
@@ -89,15 +106,10 @@ public:
 
   void ResetScale();
 
-  static void FormatTicText(TCHAR *text, double val, double step);
-  void DrawXGrid(double tic_step, const Pen &pen,
-                 double unit_step, bool draw_units = false);
-  void DrawXGrid(double tic_step, ChartLook::Style style,
-                 double unit_step, bool draw_units = false);
-  void DrawYGrid(double tic_step, const Pen &pen,
-                 double unit_step, bool draw_units = false);
-  void DrawYGrid(double tic_step, ChartLook::Style style,
-                 double unit_step, bool draw_units = false);
+  static void FormatTicText(TCHAR *text, double val, double step, UnitFormat units);
+
+  void DrawXGrid(double tic_step, double unit_step, UnitFormat units = UnitFormat::NONE);
+  void DrawYGrid(double tic_step, double unit_step, UnitFormat units = UnitFormat::NONE);
 
   void DrawXLabel(const TCHAR *text);
   void DrawXLabel(const TCHAR *text, const TCHAR *unit);
@@ -107,6 +119,9 @@ public:
 
   void DrawLabel(const TCHAR *text, double xv, double yv);
   void DrawNoData(const TCHAR *text = _("No data"));
+
+  void DrawBlankRectangle(double x_min, double y_min,
+                          double x_max, double y_max);
 
   double GetYMin() const { return y.min; }
   double GetYMax() const { return y.max; }

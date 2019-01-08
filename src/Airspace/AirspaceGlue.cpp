@@ -30,25 +30,18 @@ Copyright_License {
 #include "LogFile.hpp"
 #include "OS/Path.hpp"
 #include "IO/FileLineReader.hpp"
+#include "IO/ZipArchive.hpp"
 #include "IO/ZipLineReader.hpp"
 #include "IO/MapFile.hpp"
 #include "Profile/Profile.hpp"
-#include "Util/Error.hxx"
-
-#include <zzip/zzip.h>
 
 #include <string.h>
 
 static bool
 ParseAirspaceFile(AirspaceParser &parser, Path path,
                   OperationEnvironment &operation)
-{
-  Error error;
-  FileLineReader reader(path, error, Charset::AUTO);
-  if (reader.error()) {
-    LogError("Failed to parse airspace file", error);
-    return false;
-  }
+try {
+  FileLineReader reader(path, Charset::AUTO);
 
   if (!parser.Parse(reader, operation)) {
     LogFormat(_T("Failed to parse airspace file: %s"), path.c_str());
@@ -56,19 +49,18 @@ ParseAirspaceFile(AirspaceParser &parser, Path path,
   }
 
   return true;
+} catch (const std::runtime_error &e) {
+  LogFormat(_T("Failed to parse airspace file: %s"), path.c_str());
+  LogError(e);
+  return false;
 }
 
 static bool
 ParseAirspaceFile(AirspaceParser &parser,
                   struct zzip_dir *dir, const char *path,
                   OperationEnvironment &operation)
-{
-  Error error;
-  ZipLineReader reader(dir, path, error, Charset::AUTO);
-  if (reader.error()) {
-    LogError("Failed to parse airspace file", error);
-    return false;
-  }
+try {
+  ZipLineReader reader(dir, path, Charset::AUTO);
 
   if (!parser.Parse(reader, operation)) {
     LogFormat("Failed to parse airspace file: %s", path);
@@ -76,6 +68,10 @@ ParseAirspaceFile(AirspaceParser &parser,
   }
 
   return true;
+} catch (const std::runtime_error &e) {
+  LogFormat("Failed to parse airspace file: %s", path);
+  LogError(e);
+  return false;
 }
 
 void
@@ -100,11 +96,10 @@ ReadAirspace(Airspaces &airspaces,
   if (!path.IsNull())
     airspace_ok |= ParseAirspaceFile(parser, path, operation);
 
-  auto dir = OpenMapFile();
-  if (dir != nullptr) {
-    airspace_ok |= ParseAirspaceFile(parser, dir, "airspace.txt", operation);
-    zzip_dir_close(dir);
-  }
+  auto archive = OpenMapFile();
+  if (archive)
+    airspace_ok |= ParseAirspaceFile(parser, archive->get(), "airspace.txt",
+                                     operation);
 
   if (airspace_ok) {
     airspaces.Optimise();

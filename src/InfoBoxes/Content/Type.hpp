@@ -169,6 +169,12 @@ namespace InfoBoxFactory
     NEXT_ARROW,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
 
+    e_NonCircling_Climb_Perc,
+
+    e_Climb_Perc_Chart,
+
+    e_NbrSat, /* Number of used Sat by GPS module */
+
     e_NUM_TYPES /* Last item */
   };
 

@@ -85,15 +85,17 @@ TaskManager::SetMode(const TaskType _mode)
     if (ordered_task->TaskSize()) {
       active_task = ordered_task;
       mode = TaskType::ORDERED;
-      break;
     }
+
+    break;
 
   case TaskType::GOTO:
     if (goto_task->GetActiveTaskPoint()) {
       active_task = goto_task;
       mode = TaskType::GOTO;
-      break;
     }
+
+    break;
 
   case TaskType::NONE:
     active_task = NULL;
@@ -559,4 +561,13 @@ TaskManager::TakeoffAutotask(const GeoPoint &loc, const double terrain_alt)
   // create a goto task on takeoff
   if (!active_task && goto_task->TakeoffAutotask(loc, terrain_alt))
     SetMode(TaskType::GOTO);
+}
+
+void
+TaskManager::ResetTask()
+{
+  if (active_task != nullptr) {
+    active_task->Reset();
+    UpdateCommonStatsTask();
+  }
 }

@@ -25,28 +25,37 @@ Copyright_License {
 #define FLIGHT_STATISTICS_HPP
 
 #include "Math/LeastSquares.hpp"
+#include "Math/ConvexFilter.hpp"
+#include "Math/Histogram.hpp"
 #include "Thread/Mutex.hpp"
 
 class FlightStatistics {
 public:
   LeastSquares thermal_average;
   LeastSquares altitude;
-  LeastSquares altitude_base;
-  LeastSquares altitude_ceiling;
+  ConvexFilter altitude_base;
+  ConvexFilter altitude_ceiling;
   LeastSquares task_speed;
   LeastSquares altitude_terrain;
+  Histogram vario_circling_histogram;
+  Histogram vario_cruise_histogram;
   mutable Mutex mutex;
 
   void StartTask();
 
   double AverageThermalAdjusted(double wthis, const bool circling);
+  double GetMinWorkingHeight() const;
+  double GetMaxWorkingHeight() const;
+  double GetVarioScalePositive() const;
+  double GetVarioScaleNegative() const;
 
-  void AddAltitude(double tflight, double alt);
+  void AddAltitude(double tflight, double alt, bool final_glide);
   void AddAltitudeTerrain(double tflight, double terrainalt);
   void AddTaskSpeed(double tflight, double val);
   void AddClimbBase(double tflight, double alt);
   void AddClimbCeiling(double tflight, double alt);
-  void AddThermalAverage(double v);
+  void AddThermalAverage(double tflight_start, double tflight_end, double v);
+  void AddClimbRate(double tflight, double vario, bool circling);
 
   void Reset();
 };

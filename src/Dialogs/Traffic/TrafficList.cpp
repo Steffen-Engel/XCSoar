@@ -71,11 +71,11 @@ class TrafficListWidget : public ListWidget, public DataFieldListener,
      */
     FlarmId id;
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
     /**
      * The SkyLines account id.
      */
-    uint32_t skylines_id;
+    uint32_t skylines_id = 0;
 
     uint32_t time_of_day_ms;
 #endif
@@ -84,14 +84,14 @@ class TrafficListWidget : public ListWidget, public DataFieldListener,
      * The color that was assigned by the user to this FLARM peer.  It
      * is FlarmColor::COUNT if the color has not yet been determined.
      */
-    FlarmColor color;
+    FlarmColor color = FlarmColor::COUNT;
 
     /**
      * Were the attributes below already lazy-loaded from the
      * database?  We can't use nullptr for this, because both will be
      * nullptr after a failed lookup.
      */
-    bool loaded;
+    bool loaded = false;
 
     const FlarmNetRecord *record;
     const TCHAR *callsign;
@@ -99,20 +99,20 @@ class TrafficListWidget : public ListWidget, public DataFieldListener,
     /**
      * This object's location.  Check GeoPoint::IsValid().
      */
-    GeoPoint location;
+    GeoPoint location = GeoPoint::Invalid();
 
     /**
      * The vector from the current aircraft location to this object's
      * location (if known).  Check GeoVector::IsValid().
      */
-    GeoVector vector;
+    GeoVector vector = GeoVector::Invalid();
 
     /**
      * The display name of the SkyLines account.
      */
-    std::string name;
+    tstring name;
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
     StaticString<20> near_name;
     double near_distance;
 
@@ -120,26 +120,19 @@ class TrafficListWidget : public ListWidget, public DataFieldListener,
 #endif
 
     explicit Item(FlarmId _id)
-      :id(_id),
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
-       skylines_id(0),
-#endif
-       color(FlarmColor::COUNT),
-       loaded(false),
-       location(GeoPoint::Invalid()),
-       vector(GeoVector::Invalid()) {
+      :id(_id) {
       assert(id.IsDefined());
       assert(IsFlarm());
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
       near_name.clear();
 #endif
     }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
     explicit Item(uint32_t _id, uint32_t _time_of_day_ms,
                   const GeoPoint &_location, int _altitude,
-                  std::string &&_name)
+                  tstring &&_name)
       :id(FlarmId::Undefined()), skylines_id(_id),
        time_of_day_ms(_time_of_day_ms),
        color(FlarmColor::COUNT),
@@ -160,7 +153,7 @@ class TrafficListWidget : public ListWidget, public DataFieldListener,
       return id.IsDefined();
     }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
     /**
      * Does this object describe data from SkyLines live tracking?
      */
@@ -173,7 +166,7 @@ class TrafficListWidget : public ListWidget, public DataFieldListener,
       if (IsFlarm()) {
         record = traffic_databases->flarm_net.FindRecordById(id);
         callsign = traffic_databases->FindNameById(id);
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
       } else if (IsSkyLines()) {
         record = nullptr;
         callsign = nullptr;
@@ -403,7 +396,7 @@ TrafficListWidget::UpdateList()
       AddItem(i.id);
     }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
     /* show SkyLines traffic unless this is a FLARM traffic picker
        dialog (from dlgTeamCode) */
     if (buttons != nullptr) {
@@ -411,9 +404,9 @@ TrafficListWidget::UpdateList()
       const ScopeLock protect(data.mutex);
       for (const auto &i : data.traffic) {
         const auto name_i = data.user_names.find(i.first);
-        std::string name = name_i != data.user_names.end()
+        tstring name = name_i != data.user_names.end()
           ? name_i->second
-          : std::string();
+          : tstring();
 
         items.emplace_back(i.first, i.second.time_of_day_ms,
                            i.second.location, i.second.altitude,
@@ -481,7 +474,7 @@ TrafficListWidget::UpdateVolatile()
         i.location.SetInvalid();
         i.vector.SetInvalid();
       }
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
     } else if (i.IsSkyLines()) {
       const auto &data = tracking->GetSkyLinesData();
       const ScopeLock protect(data.mutex);
@@ -545,7 +538,7 @@ TrafficListWidget::Prepare(ContainerWindow &parent,
     list.SetLength(items.size());
 }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
 
 /**
  * Calculate how many minutes have passed since #past_ms.
@@ -578,7 +571,7 @@ TrafficListWidget::OnPaintItem(Canvas &canvas, PixelRect rc,
   Item &item = items[index];
 
   assert(item.IsFlarm()
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
          || item.IsSkyLines()
 #endif
          );
@@ -610,7 +603,7 @@ TrafficListWidget::OnPaintItem(Canvas &canvas, PixelRect rc,
       tmp.Format(_T("%s - %s"), callsign, tmp_id);
     else
       tmp.Format(_T("%s"), tmp_id);
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   } else if (item.IsSkyLines()) {
     if (!item.name.empty())
       tmp = item.name.c_str();
@@ -688,7 +681,7 @@ TrafficListWidget::OnPaintItem(Canvas &canvas, PixelRect rc,
 
     if (!tmp.empty())
       row_renderer.DrawSecondRow(canvas, rc, tmp);
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   } else if (item.IsSkyLines()) {
     if (CommonInterface::Basic().time_available) {
       tmp.UnsafeFormat(_("%u minutes ago"),

@@ -75,7 +75,7 @@ UpdateBatteryInfo()
     }
   } else {
     // code shamelessly copied from OS/SystemLoad.cpp
-    if (!File::ReadString(Path("/sys/bus/platform/drivers/pmic_battery/pmic_battery.1/power_supply/mc13892_bat/uevent"),
+    if (!File::ReadString(Path("/sys/class/power_supply/mc13892_bat/uevent"),
                           line, sizeof(line)))
       return;
 
@@ -149,6 +149,8 @@ UpdateBatteryInfo()
   case SDL_POWERSTATE_CHARGED:
     Power::External::Status = Power::External::ON;
     Power::Battery::Status = Power::Battery::CHARGING;
+    break;
+
   case SDL_POWERSTATE_ON_BATTERY:
     Power::External::Status = Power::External::OFF;
     if (remaining_percent >= 0) {
@@ -162,6 +164,8 @@ UpdateBatteryInfo()
     } else {
       Power::Battery::Status = Power::Battery::UNKNOWN;
     }
+    break;
+
   default:
     Power::External::Status = Power::External::UNKNOWN;
   }

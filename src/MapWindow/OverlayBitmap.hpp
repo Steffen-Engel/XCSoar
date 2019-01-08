@@ -30,8 +30,6 @@ Copyright_License {
 #include "Geo/GeoBounds.hpp"
 #include "Util/tstring.hpp"
 
-#include <stdexcept>
-
 class Canvas;
 class WindowProjection;
 
@@ -63,8 +61,10 @@ class MapOverlayBitmap final : public MapOverlay {
 public:
   /**
    * Load a GeoTIFF file.
+   *
+   * Throws on error.
    */
-  MapOverlayBitmap(Path path) throw(std::runtime_error);
+  MapOverlayBitmap(Path path);
 
   /**
    * Move an existing #Bitmap with a geo reference.
@@ -74,6 +74,11 @@ public:
     :bitmap(std::move(_bitmap)), bounds(_bounds),
      simple_bounds(bounds.GetBounds()),
      label(_label) {}
+
+  template<typename T>
+  void SetLabel(T &&_label) {
+    label = std::forward<T>(_label);
+  }
 
   /**
    * By default, this class uses the bitmap's alpha channel.  This

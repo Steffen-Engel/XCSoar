@@ -58,12 +58,4 @@ RenderBarograph(Canvas &canvas, const PixelRect rc,
                 const DerivedInfo &derived_info,
                 const ProtectedTaskManager *_task);
 
-void
-RenderSpeed(Canvas &canvas, const PixelRect rc,
-            const ChartLook &chart_look,
-            const FlightStatistics &fs,
-            const NMEAInfo &nmea_info,
-            const DerivedInfo &derived_info,
-            const TaskManager &task);
-
 #endif

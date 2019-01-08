@@ -27,7 +27,10 @@ Copyright_License {
 #include "Operation/Operation.hpp"
 #include "OS/ByteOrder.hpp"
 #include "OS/Path.hpp"
-#include "IO/BinaryWriter.hpp"
+#include "IO/FileOutputStream.hxx"
+#include "IO/BufferedOutputStream.hxx"
+
+#include <memory>
 
 #include <stdlib.h>
 
@@ -109,50 +112,43 @@ DownloadFlightInner(Port &port, const RecordedFlightInfo &flight,
 {
   assert(flight.internal.cai302 < 64);
 
-  BinaryWriter writer(path);
-  if (writer.HasError())
-    return false;
+  FileOutputStream fos(path);
+  BufferedOutputStream os(fos);
 
   CAI302::FileASCII file_ascii;
   if (!UploadFileASCII(port, flight.internal.cai302, file_ascii, env) ||
       env.IsCancelled())
     return false;
 
-  unsigned bytes_per_block = ReadUnalignedBE16(&file_ascii.bytes_per_block);
-  unsigned num_blocks = ReadUnalignedBE16(&file_ascii.num_blocks);
+  unsigned bytes_per_block = file_ascii.bytes_per_block;
+  unsigned num_blocks = file_ascii.num_blocks;
   env.SetProgressRange(num_blocks);
 
   unsigned allocated_size = sizeof(CAI302::FileData) + bytes_per_block;
-  void *allocated = malloc(allocated_size);
-  CAI302::FileData *header = (CAI302::FileData *)allocated;
+  std::unique_ptr<uint8_t> allocated(new uint8_t[allocated_size]);
+  // TODO: alignment?
+  CAI302::FileData *header = (CAI302::FileData *)(void *)allocated.get();
   void *data = header + 1;
 
   unsigned current_block = 0;
   unsigned valid_bytes;
   do {
     int i = UploadFileData(port, true, header, allocated_size, env);
-    if (i < (int)sizeof(*header)) {
-      free(allocated);
+    if (i < (int)sizeof(*header))
       return false;
-    }
 
     i -= sizeof(*header);
 
     valid_bytes = FromBE16(header->valid_bytes);
-    if ((unsigned)i < valid_bytes) {
-      free(allocated);
+    if ((unsigned)i < valid_bytes)
       return false;
-    }
 
-    if (!writer.Write(data, 1, valid_bytes)) {
-      free(allocated);
-      return false;
-    }
+    os.Write(data, valid_bytes);
 
     env.SetProgressPosition(current_block++);
   } while (valid_bytes == bytes_per_block);
 
-  free(allocated);
+  allocated.reset();
 
   CAI302::FileSignatureASCII signature;
   if (!CAI302::UploadFileSignatureASCII(port, signature, env))
@@ -162,8 +158,10 @@ DownloadFlightInner(Port &port, const RecordedFlightInfo &flight,
   if (valid_bytes > sizeof(signature.signature))
     return false;
 
-  if (!writer.Write(signature.signature, 1, valid_bytes))
-    return false;
+  os.Write(signature.signature, valid_bytes);
+
+  os.Flush();
+  fos.Commit();
 
   return true;
 }
@@ -183,10 +181,19 @@ CAI302Device::DownloadFlight(const RecordedFlightInfo &flight,
     return false;
   }
 
-  if (!DownloadFlightInner(port, flight, path, env)) {
+  try {
+    if (!DownloadFlightInner(port, flight, path, env)) {
+      mode = Mode::UNKNOWN;
+      DisableBulkMode(env);
+      return false;
+    }
+  } catch (...) {
     mode = Mode::UNKNOWN;
-    DisableBulkMode(env);
-    return false;
+    try {
+      DisableBulkMode(env);
+    } catch (...) {
+    }
+    throw;
   }
 
   DisableBulkMode(env);

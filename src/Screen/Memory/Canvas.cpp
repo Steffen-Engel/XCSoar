@@ -188,7 +188,7 @@ void
 Canvas::DrawSegment(PixelPoint center, unsigned radius,
                     Angle start, Angle end, bool horizon)
 {
-  Segment(*this, center, radius, start, end, horizon);
+  ::Segment(*this, center, radius, start, end, horizon);
 }
 
 void
@@ -209,6 +209,15 @@ Canvas::DrawKeyhole(PixelPoint center,
   assert(IsDefined());
 
   ::KeyHole(*this, center, big_radius, start, end, small_radius);
+}
+
+void
+Canvas::DrawArc(PixelPoint center, unsigned radius,
+                Angle start, Angle end)
+{
+  assert(IsDefined());
+
+  ::Arc(*this, center, radius, start, end);
 }
 
 const PixelSize

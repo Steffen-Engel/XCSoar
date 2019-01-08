@@ -52,7 +52,10 @@ Copyright_License {
 #include "Device/MultipleDevices.hpp"
 #include "Topography/TopographyStore.hpp"
 #include "Topography/TopographyGlue.hpp"
+#include "Audio/Features.hpp"
+#include "Audio/GlobalVolumeController.hpp"
 #include "Audio/VarioGlue.hpp"
+#include "Audio/VolumeController.hpp"
 #include "Screen/Busy.hpp"
 #include "CommandLine.hpp"
 #include "MainWindow.hpp"
@@ -65,6 +68,8 @@ Copyright_License {
 #include "Replay/Replay.hpp"
 #include "LocalPath.hpp"
 #include "IO/FileCache.hpp"
+#include "IO/Async/AsioThread.hpp"
+#include "IO/Async/GlobalAsioThread.hpp"
 #include "Net/HTTP/DownloadManager.hpp"
 #include "Hardware/DisplayDPI.hpp"
 #include "Hardware/DisplayGlue.hpp"
@@ -93,7 +98,6 @@ Copyright_License {
 #include "Units/Units.hpp"
 #include "Formatter/UserGeoPointFormatter.hpp"
 #include "Thread/Debug.hpp"
-#include "Util/Error.hxx"
 
 #include "Lua/StartFile.hpp"
 #include "Lua/Background.hpp"
@@ -131,11 +135,11 @@ AfterStartup()
 {
   StartupLogFreeRamAndStorage();
 
-  {
-    Error error;
+  try {
     const auto lua_path = LocalPath(_T("lua"));
-    if (!Lua::StartFile(AllocatedPath::Build(lua_path, _T("init.lua")), error))
-      LogError(error);
+    Lua::StartFile(AllocatedPath::Build(lua_path, _T("init.lua")));
+  } catch (const std::runtime_error &e) {
+      LogError(e);
   }
 
   if (is_simulator()) {
@@ -276,7 +280,7 @@ Startup()
 
   // Initialize DeviceBlackboard
   device_blackboard = new DeviceBlackboard();
-  devices = new MultipleDevices();
+  devices = new MultipleDevices(*asio_thread);
   device_blackboard->SetDevices(*devices);
 
   // Initialize main blackboard data
@@ -295,10 +299,10 @@ Startup()
 
   logger = new Logger();
 
-  glide_computer = new GlideComputer(way_points, airspace_database,
+  glide_computer = new GlideComputer(computer_settings,
+                                     way_points, airspace_database,
                                      *protected_task_manager,
                                      *task_events);
-  glide_computer->ReadComputerSettings(computer_settings);
   glide_computer->SetTerrain(terrain);
   glide_computer->SetLogger(logger);
   glide_computer->Initialise();
@@ -307,9 +311,11 @@ Startup()
 
 #ifdef HAVE_CMDLINE_REPLAY
   if (CommandLine::replay_path != nullptr) {
-    Error error;
-    if (!replay->Start(Path(CommandLine::replay_path), error))
-      LogError(error);
+    try {
+      replay->Start(Path(CommandLine::replay_path));
+    } catch (const std::runtime_error &e) {
+      LogError(e);
+    }
   }
 #endif
 
@@ -346,7 +352,7 @@ Startup()
 
   // Scan for weather forecast
   LogFormat("RASP load");
-  rasp = new RaspStore();
+  auto rasp = std::make_shared<RaspStore>(LocalPath(_T(RASP_FILENAME)));
   rasp->ScanAll();
 
   // Reads the airspace files
@@ -364,6 +370,10 @@ Startup()
 #ifdef HAVE_NOAA
   noaa_store = new NOAAStore();
   noaa_store->LoadFromProfile();
+#endif
+
+#ifdef HAVE_VOLUME_CONTROLLER
+  volume_controller->SetVolume(ui_settings.sound.master_volume);
 #endif
 
   AudioVarioGlue::Initialise();
@@ -392,7 +402,7 @@ Startup()
 
     map_window->SetTopography(topography);
     map_window->SetTerrain(terrain);
-    map_window->SetWeather(rasp);
+    map_window->SetRasp(rasp);
 
 #ifdef HAVE_NOAA
     map_window->SetNOAAStore(noaa_store);
@@ -446,10 +456,10 @@ Startup()
   PageActions::Update();
 
 #ifdef HAVE_TRACKING
-  tracking = new TrackingGlue();
+  tracking = new TrackingGlue(*asio_thread);
   tracking->SetSettings(computer_settings.tracking);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   if (map_window != nullptr)
     map_window->SetSkyLinesData(&tracking->GetSkyLinesData());
 #endif
@@ -573,17 +583,18 @@ Shutdown()
   operation.SetText(_("Shutdown, saving task..."));
 
   LogFormat("Save default task");
-  if (protected_task_manager != nullptr)
-    protected_task_manager->TaskSaveDefault();
+  if (protected_task_manager != nullptr) {
+    try {
+      protected_task_manager->TaskSaveDefault();
+    } catch (const std::runtime_error &e) {
+      LogError(e);
+    }
+  }
 
   // Clear waypoint database
   way_points.Clear();
 
   operation.SetText(_("Shutdown, please wait..."));
-
-  // Clear weather database
-  delete rasp;
-  rasp = nullptr;
 
   // Clear terrain database
 
@@ -653,6 +664,8 @@ Shutdown()
 
   LogFormat("Close Windows - main");
   main_window->Destroy();
+  delete main_window;
+  CommonInterface::main_window = nullptr;
 
   CloseLanguageFile();
 

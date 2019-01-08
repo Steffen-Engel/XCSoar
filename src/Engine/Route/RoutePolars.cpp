@@ -45,11 +45,13 @@ RoutePolars::MSLIntercept(const int index, const FlatGeoPoint &fp,
 
 void
 RoutePolars::Initialise(const GlideSettings &settings, const GlidePolar &polar,
-                        const SpeedVector &wind)
+                        const SpeedVector &wind,
+                        const int _height_min_working)
 {
   polar_glide.Initialise(settings, polar, wind, true);
   polar_cruise.Initialise(settings, polar, wind, false);
   inv_mc = MC_CEILING_PENALTY_FACTOR * polar.GetInvMC();
+  height_min_working = std::max(0, _height_min_working - GetSafetyHeight());
 }
 
 unsigned
@@ -225,7 +227,8 @@ RoutePolars::Intersection(const AGeoPoint &origin,
 
   return map->Intersection(origin,
                            origin.altitude - GetSafetyHeight(),
-                           CalcVHeight(e), destination);
+                           CalcVHeight(e), destination,
+                           height_min_working);
 }
 
 int
@@ -240,19 +243,21 @@ RoutePolars::CalcGlideArrival(const AFlatGeoPoint& origin,
 FlatGeoPoint
 RoutePolars::ReachIntercept(const int index, const AFlatGeoPoint &flat_origin,
                             const GeoPoint &origin,
-                             const RasterMap* map,
+                            const RasterMap* map,
                             const FlatProjection &proj) const
 {
   const bool valid = map && map->IsDefined();
   const int altitude = flat_origin.altitude - GetSafetyHeight();
   const FlatGeoPoint flat_dest = MSLIntercept(index, flat_origin,
                                               altitude, proj);
+
   if (!valid)
     return flat_dest;
 
   const GeoPoint dest = proj.Unproject(flat_dest);
   const GeoPoint p = map->Intersection(origin, altitude,
-                                       altitude, dest);
+                                       altitude, dest, height_min_working);
+
   if (!p.IsValid())
     return flat_dest;
 
@@ -271,7 +276,7 @@ RoutePolars::ReachIntercept(const int index, const AFlatGeoPoint &flat_origin,
 
   if (delta1.y * delta2.y < 0)
     /* intersection is on the wrong vertical side */
-    fp.x = flat_origin.y;
+    fp.y = flat_origin.y;
 
   return fp;
 }

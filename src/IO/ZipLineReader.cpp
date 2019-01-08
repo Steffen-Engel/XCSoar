@@ -26,35 +26,17 @@ Copyright_License {
 char *
 ZipLineReaderA::ReadLine()
 {
-  return splitter.ReadLine();
+  return buffered.ReadLine();
 }
 
 long
 ZipLineReaderA::GetSize() const
 {
-  return splitter.GetSize();
+  return zip.GetSize();
 }
 
 long
 ZipLineReaderA::Tell() const
 {
-  return splitter.Tell();
-}
-
-TCHAR *
-ZipLineReader::ReadLine()
-{
-  return convert.ReadLine();
-}
-
-long
-ZipLineReader::GetSize() const
-{
-  return convert.GetSize();
-}
-
-long
-ZipLineReader::Tell() const
-{
-  return convert.Tell();
+  return zip.GetPosition();
 }

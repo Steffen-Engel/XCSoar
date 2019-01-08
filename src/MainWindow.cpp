@@ -189,7 +189,8 @@ void
 MainWindow::Initialise()
 {
   Layout::Initialize(GetSize(),
-                     CommonInterface::GetUISettings().GetPercentScale());
+                     CommonInterface::GetUISettings().GetPercentScale(),
+                     CommonInterface::GetUISettings().custom_dpi);
 
   LogFormat("Initialise fonts");
   if (!Fonts::Initialize()) {
@@ -381,7 +382,8 @@ MainWindow::ReinitialiseLayout()
 }
 
 void 
-MainWindow::ReinitialiseLayout_flarm(PixelRect rc, const InfoBoxLayout::Layout ib_layout)
+MainWindow::ReinitialiseLayout_flarm(PixelRect rc,
+                                     const InfoBoxLayout::Layout &ib_layout)
 {
   TrafficSettings::GaugeLocation val =
     CommonInterface::GetUISettings().traffic.gauge_location;
@@ -512,7 +514,8 @@ void
 MainWindow::OnResize(PixelSize new_size)
 {
   Layout::Initialize(new_size,
-                     CommonInterface::GetUISettings().GetPercentScale());
+                     CommonInterface::GetUISettings().GetPercentScale(),
+                     CommonInterface::GetUISettings().custom_dpi);
 
   SingleWindow::OnResize(new_size);
 
@@ -674,18 +677,6 @@ MainWindow::OnUser(unsigned id)
     if (restore_page_pending)
       PageActions::Restore();
     return true;
-
-#ifdef ANDROID
-  case Command::CRASH:
-    ShowMessageBox(_T("How embarassing, we're terribly sorry!\n"
-                      "Please submit a bug report and "
-                      "include the file from the 'crash' directory.\n"
-                      "http://bugs.xcsoar.org/newticket\n"
-                      "After your report, we'll fix it ASAP."),
-                   _T("XCSoar has crashed recently"),
-                   MB_OK|MB_ICONERROR);
-    return true;
-#endif
   }
 
   return false;

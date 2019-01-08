@@ -27,7 +27,6 @@ Copyright_License {
 #include "NMEA/Info.hpp"
 #include "Geo/SpeedVector.hpp"
 #include "Units/System.hpp"
-#include "Atmosphere/Temperature.hpp"
 #include "Util/Macros.hpp"
 #include "Util/StringCompare.hxx"
 
@@ -316,7 +315,7 @@ PLXVS(NMEAInputLine &line, NMEAInfo &info)
 {
   double temperature;
   if (line.ReadChecked(temperature)) {
-    info.temperature = CelsiusToKelvin(temperature);
+    info.temperature = Temperature::FromCelsius(temperature);
     info.temperature_available = true;
   }
 
@@ -360,7 +359,8 @@ LXDevice::ParseNMEA(const char *String, NMEAInfo &info)
     LXWP1(line, device_info);
 
     const bool saw_v7 = device_info.product.equals("V7");
-    const bool saw_nano = device_info.product.equals("NANO");
+    const bool saw_nano = device_info.product.equals("NANO") ||
+                            device_info.product.equals("NANO3");
     const bool saw_lx16xx = device_info.product.equals("1606") ||
                              device_info.product.equals("1600");
 
@@ -400,7 +400,8 @@ LXDevice::ParseNMEA(const char *String, NMEAInfo &info)
     is_nano = true;
     is_colibri = false;
     PLXVC(line, info.device, info.secondary_device, nano_settings);
-    is_forwarded_nano = info.secondary_device.product.equals("NANO");
+    is_forwarded_nano = info.secondary_device.product.equals("NANO") ||
+                          info.secondary_device.product.equals("NANO3");
     return true;
   }
 
