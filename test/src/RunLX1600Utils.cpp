@@ -37,7 +37,7 @@ Copyright_License {
 #include "IO/Async/AsioThread.hpp"
 #include "Units/System.hpp"
 #include "Atmosphere/Pressure.hpp"
-#include "IO/DataHandler.hpp"
+#include "IO/NullDataHandler.hpp"
 
 #include <stdio.h>
 
@@ -326,16 +326,6 @@ RunUI(Port &port, OperationEnvironment &env)
   }
 }
 
-class NullDataHandler : public DataHandler {
-public:
-  virtual void DataReceived(const void *data, size_t length) {}
-};
-
-#ifdef __clang__
-/* true, the nullptr cast below is a bad kludge */
-#pragma GCC diagnostic ignored "-Wnull-dereference"
-#endif
-
 int
 main(int argc, char **argv)
 try {
@@ -346,7 +336,7 @@ try {
   ScopeGlobalAsioThread global_asio_thread;
 
   NullDataHandler handler;
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  auto port = debug_port.Open(*asio_thread, handler);
 
   ConsoleOperationEnvironment env;
 

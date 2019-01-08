@@ -10,6 +10,7 @@ Version 7.0 - not yet released
   - driver for XC Tracer Vario
   - driver for KRT2 radio
   - show detailed error message in device list
+  - FLARM/OGN - make it possible to set/download registered device database
 * weather
   - merge all weather data in one dialog
   - allow showing both terrain and RASP
@@ -55,6 +56,12 @@ Version 7.0 - not yet released
   - drop support for ARMv6 CPUs
 * Kobo
   - support Kobo Glo HD
+
+Version 6.8.11 - 2018/08/18
+* terrain
+  - fix yet another crash bug (libJasper)
+* Android
+  - fix crash on Android 8 due to overzealous seccomp filter
 
 Version 6.8.10 - 2017/10/07
 * terrain

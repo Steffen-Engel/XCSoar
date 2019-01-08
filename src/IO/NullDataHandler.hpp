@@ -2,7 +2,7 @@
 Copyright_License {
 
   XCSoar Glide Computer - http://www.xcsoar.org/
-  Copyright (C) 2000-2016 The XCSoar Project
+  Copyright (C) 2000-2018 The XCSoar Project
   A detailed list of copyright holders can be found in the file "AUTHORS".
 
   This program is free software; you can redistribute it and/or
@@ -21,22 +21,14 @@ Copyright_License {
 }
 */
 
-#ifndef XCSOAR_UTILS_SETTINGS_HPP
-#define XCSOAR_UTILS_SETTINGS_HPP
+#ifndef XCSOAR_IO_NULL_DATA_HANDLER_HPP
+#define XCSOAR_IO_NULL_DATA_HANDLER_HPP
 
-// changed only in config or by user interface
-// used in settings dialog
-extern bool DevicePortChanged;
-extern bool AirspaceFileChanged;
-extern bool WaypointFileChanged;
-extern bool AirfieldFileChanged;
-extern bool InputFileChanged;
-extern bool MapFileChanged;
-extern bool FlarmFileChanged;
-extern bool LanguageChanged;
-extern bool require_restart;
+#include "DataHandler.hpp"
 
-void
-SystemConfiguration();
+class NullDataHandler : public DataHandler {
+public:
+  virtual void DataReceived(const void *, size_t) {}
+};
 
 #endif

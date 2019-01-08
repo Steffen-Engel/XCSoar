@@ -109,9 +109,9 @@ freetype = FreeTypeProject(
 )
 
 curl = CurlProject(
-    'http://curl.haxx.se/download/curl-7.59.0.tar.xz',
-    'https://github.com/curl/curl/releases/download/curl-7_59_0/curl-7.59.0.tar.xz',
-    'e44eaabdf916407585bf5c7939ff1161e6242b6b015d3f2f5b758b2a330461fc',
+    'http://curl.haxx.se/download/curl-7.61.0.tar.xz',
+    'https://github.com/curl/curl/releases/download/curl-7_61_0/curl-7.61.0.tar.xz',
+    'ef6e55192d04713673b4409ccbcb4cb6cd723137d6e10ca45b0c593a454e1720',
     'lib/libcurl.a',
     [
         '--disable-shared', '--enable-static',
@@ -133,9 +133,9 @@ curl = CurlProject(
 )
 
 proj = AutotoolsProject(
-    'http://download.osgeo.org/proj/proj-4.9.3.tar.gz',
-    'https://fossies.org/linux/privat/proj-4.9.3.tar.gz',
-    'd598336ca834742735137c5674b214a1',
+    'http://download.osgeo.org/proj/proj-5.1.0.tar.gz',
+    'https://fossies.org/linux/privat/proj-5.1.0.tar.gz',
+    '6b1379a53317d9b5b8c723c1dc7bf2e3a8eb22ceb46b8807a1ce48ef65685bb3',
     'lib/libproj.a',
     [
         '--disable-shared', '--enable-static',
@@ -146,9 +146,9 @@ proj = AutotoolsProject(
 )
 
 libpng = LibPNGProject(
-    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.32.tar.xz',
-    'http://downloads.sourceforge.net/project/libpng/libpng16/1.6.32/libpng-1.6.32.tar.xz',
-    'c918c3113de74a692f0a1526ce881dc26067763eb3915c57ef3a0f7b6886f59b',
+    'ftp://ftp.simplesystems.org/pub/libpng/png/src/libpng16/libpng-1.6.34.tar.xz',
+    'http://downloads.sourceforge.net/project/libpng/libpng16/1.6.34/libpng-1.6.34.tar.xz',
+    '2f1e960d92ce3b3abd03d06dfec9637dfbd22febf107a536b44f7a47c60659f6',
     'lib/libpng.a',
     [
         '--disable-shared', '--enable-static',
@@ -185,9 +185,9 @@ simple_usbmodeswitch = AutotoolsProject(
 )
 
 libtiff = AutotoolsProject(
-    'http://download.osgeo.org/libtiff/tiff-4.0.8.tar.gz',
-    'http://ftp.lfs-matrix.net/pub/blfs/conglomeration/tiff/tiff-4.0.8.tar.gz',
-    '59d7a5a8ccd92059913f246877db95a2918e6c04fb9d43fd74e5c3390dac2910',
+    'http://download.osgeo.org/libtiff/tiff-4.0.9.tar.gz',
+    'http://ftp.lfs-matrix.net/pub/blfs/conglomeration/tiff/tiff-4.0.9.tar.gz',
+    '6e7bdeec2c310734e734d19aae3a71ebe37a4d842e0e23dbb1b8921c0026cfcd',
     'lib/libtiff.a',
     [
         '--disable-shared', '--enable-static',
@@ -241,9 +241,9 @@ sdl2 = SDL2Project(
 )
 
 lua = LuaProject(
-    'http://www.lua.org/ftp/lua-5.3.4.tar.gz',
-    'https://github.com/lua/lua/releases/download/v5-3-4/lua-5.3.4.tar.gz',
-    '79790cfd40e09ba796b01a571d4d63b52b1cd950',
+    'http://www.lua.org/ftp/lua-5.3.5.tar.gz',
+    'https://github.com/lua/lua/releases/download/v5-3-5/lua-5.3.5.tar.gz',
+    '0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac',
     'lib/liblua.a',
     patches=abspath('lib/lua/patches'),
 )
