@@ -28,7 +28,7 @@
 
 #include "Parser.hpp"
 #include "Node.hpp"
-#include "Util/CharUtil.hpp"
+#include "Util/CharUtil.hxx"
 #include "Util/StringAPI.hxx"
 #include "Util/StringUtil.hpp"
 #include "Util/NumberParser.hpp"
@@ -353,6 +353,10 @@ XML::GetNextToken(Parser *pXML)
 
     // If we haven't found a short hand closing tag then drop into the
     // text process
+
+#if GCC_CHECK_VERSION(7,0)
+    [[fallthrough]];
+#endif
 
     // Other characters
   default:

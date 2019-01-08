@@ -36,6 +36,7 @@ Copyright_License {
 #include "Operation/ConsoleOperationEnvironment.hpp"
 #include "IO/Async/GlobalAsioThread.hpp"
 #include "IO/Async/AsioThread.hpp"
+#include "IO/NullDataHandler.hpp"
 #include "Util/ConvertString.hpp"
 #include "Util/PrintException.hxx"
 
@@ -109,7 +110,8 @@ try {
 
   ScopeGlobalAsioThread global_asio_thread;
 
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   if (!port->WaitConnected(env)) {
     fprintf(stderr, "Failed to connect the port\n");

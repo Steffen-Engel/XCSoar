@@ -65,6 +65,7 @@
 #include "FaultInjectionPort.hpp"
 #include "TestUtil.hpp"
 #include "Units/System.hpp"
+#include "IO/NullDataHandler.hpp"
 
 #include <memory>
 
@@ -1215,6 +1216,11 @@ TestOpenVario()
              Temperature::FromCelsius(23.52).ToKelvin()));
   nmea_info.Reset();
 
+  // Relative humidity is read
+  ok1(device->ParseNMEA("$POV,H,58.42*24", nmea_info));
+  ok1(nmea_info.humidity_available);
+  ok1(equals(nmea_info.humidity, 58.42));
+
   delete device;
 }
 
@@ -1481,11 +1487,11 @@ TestXCTracer()
   delete device;
 }
 
-
 static void
 TestDeclare(const struct DeviceRegister &driver)
 {
-  FaultInjectionPort port(nullptr, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  FaultInjectionPort port(nullptr, handler);
   Device *device = driver.CreateOnPort(dummy_config, port);
   ok1(device != NULL);
 
@@ -1527,7 +1533,8 @@ TestDeclare(const struct DeviceRegister &driver)
 static void
 TestFlightList(const struct DeviceRegister &driver)
 {
-  FaultInjectionPort port(nullptr, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  FaultInjectionPort port(nullptr, handler);
   Device *device = driver.CreateOnPort(dummy_config, port);
   ok1(device != NULL);
 
@@ -1551,7 +1558,7 @@ TestFlightList(const struct DeviceRegister &driver)
 
 int main(int argc, char **argv)
 {
-  plan_tests(811);
+  plan_tests(814);
 
   TestGeneric();
   TestTasman();

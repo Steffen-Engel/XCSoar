@@ -1,36 +1,25 @@
-This describes the setup of a development environment suitable to compile \xc for most supported platforms. The manual focuses on debian-based flavors of linux, but should be easily adapted to other distributions. It is developed with Ubuntu 16.04 LTS, and was last changed in May 2016 for \xc 7.0 preview  6.
+This describes the setup of a development environment suitable to compile \xc
+for most supported platforms. The manual focuses on recent releases of
+Debian-based flavors of GNU/Linux (including Ubuntu).
 
-\section{Install base system}\label{sec:developsetup-base}
-The procedure uses the standard install, during/after which you should update all packages to the current level using
+In the following instructions, \texttt{sudo} is used to execute commands with
+root privileges. This is not enabled by default in Debian (but on some Debian
+based distributions, like Ubuntu).
 
+To install a virtual machine with the required, you can use \texttt{Vagrant},
+see section \ref{sec:vagrant}.
+
+\section{Download source code}
+To download the \xc source code, make sure you have git installed:
 \begin{verbatim}
 sudo apt-get update
-sudo apt-get upgrade
+sudo apt-get install git
 \end{verbatim}
 
-\section{Platform-independent components}\label{sec:developsetup-general}
-
-Components required for all platforms, plus git for downloading the source and uploading commits.
-
+Download the source code of \xc by executing \texttt{git} in the following way in
+your project directory:
 \begin{verbatim}
-sudo apt-get install make \
-  librsvg2-bin xsltproc \
-  imagemagick gettext \
-  git quilt
-\end{verbatim}
-Some of these packages might be already present in your distribution (e.g. in the case of Ubuntu).
-
-It is also recommended (though not required) to install \texttt{ccache}, which can speed up building a lot, when rebuilding after a \texttt{clean}.
-\begin{verbatim}
-sudo apt-get install ccache
-\end{verbatim}
-
-
-\section{Download source code}\label{sec:developsetup-sourcecode}
-
-Download the source code of \xc by executing /textt{git} in the following way in your project directory
-\begin{verbatim}
-git clone git://git.xcsoar.org/xcsoar/master/xcsoar.git
+git clone git://github.com/XCSoar/XCSoar
 
 # download submodule
 cd xcsoar
@@ -38,153 +27,17 @@ git submodule init
 git submodule update
 \end{verbatim}
 
-\section{For Unix builds}
-
-Make sure your distribution contains a gcc compiler version 4.9 or higher in order to build the Unix target.
-
-In addition, the following packages are needed:
-
-\begin{verbatim}
-sudo apt-get install make g++ \
-  zlib1g-dev \
-  libsdl1.2-dev libfreetype6-dev \
-  libpng-dev libjpeg-dev \
-  libtiff5-dev libgeotiff-dev\
-  libcurl4-openssl-dev \
-  liblua5.2-dev lua5.2-dev\
-  libxml-parser-perl \
-  librsvg2-bin xsltproc \
-  imagemagick gettext \
-  libegl1-mesa-dev\
-  fonts-dejavu
-\end{verbatim}
-
-\section{For Android  builds}
-\subsection{Install JDK}
-First of all, we need Java to work with Android. We use OpenJDK 8 in this example, but OpenJDK 7 should also work.
+\section{Use provisioning scripts}
+If you are not using Vagrant, but an existing standard installation of a
+Debian-based Linux distribution, you can run the scripts from
+\texttt{ide/provisioning} subfolder of the \xc source to install the build
+dependencies for various \xc target platforms.
 
 \begin{verbatim}
-sudo apt-get install openjdk-8-jdk ant
-sudo apt-get install vorbis-tools automake
+cd ide/provisioning
+sudo ./install-debian-packages.sh
+./install-android-tools.sh
 \end{verbatim}
-
-\subsection{Install Android SDK and NDK}
-
-The SDK and NDK are installed in the user directory. The \texttt{Makefile} expects them in specific directories, therefore we create some symlinks.
-
-\begin{verbatim}
-cd ~/
-mkdir opt
-cd opt/
-
-# Download and extract SDK
-wget "http://dl.google.com/android/android-sdk_r23-linux.tgz"
-
-tar xvfz android-sdk_r23-linux.tgz
-mv android-sdk-linux/ android-sdk-linux_x86/
-ln -s android-sdk-linux/ android-sdk-linux_x86
-rm android-sdk_r23-linux.tgz
-
-# Download NDK installer
-
-wget "http://dl.google.com/android/\
-repository/android-ndk-r12b-linux-x86_64.zip"
-
-unzip android-ndk-r12b-linux-x86_64.zip
-\end{verbatim}
-
-We need to add the paths by appending the following lines to \texttt{\textasciitilde/.profile} and \texttt{\textasciitilde/.bashrc} --- here relative paths work.
-
-\begin{verbatim}
-# Android SDK
-export ANDROID_SDK_HOME="~/opt/android-sdk-linux_x86"
-export PATH="$PATH:$ANDROID_SDK_HOME/tools"
-export PATH="$PATH:$ANDROID_SDK_HOME/platform-tools"
-
-# Android NDK
-export ANDROID_NDK_HOME="~/opt/android-ndk-r11"
-export PATH="$PATH:$ANDROID_NDK_HOME"
-\end{verbatim}
-
-The Android SDK (which contains some 32bit components) seems to have trouble running on some 64bit distributions, the following packages fix this:
-
-\begin{verbatim}
-sudo apt-get install lib32z1 lib32ncurses5
-sudo apt-get install libgcc1:i386
-\end{verbatim}
-
-Now, you should start the Android manager with the \texttt{android} command, and install the required packages. Use the GUI to select and install SDK 22, and the (preselected) newest tools. Be warned, these will need many GB of space on your harddisk! (approximately 15 GB for typical defaults)
-
-Finally, for the \texttt{adb} debugger interface to work via USB, most distributions require manual fixing of the \texttt{udev} rules. This can be done in the following way:
-
-\begin{maxipage}
-\begin{verbatim}
-#Create etc/udev/rules.d/99-android.rules file
-
-echo "#Acer" > 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0502", MODE="0666"" >> 99-android.rules
-echo "#ASUS" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0b05", MODE="0666"" >> 99-android.rules
-echo "#Dell" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="413c", MODE="0666"" >> 99-android.rules
-echo "#Foxconn" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0489", MODE="0666"" >> 99-android.rules
-echo "#Garmin-Asus" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="091E", MODE="0666"" >> 99-android.rules
-echo "#Google" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="18d1", MODE="0666"" >> 99-android.rules
-echo "#HTC" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0bb4", MODE="0666"" >> 99-android.rules
-echo "#Huawei" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="12d1", MODE="0666"" >> 99-android.rules
-echo "#K-Touch" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="24e3", MODE="0666"" >> 99-android.rules
-echo "#KT Tech" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="2116", MODE="0666"" >> 99-android.rules
-echo "#Kyocera" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0482", MODE="0666"" >> 99-android.rules
-echo "#Lenevo" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="17EF", MODE="0666"" >> 99-android.rules
-echo "#LG" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="1004", MODE="0666"" >> 99-android.rules
-echo "#Motorola" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="22b8", MODE="0666"" >> 99-android.rules
-echo "#NEC" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0409", MODE="0666"" >> 99-android.rules
-echo "#Nook" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="2080", MODE="0666"" >> 99-android.rules
-echo "#Nvidia" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0955", MODE="0666"" >> 99-android.rules
-echo "#OTGV" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="2257", MODE="0666"" >> 99-android.rules
-echo "#Pantech" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="10A9", MODE="0666"" >> 99-android.rules
-echo "#Philips" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0471", MODE="0666"" >> 99-android.rules
-echo "#PMC-Sierra" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="04da", MODE="0666"" >> 99-android.rules
-\end{verbatim}
-\end{maxipage}
-\begin{maxipage}
-\begin{verbatim}
-echo "#Qualcomm" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="05c6", MODE="0666"" >> 99-android.rules
-echo "#SK Telesys" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="1f53", MODE="0666"" >> 99-android.rules
-echo "#Samsung" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="04e8", MODE="0666"" >> 99-android.rules
-echo "#Sharp" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="04dd", MODE="0666"" >> 99-android.rules
-echo "#Sony Ericsson" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0fce", MODE="0666"" >> 99-android.rules
-echo "#Toshiba" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="0930", MODE="0666"" >> 99-android.rules
-echo "#ZTE" >> 99-android.rules
-echo "SUBSYSTEM=="usb", SYSFS{idVendor}=="19D2", MODE="0666"" >> 99-android.rules
-sudo mv -f 99-android.rules /etc/udev/rules.d/
-sudo chmod a+r /etc/udev/rules.d/99-android.rules
-\end{verbatim}
-\end{maxipage}
 
 \section{Optional: Eclipse IDE}
 One of the most widespread IDEs is eclipse. It is not limited to Android, and can be used for all targets. It is not required for \xc, but its installation is described here as an example. Eclipse is quite heavyweight, and many developers prefer other IDEs for \xc development.
@@ -204,22 +57,6 @@ Important: After you have added the sources, eclipse will start indexing all fil
 
 For this, in the C/C++ scope, right-click on the "output" directory in the file tree on the left side, select "Properties", then "Resource/Resource Filters" and add a filter. In the "add filter" dialog, choose "exclude all", "files and folders", "all children (recursive)" and set the Filter details to "Name matches *".
 This will exclude the output tree from the indexer, leading to a minimal index.
-
-\section{Build setup for the Manual}
-To set up the LaTeX -- specifically, LuaLaTex -- system for compiling the manual, you need to install the following packages in addition to the steps from section \ref{sec:developsetup-base}, \ref{sec:developsetup-general} and \ref{sec:developsetup-sourcecode}:
-
-\begin{verbatim}
-sudo apt-get install texlive-luatex \
-  texlive-latex-base texlive-latex-extra
-\end{verbatim}
-
-Now you can compile the manuals with 
-
-\begin{verbatim}
-make manual
-\end{verbatim}
-
-This creates a lot of warnings, but this is normal.
 
 \section{Optional: modern LaTeX editor for editing the Manual}
 Most people today edit LaTeX files in specific editors, as this is much more comfortable and efficient. This is highly recommended especially if you are not very familiar with LaTeX: learning it is very easy with a modern editor. Here, we install TeXstudio as an example, as it is very widespread and supports the rather rare LuaLaTeX well.
@@ -262,8 +99,3 @@ export TEXINPUTS="..:../../../output/manual:../../../output/manual/en:../../..:"
 Finally, you need to run "make manual" in the \xc base directory at least once from the command line before you can compile from within the TexStudio interface. This creates the path structure and generates the figure files which are included into the manual. Of course, if you change figures, you might have to run "make manual" again.
 
 Inside TeXStudio, open the file "XCSoar-manual.tex" (or one of the other root files) and right-click on this file to "set as explicit root document", in the structure view on the left. Now you are good to go. Make changes and press F5 to see the result immediately.
-
-
-
-
-
