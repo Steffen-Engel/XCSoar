@@ -95,16 +95,16 @@ ManageyAllWidget::Prepare(ContainerWindow &parent, const PixelRect &rc)
 
   StaticString<64> buffer;
 
-  buffer.UnsafeFormat("%d", Ident.version);
+  buffer.UnsafeFormat(_T("%d"), Ident.version);
   AddReadOnly(_("firmware version"), NULL, buffer.c_str());
 
-  buffer.UnsafeFormat("%d", Ident.MSPVersion);
+  buffer.UnsafeFormat(_T("%d"), Ident.MSPVersion);
   AddReadOnly(_("MSP version"), NULL, buffer.c_str());
 
-  buffer.UnsafeFormat("%d", Ident.multiType);
+  buffer.UnsafeFormat(_T("%d"), Ident.multiType);
   AddReadOnly(_("quad type"), NULL, buffer.c_str());
 
-  buffer.UnsafeFormat("%d", Ident.capabilities);
+  buffer.UnsafeFormat(_T("%d"), Ident.capabilities);
   AddReadOnly(_("capabilities"), NULL, buffer.c_str());
 
   AddButton(_("Calibrate Mag"), *this, CalibMag);
