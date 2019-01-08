@@ -50,7 +50,7 @@ ShowNextWaypointDetails()
   if (wp == nullptr)
     return;
 
-  dlgWaypointDetailsShowModal(std::move(wp));
+  dlgWaypointDetailsShowModal(std::move(wp), false);
 }
 
 static Widget *
@@ -250,13 +250,7 @@ UpdateInfoBoxNextETE(InfoBoxData &data)
 
   assert(task_stats.current_leg.time_remaining_now >= 0);
 
-  TCHAR value[32];
-  TCHAR comment[32];
-  const int dd = (int)task_stats.current_leg.time_remaining_now;
-  FormatTimeTwoLines(value, comment, dd);
-
-  data.SetValue(value);
-  data.SetComment(comment);
+  data.SetValueFromTimeTwoLines((int)task_stats.current_leg.time_remaining_now);
 }
 
 void
@@ -406,13 +400,7 @@ UpdateInfoBoxFinalETE(InfoBoxData &data)
 
   assert(task_stats.total.time_remaining_now >= 0);
 
-  TCHAR value[32];
-  TCHAR comment[32];
-  const int dd = abs((int)task_stats.total.time_remaining_now);
-  FormatTimeTwoLines(value, comment, dd);
-
-  data.SetValue(value);
-  data.SetComment(comment);
+  data.SetValueFromTimeTwoLines((int)task_stats.total.time_remaining_now);
 }
 
 void
@@ -476,12 +464,8 @@ UpdateInfoBoxTaskSpeed(InfoBoxData &data)
     return;
   }
 
-  // Set Value
-  data.SetValue(_T("%2.0f"),
-                    Units::ToUserTaskSpeed(task_stats.total.travelled.GetSpeed()));
-
-  // Set Unit
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Set Value and unit
+  data.SetValueFromTaskSpeed(task_stats.total.travelled.GetSpeed());
 }
 
 void
@@ -494,29 +478,25 @@ UpdateInfoBoxTaskSpeedAchieved(InfoBoxData &data)
     return;
   }
 
-  // Set Value
-  data.SetValue(_T("%2.0f"),
-                    Units::ToUserTaskSpeed(task_stats.total.remaining_effective.GetSpeed()));
-
-  // Set Unit
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Set Value and unit
+  data.SetValueFromTaskSpeed(task_stats.total.remaining_effective.GetSpeed());
 }
 
 void
 UpdateInfoBoxTaskSpeedInstant(InfoBoxData &data)
 {
   const TaskStats &task_stats = CommonInterface::Calculated().task_stats;
-  if (!task_stats.task_valid || !task_stats.IsPirkerSpeedAvailable()) {
+  if (!task_stats.task_valid || task_stats.inst_speed_fast < 0 ||
+      task_stats.inst_speed_slow < 0) {
     data.SetInvalid();
     return;
   }
 
   // Set Value
-  data.SetValue(_T("%2.0f"),
-                    Units::ToUserTaskSpeed(task_stats.get_pirker_speed()));
+  data.SetValueFromTaskSpeed(task_stats.inst_speed_fast);
 
-  // Set Unit
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Add slow filtered task speed as comment item
+  data.SetCommentFromTaskSpeed(task_stats.inst_speed_slow, false);
 }
 
 void
@@ -529,8 +509,8 @@ UpdateInfoBoxTaskSpeedHour(InfoBoxData &data)
     return;
   }
 
-  data.SetValue(_T("%2.0f"), Units::ToUserTaskSpeed(window.speed));
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Set Value and unit
+  data.SetValueFromTaskSpeed(window.speed);
 }
 
 void
@@ -567,16 +547,8 @@ UpdateInfoBoxTaskAATime(InfoBoxData &data)
     return;
   }
 
-  TCHAR value[32];
-  TCHAR comment[32];
-  FormatTimeTwoLines(value, comment,
-                         abs((int) common_stats.aat_time_remaining));
-
-  data.UnsafeFormatValue(common_stats.aat_time_remaining < 0 ?
-                            _T("-%s") : _T("%s"), value);
+  data.SetValueFromTimeTwoLines(common_stats.aat_time_remaining);
   data.SetValueColor(common_stats.aat_time_remaining < 0 ? 1 : 0);
-
-  data.SetComment(comment);
 }
 
 void
@@ -597,15 +569,7 @@ UpdateInfoBoxTaskAATimeDelta(InfoBoxData &data)
   auto diff = task_stats.total.time_remaining_start -
     common_stats.aat_time_remaining;
 
-  TCHAR value[32];
-  TCHAR comment[32];
-  const int dd = abs((int)diff);
-  FormatTimeTwoLines(value, comment, dd);
-
-  data.UnsafeFormatValue(diff < 0 ? _T("-%s") : _T("%s"), value);
-
-  data.SetComment(comment);
-
+  data.SetValueFromTimeTwoLines(diff);
   // Set Color (red/blue/black)
   data.SetValueColor(diff < 0 ? 1 :
                    task_stats.total.time_remaining_start >
@@ -670,12 +634,8 @@ UpdateInfoBoxTaskAASpeed(InfoBoxData &data)
     return;
   }
 
-  // Set Value
-  data.SetValue(_T("%2.0f"),
-                    Units::ToUserTaskSpeed(common_stats.aat_speed_target));
-
-  // Set Unit
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Set Value and units
+  data.SetValueFromTaskSpeed(common_stats.aat_speed_target);
 }
 
 void
@@ -690,12 +650,8 @@ UpdateInfoBoxTaskAASpeedMax(InfoBoxData &data)
     return;
   }
 
-  // Set Value
-  data.SetValue(_T("%2.0f"),
-                    Units::ToUserTaskSpeed(common_stats.aat_speed_max));
-
-  // Set Unit
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Set Value and units
+  data.SetValueFromTaskSpeed(common_stats.aat_speed_max);
 }
 
 void
@@ -711,12 +667,8 @@ UpdateInfoBoxTaskAASpeedMin(InfoBoxData &data)
     return;
   }
 
-  // Set Value
-  data.SetValue(_T("%2.0f"),
-                    Units::ToUserTaskSpeed(common_stats.aat_speed_min));
-
-  // Set Unit
-  data.SetValueUnit(Units::current.task_speed_unit);
+  // Set Value and units
+  data.SetValueFromTaskSpeed(common_stats.aat_speed_min);
 }
 
 void
@@ -734,14 +686,8 @@ UpdateInfoBoxTaskTimeUnderMaxHeight(InfoBoxData &data)
     return;
   }
 
-  const int dd = (int)(CommonInterface::Basic().time -
-      common_stats.TimeUnderStartMaxHeight);
-
-  TCHAR value[32];
-  TCHAR comment[32];
-  FormatTimeTwoLines(value, comment, dd);
-
-  data.SetValue(value);
+  data.SetValueFromTimeTwoLines((int)(CommonInterface::Basic().time -
+                                      common_stats.TimeUnderStartMaxHeight));
   data.SetComment(_("Time Below"));
 }
 
@@ -761,19 +707,12 @@ UpdateInfoBoxNextETEVMG(InfoBoxData &data)
   const auto v = basic.ground_speed;
 
   if (!task_stats.task_valid ||
-      d <= 0 ||
       v <= 0) {
     data.SetInvalid();
     return;
   }
 
-  TCHAR value[32];
-  TCHAR comment[32];
-  const int dd = (int)(d/v);
-  FormatTimeTwoLines(value, comment, dd);
-
-  data.SetValue(value);
-  data.SetComment(comment);
+  data.SetValueFromTimeTwoLines((int)(d/v));
 }
 
 void
@@ -792,7 +731,6 @@ UpdateInfoBoxNextETAVMG(InfoBoxData &data)
   const auto v = basic.ground_speed;
 
   if (!task_stats.task_valid ||
-      d <= 0 ||
       v <= 0) {
     data.SetInvalid();
     return;
@@ -824,19 +762,12 @@ UpdateInfoBoxFinalETEVMG(InfoBoxData &data)
   const auto v = basic.ground_speed;
 
   if (!task_stats.task_valid ||
-      d <= 0 ||
       v <= 0) {
     data.SetInvalid();
     return;
   }
 
-  TCHAR value[32];
-  TCHAR comment[32];
-  const int dd = (int)(d/v);
-  FormatTimeTwoLines(value, comment, dd);
-
-  data.SetValue(value);
-  data.SetComment(comment);
+  data.SetValueFromTimeTwoLines((int)(d/v));
 }
 
 void
@@ -848,7 +779,7 @@ UpdateInfoBoxCruiseEfficiency(InfoBoxData &data)
     return;
   }
 
-  data.UnsafeFormatValue(_T("%d"), (int) (task_stats.cruise_efficiency * 100));
+  data.SetValueFromPercent(task_stats.cruise_efficiency*100);
   data.SetCommentFromVerticalSpeed(task_stats.effective_mc, false);
 }
 

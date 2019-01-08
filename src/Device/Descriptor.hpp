@@ -28,6 +28,7 @@ Copyright_License {
 #include "Config.hpp"
 #include "Device/Util/LineSplitter.hpp"
 #include "Port/State.hpp"
+#include "Port/Listener.hpp"
 #include "Device/Parser.hpp"
 #include "RadioFrequency.hpp"
 #include "NMEA/ExternalSettings.hpp"
@@ -36,10 +37,14 @@ Copyright_License {
 #include "Event/Notify.hpp"
 #include "Thread/Mutex.hpp"
 #include "Thread/Debug.hpp"
+#include "Util/tstring.hpp"
+#include "Util/StaticFifoBuffer.hxx"
 
 #include <assert.h>
 #include <tchar.h>
 #include <stdio.h>
+
+namespace boost { namespace asio { class io_service; }}
 
 struct NMEAInfo;
 struct MoreData;
@@ -61,15 +66,19 @@ class RecordedFlightList;
 struct RecordedFlightInfo;
 class OperationEnvironment;
 class OpenDeviceJob;
-class PortListener;
 
-class DeviceDescriptor final : private Notify, private PortLineSplitter {
+class DeviceDescriptor final : Notify, PortListener, PortLineSplitter {
+  /**
+   * The io_service instance used by Port instances.
+   */
+  boost::asio::io_service &io_service;
+
   /**
    * This mutex protects modifications of the attribute "device".  If
    * you use the attribute "device" from a thread other than the main
    * thread, you must hold this mutex.
    */
-  Mutex mutex;
+  mutable Mutex mutex;
 
   /** the index of this device in the global list */
   const unsigned index;
@@ -187,6 +196,12 @@ class DeviceDescriptor final : private Notify, private PortLineSplitter {
   ExternalSettings settings_received;
 
   /**
+   * If this device has failed, then this attribute may contain an
+   * error message.
+   */
+  tstring error_message;
+
+  /**
    * Number of port failures since the device was last reset.
    *
    * @param see ResetFailureCounter()
@@ -215,7 +230,8 @@ class DeviceDescriptor final : private Notify, private PortLineSplitter {
   bool borrowed;
 
 public:
-  DeviceDescriptor(unsigned index, PortListener *port_listener);
+  DeviceDescriptor(boost::asio::io_service &_io_service,
+                   unsigned index, PortListener *port_listener);
   ~DeviceDescriptor() {
     assert(!IsOccupied());
   }
@@ -237,6 +253,11 @@ public:
 
   gcc_pure
   PortState GetState() const;
+
+  tstring GetErrorMessage() const {
+    const ScopeLock protect(mutex);
+    return error_message;
+  }
 
   /**
    * Was there a failure on the #Port object?
@@ -506,6 +527,10 @@ private:
 
   /* virtual methods from class Notify */
   void OnNotification() override;
+
+  /* virtual methods from class PortListener */
+  void PortStateChanged() override;
+  void PortError(const char *msg) override;
 
   /* virtual methods from DataHandler  */
   void DataReceived(const void *data, size_t length) override;

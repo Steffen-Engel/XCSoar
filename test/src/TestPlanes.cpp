@@ -28,7 +28,9 @@
 #include "Units/System.hpp"
 #include "TestUtil.hpp"
 #include "Util/StringAPI.hxx"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
+
+#include <stdlib.h>
 
 static void
 TestReader()
@@ -82,9 +84,7 @@ TestWriter()
 
   PlaneGlue::WriteFile(plane, Path(_T("output/D-4449.xcp")));
 
-  FileLineReader reader(Path(_T("output/D-4449.xcp")), IgnoreError());
-  if (reader.error())
-    return;
+  FileLineReader reader(Path(_T("output/D-4449.xcp")));
 
   unsigned count = 0;
   bool found1 = false, found2 = false, found3 = false, found4 = false;
@@ -137,11 +137,14 @@ TestWriter()
 }
 
 int main(int argc, char **argv)
-{
+try {
   plan_tests(30);
 
   TestReader();
   TestWriter();
 
   return exit_status();
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }

@@ -25,8 +25,7 @@ Copyright_License {
 #include "FlarmNetRecord.hpp"
 #include "FlarmNetDatabase.hpp"
 #include "Util/StringUtil.hpp"
-#include "Util/CharUtil.hpp"
-#include "Util/Error.hxx"
+#include "Util/CharUtil.hxx"
 #include "IO/LineReader.hpp"
 #include "IO/FileLineReader.hpp"
 
@@ -145,10 +144,9 @@ FlarmNetReader::LoadFile(NLineReader &reader, FlarmNetDatabase &database)
 
 unsigned
 FlarmNetReader::LoadFile(Path path, FlarmNetDatabase &database)
-{
-  FileLineReaderA file(path, IgnoreError());
-  if (file.error())
-    return 0;
-
+try {
+  FileLineReaderA file(path);
   return LoadFile(file, database);
+} catch (const std::runtime_error &e) {
+  return 0;
 }

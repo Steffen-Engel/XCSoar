@@ -23,6 +23,7 @@ Copyright_License {
 
 #include "MapOverlayWidget.hpp"
 #include "Dialogs/Error.hpp"
+#include "Dialogs/JobDialog.hpp"
 #include "UIGlobals.hpp"
 #include "Screen/Bitmap.hpp"
 #include "Screen/Canvas.hpp"
@@ -35,6 +36,8 @@ Copyright_License {
 #include "MapWindow/OverlayBitmap.hpp"
 #include "MapWindow/GlueMapWindow.hpp"
 #include "Language/Language.hpp"
+#include "Weather/PCMet/Overlays.hpp"
+#include "Interface.hpp"
 #include "LocalPath.hpp"
 #include "OS/Path.hpp"
 #include "OS/FileUtil.hpp"
@@ -50,11 +53,18 @@ class WeatherMapOverlayListWidget final
   enum Buttons {
     USE,
     DISABLE,
+    UPDATE,
   };
 
   struct Item {
     StaticString<80> name;
     AllocatedPath path;
+
+    std::unique_ptr<PCMet::OverlayInfo> pc_met;
+
+    explicit Item(PCMet::OverlayInfo &&_pc_met)
+      :name(_pc_met.label.c_str()), path(_pc_met.path.c_str()),
+       pc_met(new PCMet::OverlayInfo(std::move(_pc_met))) {}
 
     Item(const TCHAR *_name, Path _path)
       :name(_name), path(_path) {}
@@ -69,7 +79,7 @@ class WeatherMapOverlayListWidget final
 
   ButtonPanelWidget *buttons_widget;
 
-  Button *use_button, *disable_button;
+  Button *use_button, *disable_button, *update_button;
 
   std::vector<Item> items;
 
@@ -127,7 +137,7 @@ private:
 
     preview_bitmap.Reset();
     try {
-      if (!preview_bitmap.LoadFile(path))
+      if (path.IsNull() || !preview_bitmap.LoadFile(path))
         return;
     } catch (const std::exception &e) {
       return;
@@ -191,6 +201,8 @@ protected:
   }
 
 private:
+  void SetOverlay(Path path, const TCHAR *label=nullptr);
+
   void UseClicked(unsigned i);
 
   void DisableClicked() {
@@ -201,6 +213,8 @@ private:
     UpdateActiveIndex();
   }
 
+  void UpdateClicked();
+
   /* virtual methods from class ActionListener */
   virtual void OnAction(int id) override;
 };
@@ -210,12 +224,18 @@ WeatherMapOverlayListWidget::CreateButtons(ButtonPanel &buttons)
 {
   use_button = buttons.Add(_("Use"), *this, USE);
   disable_button = buttons.Add(_("Disable"), *this, DISABLE);
+  update_button = buttons.Add(_("Update"), *this, UPDATE);
 }
 
 void
 WeatherMapOverlayListWidget::UpdateList()
 {
   items.clear();
+
+  const auto &pc_met_settings = CommonInterface::GetComputerSettings().weather.pcmet;
+  if (pc_met_settings.ftp_credentials.IsDefined())
+    for (auto &i : PCMet::CollectOverlays())
+      items.emplace_back(std::move(i));
 
   struct Visitor : public File::Visitor {
     std::vector<Item> &items;
@@ -243,6 +263,7 @@ WeatherMapOverlayListWidget::UpdateList()
 
   const bool empty = items.empty();
   use_button->SetEnabled(!empty);
+  update_button->SetEnabled(pc_met_settings.ftp_credentials.IsDefined());
 
   UpdateActiveIndex();
 }
@@ -251,7 +272,7 @@ WeatherMapOverlayListWidget::UpdateList()
  * Set up reasonable defaults for the given overlay.
  */
 static void
-SetupOverlay(MapOverlayBitmap &bmp, Path::const_pointer name)
+SetupOverlay(MapOverlayBitmap &bmp, Path::const_pointer_type name)
 {
   /* File name convention according to DWD paper:
    *
@@ -302,22 +323,15 @@ SetupOverlay(MapOverlayBitmap &bmp, Path::const_pointer name)
 }
 
 void
-WeatherMapOverlayListWidget::UseClicked(unsigned i)
+WeatherMapOverlayListWidget::SetOverlay(Path path, const TCHAR *label)
 {
-  if (int(i) == active_index) {
-    DisableClicked();
-    return;
-  }
-
   auto *map = UIGlobals::GetMap();
   if (map == nullptr)
     return;
 
-  const Path path = items[i].path;
-
   std::unique_ptr<MapOverlayBitmap> bmp;
   try {
-    bmp.reset(new MapOverlayBitmap(items[i].path));
+    bmp.reset(new MapOverlayBitmap(path));
   } catch (const std::exception &e) {
     ShowError(e, _("Weather"));
     return;
@@ -325,9 +339,74 @@ WeatherMapOverlayListWidget::UseClicked(unsigned i)
 
   SetupOverlay(*bmp, path.GetBase().c_str());
 
+  if (label != nullptr)
+    bmp->SetLabel(label);
+
   map->SetOverlay(std::move(bmp));
 
   UpdateActiveIndex();
+}
+
+void
+WeatherMapOverlayListWidget::UseClicked(unsigned i)
+{
+  if (int(i) == active_index) {
+    DisableClicked();
+    return;
+  }
+
+  const TCHAR *label = nullptr;
+  auto &item = items[i];
+  if (item.pc_met) {
+    const auto &info = *item.pc_met;
+    label = info.label.c_str();
+    if (item.path.IsNull()) {
+      const auto &settings = CommonInterface::GetComputerSettings().weather.pcmet;
+
+      DialogJobRunner runner(UIGlobals::GetMainWindow(),
+                             UIGlobals::GetDialogLook(),
+                             _("Download"), true);
+
+      try {
+        auto overlay = PCMet::DownloadOverlay(info,
+                                              BrokenDateTime::NowUTC(),
+                                              settings, runner);
+        item.path = AllocatedPath(overlay.path.c_str());
+        UpdatePreview(item.path);
+      } catch (const std::exception &exception) {
+        ShowError(exception, _T("pc_met"));
+      }
+    }
+  }
+
+  SetOverlay(item.path, label);
+}
+
+void
+WeatherMapOverlayListWidget::UpdateClicked()
+{
+  const auto &settings = CommonInterface::GetComputerSettings().weather.pcmet;
+  DialogJobRunner runner(UIGlobals::GetMainWindow(),
+                         UIGlobals::GetDialogLook(),
+                         _("Download"), true);
+  BrokenDateTime now = BrokenDateTime::NowUTC();
+  int i = 0;
+  for (auto &item : items) {
+    if (item.pc_met) {
+      try {
+        const auto &info = *item.pc_met;
+        auto overlay = PCMet::DownloadOverlay(info, now, settings, runner);
+        if (i == active_index)
+          SetOverlay(overlay.path, info.label.c_str());
+        item.path = AllocatedPath(overlay.path.c_str());
+      } catch (const std::exception &exception) {
+        ShowError(exception, _T("pc_met"));
+        break;
+      }
+    }
+    ++i;
+  }
+  UpdatePreview();
 }
 
 void
@@ -340,6 +419,10 @@ WeatherMapOverlayListWidget::OnAction(int id)
 
   case DISABLE:
     DisableClicked();
+    break;
+
+  case UPDATE:
+    UpdateClicked();
     break;
   }
 }

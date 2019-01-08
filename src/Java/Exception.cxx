@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2015 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2010-2015 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -43,6 +43,8 @@ Java::RethrowException(JNIEnv *env)
 	if (exception == nullptr)
 		return;
 
+	LocalRef<jthrowable> ref(env, exception);
+
 	env->ExceptionClear();
-	throw Exception(env, Java::LocalRef<jthrowable>(env, exception));
+	throw Exception(env, exception);
 }

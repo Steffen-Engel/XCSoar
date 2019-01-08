@@ -163,7 +163,7 @@ MapWindow::DrawWaves(Canvas &canvas)
 {
   const WaveRenderer renderer(look.wave);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   if (skylines_data != nullptr) {
     ScopeLock protect(skylines_data->mutex);
     renderer.Draw(canvas, render_projection, *skylines_data);
@@ -183,7 +183,7 @@ MapWindow::RenderGlide(Canvas &canvas)
 
 void
 MapWindow::Render(Canvas &canvas, const PixelRect &rc)
-{ 
+{
   const NMEAInfo &basic = Basic();
 
   // reset label over-write preventer
@@ -201,6 +201,14 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   if (basic.location_available)
       aircraft_pos = render_projection.GeoToScreen(basic.location);
 
+  // General layout principles:
+  // - lower elevation drawn on bottom layers
+  // - increasing elevation drawn above
+  // - increasing importance drawn above
+  // - attempt to not obscure text
+
+  //////////////////////////////////////////////// items on ground
+
   // Render terrain, groundline and topography
   draw_sw.Mark("RenderTerrain");
   RenderTerrain(canvas);
@@ -214,16 +222,21 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   draw_sw.Mark("RenderOverlays");
   RenderOverlays(canvas);
 
+  draw_sw.Mark("DrawNOAAStations");
+  RenderNOAAStations(canvas);
+
+  //////////////////////////////////////////////// glide range info
+
   draw_sw.Mark("RenderFinalGlideShading");
   RenderFinalGlideShading(canvas);
 
-  // Render track bearing (projected track ground/air relative)
-  draw_sw.Mark("DrawTrackBearing");
-  RenderTrackBearing(canvas, aircraft_pos);
+  //////////////////////////////////////////////// airspace
 
   // Render airspace
   draw_sw.Mark("RenderAirspace");
   RenderAirspace(canvas);
+
+  //////////////////////////////////////////////// task
 
   // Render task, waypoints
   draw_sw.Mark("DrawContest");
@@ -235,13 +248,7 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   draw_sw.Mark("DrawWaypoints");
   DrawWaypoints(canvas);
 
-  draw_sw.Mark("DrawNOAAStations");
-  RenderNOAAStations(canvas);
-
-  draw_sw.Mark("RenderMisc1");
-  // Render weather/terrain max/min values
-  DrawTaskOffTrackIndicator(canvas);
-
+  //////////////////////////////////////////////// aircraft level items
   // Render the snail trail
   if (basic.location_available)
     RenderTrail(canvas, aircraft_pos);
@@ -251,27 +258,38 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   // Render estimate of thermal location
   DrawThermalEstimate(canvas);
 
+  //////////////////////////////////////////////// text items
   // Render topography on top of airspace, to keep the text readable
   draw_sw.Mark("RenderTopographyLabels");
   RenderTopographyLabels(canvas);
 
+  //////////////////////////////////////////////// navigation overlays
   // Render glide through terrain range
   draw_sw.Mark("RenderGlide");
   RenderGlide(canvas);
 
+  draw_sw.Mark("RenderMisc1");
+  // Render weather/terrain max/min values
+  DrawTaskOffTrackIndicator(canvas);
+
+  // Render track bearing (projected track ground/air relative)
+  draw_sw.Mark("DrawTrackBearing");
+  RenderTrackBearing(canvas, aircraft_pos);
+
   draw_sw.Mark("RenderMisc2");
-
   DrawBestCruiseTrack(canvas, aircraft_pos);
-
-  airspace_renderer.DrawIntersections(canvas, render_projection);
 
   // Draw wind vector at aircraft
   if (basic.location_available)
     DrawWind(canvas, aircraft_pos, rc);
 
+  // Render compass
+  DrawCompass(canvas, rc);
+
+  //////////////////////////////////////////////// traffic
   // Draw traffic
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   DrawSkyLinesTraffic(canvas);
 #endif
 
@@ -280,12 +298,14 @@ MapWindow::Render(Canvas &canvas, const PixelRect &rc)
   if (basic.location_available)
     DrawFLARMTraffic(canvas, aircraft_pos);
 
+  //////////////////////////////////////////////// own aircraft
   // Finally, draw you!
   if (basic.location_available)
     AircraftRenderer::Draw(canvas, GetMapSettings(), look.aircraft,
                            basic.attitude.heading - render_projection.GetScreenAngle(),
                            aircraft_pos);
 
-  // Render compass
-  DrawCompass(canvas, rc);
+  //////////////////////////////////////////////// important overlays
+  // Draw intersections on top of aircraft
+  airspace_renderer.DrawIntersections(canvas, render_projection);
 }

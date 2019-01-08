@@ -272,9 +272,9 @@ PrintHelper::abstracttask_print(const AbstractTask &task,
                 : 0)
      << " " << stats.total.vario.get_value()
      << " " << stats.effective_mc
-     << " " << (stats.total.pirker.IsDefined()
-                ? stats.get_pirker_speed()
-                : 0)
+     << " " << (stats.task_valid
+                ? stats.inst_speed_slow
+                : -1)
      << " " << stats.total.solution_remaining.altitude_difference
      << "\n";
   f6.flush();

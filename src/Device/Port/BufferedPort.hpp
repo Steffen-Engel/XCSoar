@@ -28,7 +28,7 @@ Copyright_License {
 #include "IO/DataHandler.hpp"
 #include "Thread/Mutex.hpp"
 #include "Thread/Cond.hxx"
-#include "Util/StaticFifoBuffer.hpp"
+#include "Util/StaticFifoBuffer.hxx"
 
 #include <stdint.h>
 
@@ -58,10 +58,6 @@ class BufferedPort : public Port, protected DataHandler {
 
 public:
   BufferedPort(PortListener *_listener, DataHandler &_handler);
-
-#ifndef NDEBUG
-  virtual ~BufferedPort();
-#endif
 
 protected:
   void BeginClose();

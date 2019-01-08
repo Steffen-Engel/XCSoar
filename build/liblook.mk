@@ -12,6 +12,7 @@ LOOK_SOURCES := \
 	$(SRC)/Look/VarioLook.cpp \
 	$(SRC)/Look/ChartLook.cpp \
 	$(SRC)/Look/MapLook.cpp \
+	$(SRC)/Look/OverlayLook.cpp \
 	$(SRC)/Look/TopographyLook.cpp \
 	$(SRC)/Look/WindArrowLook.cpp \
 	$(SRC)/Look/ThermalBandLook.cpp \
@@ -32,7 +33,8 @@ LOOK_SOURCES := \
 	$(SRC)/Look/VarioBarLook.cpp \
 	$(SRC)/Look/IconLook.cpp \
 	$(SRC)/Look/ThermalAssistantLook.cpp \
-	$(SRC)/Look/WaveLook.cpp
+	$(SRC)/Look/WaveLook.cpp \
+	$(SRC)/Look/ClimbPercentLook.cpp
 
 LOOK_CPPFLAGS_INTERNAL = $(SCREEN_CPPFLAGS)
 

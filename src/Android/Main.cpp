@@ -35,7 +35,6 @@ Copyright_License {
 #include "NativePortListener.hpp"
 #include "NativeInputListener.hpp"
 #include "TextUtil.hpp"
-#include "LogCat.hpp"
 #include "Product.hpp"
 #include "Nook.hpp"
 #include "Language/Language.hpp"
@@ -60,7 +59,8 @@ Copyright_License {
 #include "Java/URL.hxx"
 #include "Compiler.h"
 #include "org_xcsoar_NativeView.h"
-#include "IO/Async/GlobalIOThread.hpp"
+#include "IO/Async/GlobalAsioThread.hpp"
+#include "IO/Async/AsioThread.hpp"
 #include "Thread/Debug.hpp"
 
 #include "IOIOHelper.hpp"
@@ -122,7 +122,7 @@ Java_org_xcsoar_NativeView_initializeNative(JNIEnv *env, jobject obj,
 
   InitThreadDebug();
 
-  InitialiseIOThread();
+  InitialiseAsioThread();
 
   Java::Init(env);
   Java::Object::Initialise(env);
@@ -140,7 +140,7 @@ Java_org_xcsoar_NativeView_initializeNative(JNIEnv *env, jobject obj,
   PortBridge::Initialise(env);
   BluetoothHelper::Initialise(env);
   NativeLeScanCallback::Initialise(env);
-  IOIOHelper::Initialise(env);
+  const bool have_ioio = IOIOHelper::Initialise(env);
   NativeBMP085Listener::Initialise(env);
   BMP085Device::Initialise(env);
   NativeI2CbaroListener::Initialise(env);
@@ -172,7 +172,8 @@ Java_org_xcsoar_NativeView_initializeNative(JNIEnv *env, jobject obj,
   Vibrator::Initialise(env);
   vibrator = Vibrator::Create(env, *context);
 
-  ioio_helper = new IOIOHelper(env);
+  if (have_ioio)
+    ioio_helper = new IOIOHelper(env);
 
 #ifdef __arm__
   if (IsNookSimpleTouch()) {
@@ -189,13 +190,6 @@ Java_org_xcsoar_NativeView_initializeNative(JNIEnv *env, jobject obj,
   return Startup();
 }
 
-void
-OnLogCatFinished(bool crash_found)
-{
-  if (crash_found)
-    CommonInterface::main_window->SendCrash();
-}
-
 gcc_visibility_default
 JNIEXPORT void JNICALL
 Java_org_xcsoar_NativeView_runNative(JNIEnv *env, jobject obj)
@@ -203,8 +197,6 @@ Java_org_xcsoar_NativeView_runNative(JNIEnv *env, jobject obj)
   InitThreadDebug();
 
   OpenGL::Initialise();
-
-  CheckLogCat(*io_thread);
 
   CommonInterface::main_window->RunEventLoop();
 }
@@ -218,8 +210,6 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   if (IsNookSimpleTouch()) {
     Nook::ExitFastMode();
   }
-
-  StopLogCat();
 
   InitThreadDebug();
 
@@ -271,7 +261,7 @@ Java_org_xcsoar_NativeView_deinitializeNative(JNIEnv *env, jobject obj)
   NativeView::Deinitialise(env);
   Java::URL::Deinitialise(env);
 
-  DeinitialiseIOThread();
+  DeinitialiseAsioThread();
 }
 
 gcc_visibility_default

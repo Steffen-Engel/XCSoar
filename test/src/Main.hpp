@@ -4,6 +4,8 @@
  *
  */
 
+#include "Util/PrintException.hxx"
+
 #if defined(ENABLE_CMDLINE) || defined(ENABLE_MAIN_WINDOW)
 #include "OS/Args.hpp"
 #endif
@@ -32,7 +34,7 @@
 #include "Screen/SingleWindow.hpp"
 #include "Form/ActionListener.hpp"
 #include "UIGlobals.hpp"
-#include "Util/CharUtil.hpp"
+#include "Util/CharUtil.hxx"
 #include "Util/NumberParser.hpp"
 #define ENABLE_SCREEN
 #endif
@@ -284,7 +286,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
   try {
     Main();
   } catch (const std::exception &e) {
-    fprintf(stderr, "%s\n", e.what());
+    PrintException(e);
     result = EXIT_FAILURE;
   }
 

@@ -24,21 +24,16 @@ Copyright_License {
 #ifndef XCSOAR_LUA_TIMER_HPP
 #define XCSOAR_LUA_TIMER_HPP
 
-#include "Compiler.h"
-
 struct lua_State;
 
 namespace Lua {
-  /**
-   * Provide the Lua class "xcsoar.timer".
-   */
-  void InitTimer(lua_State *L);
 
-  /**
-   * Is there at least one pending timer?
-   */
-  gcc_pure
-  bool HasPendingTimer(lua_State *L);
+/**
+ * Provide the Lua class "xcsoar.timer".
+ */
+void
+InitTimer(lua_State *L);
+
 }
 
 #endif

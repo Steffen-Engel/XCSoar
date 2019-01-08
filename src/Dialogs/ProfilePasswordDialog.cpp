@@ -31,14 +31,17 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "OS/Path.hpp"
 #include "Util/StringAPI.hxx"
-#include "Util/Error.hxx"
 
 TriState
 ProfileFileHasPassword(Path path)
 {
   ProfileMap map;
-  if (!Profile::LoadFile(map, path, IgnoreError()))
+
+  try {
+    Profile::LoadFile(map, path);
+  } catch (const std::runtime_error &) {
     return TriState::UNKNOWN;
+  }
 
   return map.Exists(ProfileKeys::Password)
     ? TriState::TRUE
@@ -50,12 +53,12 @@ CheckProfilePassword(const ProfileMap &map)
 {
   /* oh no, profile passwords are not truly secure! */
 
-  StringBuffer<TCHAR, 80> profile_password;
+  BasicStringBuffer<TCHAR, 80> profile_password;
   if (!map.Get(ProfileKeys::Password, profile_password))
       /* not password protected */
       return ProfilePasswordResult::UNPROTECTED;
 
-  StringBuffer<TCHAR, 80> user_password;
+  BasicStringBuffer<TCHAR, 80> user_password;
   user_password.clear();
   if (!TextEntryDialog(user_password, _("Enter your password")))
     return ProfilePasswordResult::CANCEL;
@@ -66,17 +69,15 @@ CheckProfilePassword(const ProfileMap &map)
 }
 
 ProfilePasswordResult
-CheckProfileFilePassword(Path path, Error &error)
+CheckProfileFilePassword(Path path)
 {
   ProfileMap map;
-  if (!Profile::LoadFile(map, path, error))
-    return ProfilePasswordResult::ERROR;
-
+  Profile::LoadFile(map, path);
   return CheckProfilePassword(map);
 }
 
 bool
-CheckProfilePasswordResult(ProfilePasswordResult result, const Error &error)
+CheckProfilePasswordResult(ProfilePasswordResult result)
 {
   switch (result) {
   case ProfilePasswordResult::UNPROTECTED:
@@ -89,10 +90,6 @@ CheckProfilePasswordResult(ProfilePasswordResult result, const Error &error)
 
   case ProfilePasswordResult::CANCEL:
     return false;
-
-  case ProfilePasswordResult::ERROR:
-    ShowError(error, _("Password"));
-    return false;
   }
 
   gcc_unreachable();
@@ -101,7 +98,7 @@ CheckProfilePasswordResult(ProfilePasswordResult result, const Error &error)
 bool
 SetProfilePasswordDialog(ProfileMap &map)
 {
-  StringBuffer<TCHAR, 80> new_password;
+  BasicStringBuffer<TCHAR, 80> new_password;
   new_password.clear();
   if (!TextEntryDialog(new_password, _("Enter a new password")))
     return false;

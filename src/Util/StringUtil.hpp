@@ -45,36 +45,6 @@ char *
 CopyString(char *dest, const char *src, size_t size);
 
 /**
- * Copy all ASCII characters to the destination string
- * (i.e. 0x01..0x7f), ignoring the others.  In the worst case, the
- * destination buffer must be as large as the source buffer.  Can be
- * used for in-place operation.
- */
-gcc_nonnull_all
-void
-CopyASCII(char *dest, const char *src);
-
-/**
- * Copy all ASCII characters to the destination string
- * (i.e. 0x01..0x7f), ignoring the others.
- *
- * This function does not null-terminate the destination buffer.
- *
- * @param dest_size the size of the destination buffer
- * @return a pointer to the written end of the destination buffer
- */
-gcc_nonnull_all
-char *
-CopyASCII(char *dest, size_t dest_size, const char *src, const char *src_end);
-
-/**
- * Like CopyUpper(), but convert all letters to upper-case.
- */
-gcc_nonnull_all
-void
-CopyASCIIUpper(char *dest, const char *src);
-
-/**
  * Skips whitespace at the beginning of the string, and returns the
  * first non-whitespace character.  If the string has no
  * non-whitespace characters, then a pointer to the NULL terminator is
@@ -130,15 +100,5 @@ StripRight(char *p);
 gcc_nonnull_all
 char *
 NormalizeSearchString(char *dest, const char *src);
-
-/**
- * Copy a portion of the string to a new allocation.  The given length
- * must not be smaller than the actual length of the null-terminated
- * string.  The return value will be null-terminated and must be freed
- * with free().
- */
-gcc_malloc gcc_nonnull_all
-char *
-DuplicateString(const char *p, size_t length);
 
 #endif

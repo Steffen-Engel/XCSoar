@@ -24,15 +24,16 @@
 #include "OS/Args.hpp"
 #include "IO/FileTransaction.hpp"
 #include "IO/FileLineReader.hpp"
-#include "IO/TextWriter.hpp"
-#include "Util/Error.hxx"
+#include "IO/FileOutputStream.hxx"
+#include "IO/BufferedOutputStream.hxx"
+#include "Util/PrintException.hxx"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-static bool
-FixGRecord(NLineReader &reader, TextWriter &writer)
+static void
+FixGRecord(NLineReader &reader, BufferedOutputStream &writer)
 {
   GRecord grecord;
   grecord.Initialize();
@@ -65,25 +66,27 @@ FixGRecord(NLineReader &reader, TextWriter &writer)
 
     grecord.AppendRecordToBuffer(line);
 
-    if (!writer.WriteLine(line))
-      return false;
+    writer.Write(line);
+    writer.Write('\n');
   }
 
   grecord.FinalizeBuffer();
   grecord.WriteTo(writer);
-  return true;
 }
 
-static bool
+static void
 FixGRecord(NLineReader &reader, Path dest_path)
 {
-  TextWriter writer(dest_path);
-  return writer.IsOpen() && FixGRecord(reader, writer) && writer.Flush();
+  FileOutputStream file(dest_path);
+  BufferedOutputStream writer(file);
+  FixGRecord(reader, writer);
+  writer.Flush();
+  file.Commit();
 }
 
 int
 main(int argc, char **argv)
-{
+try {
   Args args(argc, argv, "FILE.igc");
   const auto path = args.ExpectNextPath();
   args.ExpectEnd();
@@ -91,12 +94,7 @@ main(int argc, char **argv)
   {
     GRecord grecord;
     grecord.Initialize();
-
-    Error error;
-    if (!grecord.VerifyGRecordInFile(path, error)) {
-      fprintf(stderr, "%s\n", error.GetMessage());
-      return EXIT_FAILURE;
-    }
+    grecord.VerifyGRecordInFile(path);
   }
 
   printf("Valid G record found\n");
@@ -104,17 +102,9 @@ main(int argc, char **argv)
   FileTransaction transaction(path);
 
   {
-    Error error;
-    FileLineReaderA reader(path, error);
-    if (reader.error()) {
-      fprintf(stderr, "%s\n", error.GetMessage());
-      return EXIT_FAILURE;
-    }
+    FileLineReaderA reader(path);
 
-    if (!FixGRecord(reader, transaction.GetTemporaryPath())) {
-      fprintf(stderr, "Failed to write output file\n");
-      return EXIT_FAILURE;
-    }
+    FixGRecord(reader, transaction.GetTemporaryPath());
   }
 
   if (!transaction.Commit()) {
@@ -124,4 +114,7 @@ main(int argc, char **argv)
 
   printf("New G record written\n");
   return EXIT_SUCCESS;
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }

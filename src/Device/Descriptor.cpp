@@ -35,6 +35,7 @@ Copyright_License {
 #include "NMEA/Info.hpp"
 #include "Thread/Mutex.hpp"
 #include "Util/StringAPI.hxx"
+#include "Util/ConvertString.hpp"
 #include "Logger/NMEALogger.hpp"
 #include "Language/Language.hpp"
 #include "Operation/Operation.hpp"
@@ -60,6 +61,8 @@ Copyright_License {
 #ifdef __APPLE__
 #include "Apple/InternalSensors.hpp"
 #endif
+
+#include <stdexcept>
 
 #include <assert.h>
 
@@ -95,9 +98,10 @@ public:
   };
 };
 
-DeviceDescriptor::DeviceDescriptor(unsigned _index,
+DeviceDescriptor::DeviceDescriptor(boost::asio::io_service &_io_service,
+                                   unsigned _index,
                                    PortListener *_port_listener)
-  :index(_index),
+  :io_service(_io_service), index(_index),
    port_listener(_port_listener),
    open_job(nullptr),
    port(nullptr), monitor(nullptr), dispatcher(nullptr),
@@ -216,7 +220,12 @@ DeviceDescriptor::CancelAsync()
   assert(open_job != nullptr);
 
   async.Cancel();
-  async.Wait();
+
+  try {
+    async.Wait();
+  } catch (const std::runtime_error &e) {
+    LogError(e);
+  }
 
   delete open_job;
   open_job = nullptr;
@@ -407,6 +416,11 @@ DeviceDescriptor::DoOpen(OperationEnvironment &env)
 {
   assert(config.IsAvailable());
 
+  {
+    ScopeLock protect(mutex);
+    error_message.clear();
+  }
+
   if (config.port_type == DeviceConfig::PortType::INTERNAL)
     return OpenInternalSensors();
 
@@ -424,7 +438,30 @@ DeviceDescriptor::DoOpen(OperationEnvironment &env)
 
   reopen_clock.Update();
 
-  Port *port = OpenPort(config, port_listener, *this);
+  Port *port;
+  try {
+    port = OpenPort(io_service, config, this, *this);
+  } catch (const std::runtime_error &e) {
+    TCHAR name_buffer[64];
+    const TCHAR *name = config.GetPortName(name_buffer, 64);
+
+    LogError(WideToUTF8Converter(name), e);
+
+    StaticString<256> msg;
+
+    const UTF8ToWideConverter what(e.what());
+    if (what.IsValid()) {
+      ScopeLock protect(mutex);
+      error_message = what;
+    }
+
+    msg.Format(_T("%s: %s (%s)"), _("Unable to open port"), name,
+               (const TCHAR *)what);
+
+    env.SetErrorMessage(msg);
+    return false;
+  }
+
   if (port == nullptr) {
     TCHAR name_buffer[64];
     const TCHAR *name = config.GetPortName(name_buffer, 64);
@@ -1118,10 +1155,42 @@ DeviceDescriptor::OnNotification()
   assert(InMainThread());
   assert(open_job != nullptr);
 
-  async.Wait();
+  try {
+    async.Wait();
+  } catch (const std::runtime_error &e) {
+    LogError(e);
+  }
 
   delete open_job;
   open_job = nullptr;
+}
+
+void
+DeviceDescriptor::PortStateChanged()
+{
+  if (port_listener != nullptr)
+    port_listener->PortStateChanged();
+}
+
+void
+DeviceDescriptor::PortError(const char *msg)
+{
+  {
+    TCHAR buffer[64];
+    LogFormat(_T("Error on device %s: %s"),
+              config.GetPortName(buffer, 64), msg);
+  }
+
+  {
+    const UTF8ToWideConverter tmsg(msg);
+    if (tmsg.IsValid()) {
+      ScopeLock protect(mutex);
+      error_message = tmsg;
+    }
+  }
+
+  if (port_listener != nullptr)
+    port_listener->PortError(msg);
 }
 
 void

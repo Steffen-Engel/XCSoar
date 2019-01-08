@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "Task.hpp"
 #include "Geo.hpp"
-#include "Util.hpp"
+#include "Util.hxx"
 #include "Util/StringAPI.hxx"
 #include "Interface.hpp"
 #include "Components.hpp"
@@ -222,10 +222,10 @@ l_task_index(lua_State *L)
       Lua::Push(L, task_stats.total.remaining_effective.GetSpeed());
   } else if (StringIsEqual(name, "task_speed_instant")) {
       const TaskStats &task_stats = CommonInterface::Calculated().task_stats;
-      if (!task_stats.task_valid || !task_stats.IsPirkerSpeedAvailable()) 
-        return 0;
+      if (!task_stats.task_valid)
+        return -1;
 
-      Lua::Push(L, task_stats.get_pirker_speed());
+      Lua::Push(L, task_stats.inst_speed_fast);
   } else if (StringIsEqual(name, "task_speed_hour")) {
       const WindowStats &window = CommonInterface::Calculated().task_stats.last_hour;
       if (window.duration < 0)

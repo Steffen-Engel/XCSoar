@@ -78,6 +78,15 @@ public:
   /** Risk MC setting (m/s) */
   double current_risk_mc;
 
+  /** Working height floor (m MSL) */
+  double height_min_working;
+
+  /** Working height ceiling (m MSL) */
+  double height_max_working;
+
+  /** Ratio of current height above working floor to working height band */
+  double height_fraction_working;
+
   /** Summary of ordered task progress */
   TaskSummary ordered_summary;
 
@@ -90,6 +99,16 @@ public:
    * Reset the task stats
    */
   void ResetTask();
+
+  /**
+   * Automatic positive vario scale from history [m/s]
+   */
+  double vario_scale_positive;
+
+  /**
+   * Automatic negative vario scale from history [m/s]
+   */
+  double vario_scale_negative;
 };
 
 static_assert(std::is_trivial<CommonStats>::value, "type is not trivial");

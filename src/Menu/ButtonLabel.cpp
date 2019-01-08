@@ -27,7 +27,8 @@ Copyright_License {
 #include "Language/Language.hpp"
 #include "Util/StringAPI.hxx"
 #include "Util/StringBuilder.hxx"
-#include "Util/CharUtil.hpp"
+#include "Util/StringUtil.hpp"
+#include "Util/CharUtil.hxx"
 #include "Util/Macros.hpp"
 
 #include <algorithm>

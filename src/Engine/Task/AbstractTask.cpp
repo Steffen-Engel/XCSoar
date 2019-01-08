@@ -40,6 +40,7 @@ AbstractTask::AbstractTask(TaskType _type,
    mc_lpf_valid(false)
 {
    stats.reset();
+   stats_computer.Reset(stats);
 }
 
 bool 
@@ -179,16 +180,6 @@ Copy(DistanceStat &stat, const GlideResult &solution)
     stat.Reset();
 }
 
-static void
-CalculatePirker(DistanceStat &pirker, const DistanceStat &planned,
-                const DistanceStat &remaining_effective)
-{
-  if (planned.IsDefined() && remaining_effective.IsDefined())
-    pirker.SetDistance(planned.GetDistance() -
-                        remaining_effective.GetDistance());
-  else
-    pirker.Reset();
-}
 
 void
 AbstractTask::UpdateGlideSolutions(const AircraftState &state,
@@ -209,6 +200,20 @@ AbstractTask::UpdateGlideSolutions(const AircraftState &state,
     stats.current_leg.solution_mc0 = stats.current_leg.solution_remaining;
   }
 
+  // instantaneous speed
+  if (stats.total.solution_remaining.IsDefined() &&
+      stats.current_leg.solution_remaining.IsDefined()) {
+    const double ss = stats.total.solution_remaining.InstantSpeed(
+        state,
+        stats.current_leg.solution_remaining,
+        glide_polar);
+
+    stats.inst_speed_fast = stats_computer.inst_speed_fast.Update(ss);
+    stats.inst_speed_slow = stats_computer.inst_speed_slow.Update(ss);
+  } else {
+    stats.inst_speed_fast = stats.inst_speed_slow = -1;
+  }
+
   GlideSolutionTravelled(state, glide_polar,
                          stats.total.solution_travelled,
                            stats.current_leg.solution_travelled);
@@ -220,12 +225,6 @@ AbstractTask::UpdateGlideSolutions(const AircraftState &state,
                          stats.current_leg.remaining_effective,
                          stats.total.solution_remaining,
                          stats.current_leg.solution_remaining);
-
-  CalculatePirker(stats.total.pirker, stats.total.planned,
-                  stats.total.remaining_effective);
-
-  CalculatePirker(stats.current_leg.pirker, stats.current_leg.planned,
-                  stats.current_leg.remaining_effective);
 
   Copy(stats.current_leg.remaining, stats.current_leg.solution_remaining);
   Copy(stats.current_leg.travelled, stats.current_leg.solution_travelled);
@@ -314,6 +313,7 @@ AbstractTask::Reset()
   ResetAutoMC();
   ce_lpf.Reset(1);
   stats.reset();
+  stats_computer.Reset(stats);
   force_full_update = true;
 }
 

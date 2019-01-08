@@ -26,6 +26,7 @@ Copyright_License {
 namespace ProfileKeys {
 
 const char UIScale[] = "UIScale";
+const char CustomDPI[] = "CustomDPI";
 const char Password[] = "Password";
 const char AirspaceWarning[] = "AirspaceWarn";
 const char AirspaceWarningDialog[] = "AirspaceWarnDialog";
@@ -57,6 +58,7 @@ const char TerrainContours[] = "TerrainContours";
 const char DrawTopography[] = "DrawTopology";
 const char FinalGlideTerrain[] = "FinalGlideTerrain";
 const char AutoWind[] = "AutoWind";
+const char ExternalWind[] = "ExternalWind";
 const char HomeWaypoint[] = "HomeWaypoint";
 const char HomeLocation[] = "HomeLocation";
 const char LiftUnitsValue[] = "LiftUnit";
@@ -85,6 +87,7 @@ const char AcknowledgementTime[] = "AcknowledgementTime";
 const char AirfieldFile[] = "AirfieldFile"; // pL
 const char AirspaceFile[] = "AirspaceFile"; // pL
 const char AdditionalAirspaceFile[] = "AdditionalAirspaceFile"; // pL
+const char FlarmFile[] = "FlarmFile";
 const char PolarFile[] = "PolarFile"; // pL
 const char WaypointFile[] = "WPFile"; // pL
 const char AdditionalWaypointFile[] = "AdditionalWPFile"; // pL
@@ -232,22 +235,29 @@ const char AircraftSymbol[] = "AircraftSymbol";
 
 const char FlarmLocation[] = "FlarmLocation";
 
-const char TrackingInterval[] = "TrackingInterval";
-const char TrackingVehicleType[] = "TrackingVehicleType";
-const char TrackingVehicleName[] = "TrackingVehicleName";
 const char SkyLinesTrackingEnabled[] = "SkyLinesTrackingEnabled";
 const char SkyLinesRoaming[] = "SkyLinesRoaming";
 const char SkyLinesTrackingInterval[] = "SkyLinesTrackingInterval";
 const char SkyLinesTrafficEnabled[] = "SkyLinesTrafficEnabled";
 const char SkyLinesNearTrafficEnabled[] = "SkyLinesNearTrafficEnabled";
 const char SkyLinesTrackingKey[] = "SkyLinesTrackingKey";
+
+const char CloudEnabled[] = "CloudEnabled";
+const char CloudShowThermals[] = "CloudShowThermals";
+const char CloudKey[] = "CloudKey";
+
 const char LiveTrack24Enabled[] = "LiveTrack24Enabled";
 const char LiveTrack24Server[] = "LiveTrack24Server";
 const char LiveTrack24Username[] = "LiveTrack24Username";
 const char LiveTrack24Password[] = "LiveTrack24Password";
+const char LiveTrack24TrackingInterval[] = "TrackingInterval";
+const char LiveTrack24TrackingVehicleType[] = "TrackingVehicleType";
+const char LiveTrack24TrackingVehicleName[] = "TrackingVehicleName";
 
 const char PCMetUsername[] = "PCMetUsername";
 const char PCMetPassword[] = "PCMetPassword";
+const char PCMetFtpUsername[] = "PCMetFtpUsername";
+const char PCMetFtpPassword[] = "PCMetFtpPassword";
 
 const char EnableLocationMapItem[] = "EnableLocationMapItem";
 const char EnableArrivalAltitudeMapItem[] = "EnableArrivalAltitudeMapItem";
@@ -264,5 +274,7 @@ const char VarioDeadBandMax[] = "VarioDeadBandMax";
 const char PagesDistinctZoom[] = "PagesDistinctZoom";
 
 const char WaveAssistant[] = "WaveAssistant";
+
+const char MasterAudioVolume[] = "MasterAudioVolume";
 
 }

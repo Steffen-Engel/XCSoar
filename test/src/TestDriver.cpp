@@ -65,6 +65,7 @@
 #include "FaultInjectionPort.hpp"
 #include "TestUtil.hpp"
 #include "Units/System.hpp"
+#include "IO/NullDataHandler.hpp"
 
 #include <memory>
 
@@ -125,6 +126,11 @@ TestGeneric()
 
   /* Magnetic Heading bad checksum */
   ok1(!parser.ParseLine("$HCHDM,182.7,M*26", nmea_info));
+
+  ok1(parser.ParseLine("$WIMWV,12.1,T,10.1,M,A*24", nmea_info));
+  ok1(nmea_info.external_wind_available);
+  ok1(equals(nmea_info.external_wind.bearing, 12.1));
+  ok1(nmea_info.external_wind.norm == 10.1);
 }
 
 static void
@@ -348,7 +354,7 @@ TestBorgeltB50()
   ok1(equals(nmea_info.settings.ballast_overload, 1.3));
   ok1(nmea_info.switch_state.flight_mode == SwitchState::FlightMode::CIRCLING);
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, 245.15));
+  ok1(equals(nmea_info.temperature.ToKelvin(), 245.15));
 
   delete device;
 }
@@ -434,8 +440,8 @@ TestCProbe()
   ok1(nmea_info.acceleration.real);
   ok1(equals(nmea_info.acceleration.g_load, 1.0030817514));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature,
-             Units::ToSysUnit(11.7, Unit::DEGREES_CELCIUS)));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(11.7).ToKelvin()));
   ok1(nmea_info.humidity_available);
   ok1(equals(nmea_info.humidity, 21.4));
   ok1(nmea_info.battery_level_available);
@@ -480,8 +486,8 @@ TestEye()
   ok1(nmea_info.noncomp_vario_available);
   ok1(equals(nmea_info.noncomp_vario, 5.4));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature,
-             Units::ToSysUnit(15.2, Unit::DEGREES_CELCIUS)));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(15.2).ToKelvin()));
   ok1(nmea_info.humidity_available);
   ok1(equals(nmea_info.humidity, 95));
 
@@ -520,8 +526,8 @@ TestFlymasterF1()
   ok1(equals(nmea_info.total_energy_vario, -1.2));
   ok1(!nmea_info.voltage_available);
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature,
-             Units::ToSysUnit(21.3, Unit::DEGREES_CELCIUS)));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(21.3).ToKelvin()));
   ok1(!nmea_info.baro_altitude_available);
   ok1(!nmea_info.pressure_altitude_available);
   ok1(nmea_info.static_pressure_available);
@@ -614,7 +620,7 @@ TestFlytec()
   ok1(nmea_info.airspeed_available);
   ok1(equals(nmea_info.true_airspeed, 17.5));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, 295.55));
+  ok1(equals(nmea_info.temperature.ToKelvin(), 295.55));
 
   nmea_info.Reset();
   nmea_info.clock = 1;
@@ -687,7 +693,8 @@ TestFlytec()
   ok1(nmea_info.battery_level_available);
   ok1(equals(nmea_info.battery_level, (88.0 + 38.0) / 2));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, Units::ToSysUnit(23, Unit::DEGREES_CELCIUS)));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(23).ToKelvin()));
 
   nmea_info.Reset();
   nmea_info.clock = 1;
@@ -720,7 +727,8 @@ TestFlytec()
   ok1(nmea_info.battery_level_available);
   ok1(equals(nmea_info.battery_level, 38.0));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, Units::ToSysUnit(17, Unit::DEGREES_CELCIUS)));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(17).ToKelvin()));
 
   delete device;
 }
@@ -748,7 +756,7 @@ TestLeonardo()
   ok1(equals(nmea_info.netto_vario, 2.5));
 
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, 302.15));
+  ok1(equals(nmea_info.temperature.ToKelvin(), 302.15));
 
   ok1(nmea_info.external_wind_available);
   ok1(equals(nmea_info.external_wind.bearing, 45));
@@ -781,7 +789,7 @@ TestLeonardo()
   ok1(nmea_info.airspeed_available);
   ok1(equals(nmea_info.true_airspeed, 5));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, 304.15));
+  ok1(equals(nmea_info.temperature.ToKelvin(), 304.15));
 
   nmea_info.Reset();
   nmea_info.clock = 1;
@@ -1058,7 +1066,7 @@ TestLXV7()
 
   ok1(device->ParseNMEA("$PLXVS,23.1,0,12.3,*71", basic));
   ok1(basic.temperature_available);
-  ok1(equals(basic.temperature, 296.25));
+  ok1(equals(basic.temperature.ToKelvin(), 296.25));
   ok1(basic.switch_state.flight_mode == SwitchState::FlightMode::CIRCLING);
   ok1(basic.voltage_available);
   ok1(equals(basic.voltage, 12.3));
@@ -1204,8 +1212,14 @@ TestOpenVario()
   // Temperature is read
   ok1(device->ParseNMEA("$POV,T,23.52*35", nmea_info));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, 23.52 + 273.15));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(23.52).ToKelvin()));
   nmea_info.Reset();
+
+  // Relative humidity is read
+  ok1(device->ParseNMEA("$POV,H,58.42*24", nmea_info));
+  ok1(nmea_info.humidity_available);
+  ok1(equals(nmea_info.humidity, 58.42));
 
   delete device;
 }
@@ -1235,7 +1249,8 @@ TestWesterboer()
   ok1(nmea_info.voltage_available);
   ok1(equals(nmea_info.voltage, 12.8));
   ok1(nmea_info.temperature_available);
-  ok1(equals(nmea_info.temperature, 29.5 + 273.15));
+  ok1(equals(nmea_info.temperature.ToKelvin(),
+             Temperature::FromCelsius(29.5).ToKelvin()));
 
   ok1(device->ParseNMEA("$PWES1,20,21,0,030,1,6,385,10*1a", nmea_info));
   ok1(nmea_info.settings.mac_cready_available);
@@ -1472,11 +1487,11 @@ TestXCTracer()
   delete device;
 }
 
-
 static void
 TestDeclare(const struct DeviceRegister &driver)
 {
-  FaultInjectionPort port(nullptr, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  FaultInjectionPort port(nullptr, handler);
   Device *device = driver.CreateOnPort(dummy_config, port);
   ok1(device != NULL);
 
@@ -1518,7 +1533,8 @@ TestDeclare(const struct DeviceRegister &driver)
 static void
 TestFlightList(const struct DeviceRegister &driver)
 {
-  FaultInjectionPort port(nullptr, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  FaultInjectionPort port(nullptr, handler);
   Device *device = driver.CreateOnPort(dummy_config, port);
   ok1(device != NULL);
 
@@ -1542,7 +1558,7 @@ TestFlightList(const struct DeviceRegister &driver)
 
 int main(int argc, char **argv)
 {
-  plan_tests(807);
+  plan_tests(814);
 
   TestGeneric();
   TestTasman();

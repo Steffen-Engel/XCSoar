@@ -31,13 +31,13 @@ Copyright_License {
 #include "Device/Driver/LX/LX1600.hpp"
 #include "OS/Args.hpp"
 #include "Util/StringUtil.hpp"
+#include "Util/PrintException.hxx"
 #include "Operation/ConsoleOperationEnvironment.hpp"
-#include "IO/Async/GlobalIOThread.hpp"
+#include "IO/Async/GlobalAsioThread.hpp"
+#include "IO/Async/AsioThread.hpp"
 #include "Units/System.hpp"
 #include "Atmosphere/Pressure.hpp"
-#include "IO/DataHandler.hpp"
-
-#include <memory>
+#include "IO/NullDataHandler.hpp"
 
 #include <stdio.h>
 
@@ -326,26 +326,17 @@ RunUI(Port &port, OperationEnvironment &env)
   }
 }
 
-class NullDataHandler : public DataHandler {
-public:
-  virtual void DataReceived(const void *data, size_t length) {}
-};
-
 int
 main(int argc, char **argv)
-{
+try {
   Args args(argc, argv, "PORT BAUD");
-  const DeviceConfig config = ParsePortArgs(args);
+  DebugPort debug_port(args);
   args.ExpectEnd();
 
-  InitialiseIOThread();
+  ScopeGlobalAsioThread global_asio_thread;
 
   NullDataHandler handler;
-  std::unique_ptr<Port> port(OpenPort(config, nullptr, handler));
-  if (!port) {
-    fprintf(stderr, "Failed to open COM port\n");
-    return EXIT_FAILURE;
-  }
+  auto port = debug_port.Open(*asio_thread, handler);
 
   ConsoleOperationEnvironment env;
 
@@ -356,7 +347,8 @@ main(int argc, char **argv)
 
   RunUI(*port, env);
 
-  DeinitialiseIOThread();
-
   return EXIT_SUCCESS;
+} catch (const std::exception &exception) {
+  PrintException(exception);
+  return EXIT_FAILURE;
 }

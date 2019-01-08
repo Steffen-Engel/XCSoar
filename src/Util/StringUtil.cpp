@@ -24,7 +24,7 @@ Copyright_License {
 #include "StringUtil.hpp"
 #include "StringAPI.hxx"
 #include "StringCompare.hxx"
-#include "CharUtil.hpp"
+#include "CharUtil.hxx"
 
 #include <algorithm>
 
@@ -42,43 +42,6 @@ CopyString(char *gcc_restrict dest, const char *gcc_restrict src, size_t size)
   char *p = std::copy_n(src, length, dest);
   *p = '\0';
   return p;
-}
-
-void
-CopyASCII(char *dest, const char *src)
-{
-  do {
-    if (IsASCII(*src))
-      *dest++ = *src;
-  } while (*src++ != '\0');
-}
-
-char *
-CopyASCII(char *dest, size_t dest_size, const char *src, const char *src_end)
-{
-  assert(dest_size > 0);
-  assert(src_end >= src);
-
-  for (const char *const dest_end = dest + dest_size;
-       dest != dest_end && src != src_end; ++src)
-    if (IsASCII(*src))
-      *dest++ = *src;
-
-  return dest;
-}
-
-void
-CopyASCIIUpper(char *dest, const char *src)
-{
-  do {
-    char ch = *src;
-    if (IsASCII(ch)) {
-      if (IsLowerAlphaASCII(ch))
-        ch -= 'a' - 'A';
-
-      *dest++ = ch;
-    }
-  } while (*src++ != '\0');
 }
 
 const char *
@@ -129,13 +92,4 @@ NormalizeSearchString(char *gcc_restrict dest,
   *dest = '\0';
 
   return retval;
-}
-
-char *
-DuplicateString(const char *p, size_t length)
-{
-  char *q = (char *)malloc((length + 1) * sizeof(*p));
-  if (q != nullptr)
-    *std::copy_n(p, length, q) = '\0';
-  return q;
 }

@@ -2,7 +2,7 @@ LUA = y
 
 ifeq ($(LUA),y)
 
-ifeq ($(USE_THIRDARTY_LIBS),y)
+ifeq ($(USE_THIRDPARTY_LIBS),y)
 LIBLUA_LDLIBS = -llua
 LIBLUA_CPPFLAGS =
 else
@@ -10,6 +10,7 @@ $(eval $(call pkg-config-library,LIBLUA,lua5.2))
 endif
 
 LUA_SOURCES = \
+	$(SRC)/Lua/Ptr.cpp \
 	$(SRC)/Lua/Error.cpp \
 	$(SRC)/Lua/Catch.cpp \
 	$(SRC)/Lua/Persistent.cpp \
@@ -31,7 +32,9 @@ LUA_SOURCES = \
         $(SRC)/Lua/Settings.cpp \
         $(SRC)/Lua/Wind.cpp \
         $(SRC)/Lua/Logger.cpp \
-        $(SRC)/Lua/Tracking.cpp
+        $(SRC)/Lua/Tracking.cpp \
+		$(SRC)/Lua/Replay.cpp \
+	    $(SRC)/Lua/InputEvent.cpp \
 
 LUA_CPPFLAGS_INTERNAL = $(LIBLUA_CPPFLAGS) $(SCREEN_CPPFLAGS)
 LUA_LDLIBS = $(LIBLUA_LDLIBS)

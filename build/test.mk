@@ -120,7 +120,10 @@ TEST_NAMES = \
 	TestByteSizeFormatter \
 	TestTimeFormatter \
 	TestIGCFilenameFormatter \
-	TestLXNToIGC
+	TestLXNToIGC \
+	TestLeastSquares \
+	TestThermalBand
+
 
 TESTS = $(call name-to-bin,$(TEST_NAMES))
 
@@ -129,6 +132,22 @@ TEST_CRC_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/TestCRC.cpp
 $(eval $(call link-program,TestCRC,TEST_CRC))
+
+TEST_LEASTSQUARES_SOURCES = \
+	$(SRC)/Math/LeastSquares.cpp \
+	$(SRC)/Math/XYDataStore.cpp \
+	$(TEST_SRC_DIR)/tap.c \
+	$(TEST_SRC_DIR)/TestLeastSquares.cpp
+$(eval $(call link-program,TestLeastSquares,TEST_LEASTSQUARES))
+
+TEST_THERMALBAND_SOURCES = \
+$(ENGINE_SRC_DIR)/ThermalBand/ThermalBand.cpp \
+$(ENGINE_SRC_DIR)/ThermalBand/ThermalSlice.cpp \
+$(ENGINE_SRC_DIR)/ThermalBand/ThermalEncounterBand.cpp \
+$(ENGINE_SRC_DIR)/ThermalBand/ThermalEncounterCollection.cpp \
+$(TEST_SRC_DIR)/tap.c \
+$(TEST_SRC_DIR)/TestThermalBand.cpp
+$(eval $(call link-program,TestThermalBand,TEST_THERMALBAND))
 
 TEST_OVERWRITING_RING_BUFFER_SOURCES = \
 	$(TEST_SRC_DIR)/tap.c \
@@ -411,6 +430,7 @@ TEST_UNITS_SOURCES = \
 	$(SRC)/Units/Settings.cpp \
 	$(SRC)/Units/Descriptor.cpp \
 	$(SRC)/Units/System.cpp \
+	$(SRC)/Units/Temperature.cpp \
 	$(TEST_SRC_DIR)/tap.c \
 	$(TEST_SRC_DIR)/TestUnits.cpp
 TEST_UNITS_DEPENDS = MATH
@@ -784,6 +804,10 @@ ifeq ($(HAVE_HTTP),y)
 DEBUG_PROGRAM_NAMES += DownloadFile RunDownloadToFile RunNOAADownloader RunSkyLinesTracking RunLiveTrack24
 endif
 
+ifeq ($(TARGET_IS_LINUX),y)
+DEBUG_PROGRAM_NAMES += RunWPASupplicant
+endif
+
 ifeq ($(HAVE_PCM_PLAYER),y)
 DEBUG_PROGRAM_NAMES += PlayTone PlayVario DumpVario
 endif
@@ -828,7 +852,10 @@ DEBUG_REPLAY_SOURCES = \
 	$(SRC)/NMEA/ClimbInfo.cpp \
 	$(SRC)/NMEA/ClimbHistory.cpp \
 	$(SRC)/NMEA/CirclingInfo.cpp \
-	$(SRC)/NMEA/ThermalBand.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalBand.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalSlice.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalEncounterBand.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalEncounterCollection.cpp \
 	$(SRC)/NMEA/ThermalLocator.cpp \
 	$(SRC)/NMEA/FlyingState.cpp \
 	$(SRC)/Operation/Operation.cpp \
@@ -932,7 +959,7 @@ $(eval $(call link-program,RunTextWriter,RUN_TEXT_WRITER))
 DOWNLOAD_FILE_SOURCES = \
 	$(SRC)/Version.cpp \
 	$(TEST_SRC_DIR)/DownloadFile.cpp
-DOWNLOAD_FILE_DEPENDS = IO LIBNET UTIL
+DOWNLOAD_FILE_DEPENDS = LIBNET IO THREAD UTIL
 $(eval $(call link-program,DownloadFile,DOWNLOAD_FILE))
 
 RUN_DOWNLOAD_TO_FILE_SOURCES = \
@@ -967,6 +994,12 @@ RUN_NOAA_DOWNLOADER_SOURCES = \
 RUN_NOAA_DOWNLOADER_DEPENDS = GEO IO MATH LIBNET UTIL TIME
 $(eval $(call link-program,RunNOAADownloader,RUN_NOAA_DOWNLOADER))
 
+RUN_WPA_SUPPLICANT_SOURCES = \
+	$(SRC)/Kobo/WPASupplicant.cpp \
+	$(TEST_SRC_DIR)/RunWPASupplicant.cpp
+RUN_WPA_SUPPLICANT_DEPENDS = LIBNET OS UTIL
+$(eval $(call link-program,RunWPASupplicant,RUN_WPA_SUPPLICANT))
+
 RUN_SL_TRACKING_SOURCES = \
 	$(DEBUG_REPLAY_SOURCES) \
 	$(SRC)/NMEA/Info.cpp \
@@ -976,7 +1009,7 @@ RUN_SL_TRACKING_SOURCES = \
 	$(SRC)/Tracking/SkyLines/Client.cpp \
 	$(SRC)/Tracking/SkyLines/Assemble.cpp \
 	$(TEST_SRC_DIR)/RunSkyLinesTracking.cpp
-RUN_SL_TRACKING_LDADD = $(ASYNC_LDADD) $(DEBUG_REPLAY_LDADD)
+RUN_SL_TRACKING_LDADD = $(DEBUG_REPLAY_LDADD)
 RUN_SL_TRACKING_DEPENDS = LIBNET OS GEO MATH UTIL TIME
 $(eval $(call link-program,RunSkyLinesTracking,RUN_SL_TRACKING))
 
@@ -987,6 +1020,7 @@ RUN_LIVETRACK24_SOURCES = \
 	$(SRC)/Units/Units.cpp \
 	$(SRC)/Units/Settings.cpp \
 	$(SRC)/Units/Descriptor.cpp \
+	$(SRC)/Operation/ConsoleOperationEnvironment.cpp \
 	$(TEST_SRC_DIR)/RunLiveTrack24.cpp
 RUN_LIVETRACK24_LDADD = $(DEBUG_REPLAY_LDADD)
 RUN_LIVETRACK24_DEPENDS = LIBNET GEO MATH UTIL TIME
@@ -1214,7 +1248,7 @@ RUN_PORT_HANDLER_SOURCES = \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/DebugPort.cpp \
 	$(TEST_SRC_DIR)/RunPortHandler.cpp
-RUN_PORT_HANDLER_DEPENDS = PORT ASYNC LIBNET OS THREAD UTIL
+RUN_PORT_HANDLER_DEPENDS = PORT LIBNET OS THREAD UTIL
 $(eval $(call link-program,RunPortHandler,RUN_PORT_HANDLER))
 
 LOG_PORT_SOURCES = \
@@ -1228,7 +1262,7 @@ LOG_PORT_SOURCES = \
 	$(TEST_SRC_DIR)/DebugPort.cpp \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/LogPort.cpp
-LOG_PORT_DEPENDS = PORT ASYNC LIBNET OS THREAD UTIL
+LOG_PORT_DEPENDS = PORT LIBNET OS THREAD UTIL
 $(eval $(call link-program,LogPort,LOG_PORT))
 
 RUN_DEVICE_DRIVER_SOURCES = \
@@ -1331,7 +1365,7 @@ RUN_ENABLE_NMEA_SOURCES = \
 	$(TEST_SRC_DIR)/FakeDialogs.cpp \
 	$(TEST_SRC_DIR)/DebugPort.cpp \
 	$(TEST_SRC_DIR)/RunEnableNMEA.cpp
-RUN_ENABLE_NMEA_DEPENDS = DRIVER PORT TIME GEO MATH UTIL ASYNC IO LIBNET OS THREAD
+RUN_ENABLE_NMEA_DEPENDS = DRIVER PORT TIME GEO MATH ASYNC IO LIBNET OS THREAD UTIL
 $(eval $(call link-program,RunEnableNMEA,RUN_ENABLE_NMEA))
 
 RUN_VEGA_SETTINGS_SOURCES = \
@@ -1480,7 +1514,7 @@ CAI302_TOOL_SOURCES = \
 	$(TEST_SRC_DIR)/FakeLanguage.cpp \
 	$(TEST_SRC_DIR)/DebugPort.cpp \
 	$(TEST_SRC_DIR)/CAI302Tool.cpp
-CAI302_TOOL_DEPENDS = DRIVER PORT ASYNC LIBNET OS THREAD IO TIME MATH UTIL
+CAI302_TOOL_DEPENDS = DRIVER PORT ASYNC LIBNET THREAD IO OS TIME MATH UTIL
 $(eval $(call link-program,CAI302Tool,CAI302_TOOL))
 
 TEST_LXN_TO_IGC_SOURCES = \
@@ -1520,6 +1554,7 @@ RUN_FLIGHT_LOGGER_SOURCES = \
 	$(DEBUG_REPLAY_SOURCES) \
 	$(SRC)/Computer/CirclingComputer.cpp \
 	$(SRC)/Logger/FlightLogger.cpp \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/RunFlightLogger.cpp
 RUN_FLIGHT_LOGGER_LDADD = $(DEBUG_REPLAY_LDADD)
 RUN_FLIGHT_LOGGER_DEPENDS = GEO MATH UTIL TIME
@@ -1652,6 +1687,10 @@ ANALYSE_FLIGHT_SOURCES = \
 	$(SRC)/Computer/CirclingComputer.cpp \
 	$(ENGINE_SRC_DIR)/Trace/Point.cpp \
 	$(ENGINE_SRC_DIR)/Trace/Trace.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalBand.cpp \
+    $(ENGINE_SRC_DIR)/ThermalBand/ThermalSlice.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalEncounterBand.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalEncounterCollection.cpp \
 	$(TEST_SRC_DIR)/FakeTerrain.cpp \
 	$(TEST_SRC_DIR)/Printing.cpp \
 	$(TEST_SRC_DIR)/ContestPrinting.cpp \
@@ -1713,6 +1752,8 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Engine/Trace/Trace.cpp \
 	$(SRC)/Engine/Trace/Vector.cpp \
 	$(SRC)/Engine/Navigation/Aircraft.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalBand.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalSlice.cpp \
 	$(IO_SRC_DIR)/MapFile.cpp \
 	$(IO_SRC_DIR)/DataFile.cpp \
 	$(IO_SRC_DIR)/ConfiguredFile.cpp \
@@ -1730,7 +1771,6 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/NMEA/ClimbHistory.cpp \
 	$(SRC)/NMEA/CirclingInfo.cpp \
 	$(SRC)/NMEA/SwitchState.cpp \
-	$(SRC)/NMEA/ThermalBand.cpp \
 	$(SRC)/Engine/Navigation/TraceHistory.cpp \
 	$(SRC)/FLARM/FlarmId.cpp \
 	$(SRC)/FLARM/Friends.cpp \
@@ -1809,7 +1849,6 @@ RUN_MAP_WINDOW_SOURCES = \
 	$(SRC)/Computer/Wind/Settings.cpp \
 	$(SRC)/TeamCode/Settings.cpp \
 	$(SRC)/Logger/Settings.cpp \
-	$(SRC)/Tracking/TrackingSettings.cpp \
 	$(SRC)/Computer/TraceComputer.cpp \
 	$(SRC)/IGC/IGCParser.cpp \
 	$(SRC)/Task/ProtectedRoutePlanner.cpp \
@@ -2100,10 +2139,11 @@ RUN_FINAL_GLIDE_BAR_RENDERER_SOURCES = \
 	$(SRC)/NMEA/VarioInfo.cpp \
 	$(SRC)/NMEA/CirclingInfo.cpp \
 	$(SRC)/NMEA/ClimbHistory.cpp \
-	$(SRC)/NMEA/ThermalBand.cpp \
 	$(SRC)/NMEA/ClimbInfo.cpp \
 	$(SRC)/NMEA/ThermalLocator.cpp \
 	$(SRC)/NMEA/FlyingState.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalBand.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalSlice.cpp \
 	$(SRC)/Engine/Navigation/TraceHistory.cpp \
 	$(TEST_SRC_DIR)/FakeAsset.cpp \
 	$(TEST_SRC_DIR)/Fonts.cpp \
@@ -2178,6 +2218,7 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/Engine/Trace/Trace.cpp \
 	$(SRC)/Engine/Trace/Vector.cpp \
 	$(SRC)/NMEA/Aircraft.cpp \
+	$(ENGINE_SRC_DIR)/ThermalBand/ThermalBand.cpp \
 	$(SRC)/UIUtil/GestureManager.cpp \
 	$(SRC)/Task/Deserialiser.cpp \
 	$(SRC)/Task/LoadFile.cpp \
@@ -2215,6 +2256,7 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/MapWindow/MapCanvas.cpp \
 	$(SRC)/Units/Units.cpp \
 	$(SRC)/Units/Settings.cpp \
+	$(SRC)/Units/Temperature.cpp \
 	$(SRC)/Formatter/Units.cpp \
 	$(SRC)/Formatter/UserUnits.cpp \
 	$(SRC)/Formatter/HexColor.cpp \
@@ -2241,9 +2283,15 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/Renderer/BarographRenderer.cpp \
 	$(SRC)/Renderer/ClimbChartRenderer.cpp \
 	$(SRC)/Renderer/GlidePolarRenderer.cpp \
+	$(SRC)/Renderer/GlidePolarInfoRenderer.cpp \
+	$(SRC)/Renderer/MacCreadyRenderer.cpp \
+    $(SRC)/Renderer/VarioHistogramRenderer.cpp \
+	$(SRC)/Renderer/TaskLegRenderer.cpp \
+	$(SRC)/Renderer/TaskSpeedRenderer.cpp \
 	$(SRC)/Renderer/ThermalBandRenderer.cpp \
 	$(SRC)/Renderer/WindChartRenderer.cpp \
 	$(SRC)/Renderer/CuRenderer.cpp \
+	$(SRC)/Renderer/MapScaleRenderer.cpp \
 	$(SRC)/Computer/ThermalLocator.cpp \
 	$(SRC)/Computer/ThermalBase.cpp \
 	$(SRC)/Computer/ThermalBandComputer.cpp \
@@ -2280,7 +2328,6 @@ RUN_ANALYSIS_SOURCES = \
 	$(SRC)/TeamCode/TeamCode.cpp \
 	$(SRC)/TeamCode/Settings.cpp \
 	$(SRC)/Logger/Settings.cpp \
-	$(SRC)/Tracking/TrackingSettings.cpp \
 	$(SRC)/IGC/IGCParser.cpp \
 	$(SRC)/MapSettings.cpp \
 	$(SRC)/Blackboard/InterfaceBlackboard.cpp \
@@ -2359,7 +2406,7 @@ RUN_AIRSPACE_WARNING_DIALOG_SOURCES = \
 	$(TEST_SRC_DIR)/Fonts.cpp \
 	$(TEST_SRC_DIR)/RunAirspaceWarningDialog.cpp
 RUN_AIRSPACE_WARNING_DIALOG_LDADD = $(FAKE_LIBS)
-RUN_AIRSPACE_WARNING_DIALOG_DEPENDS = FORM WIDGET DATA_FIELD SCREEN EVENT RESOURCE IO ASYNC OS THREAD AIRSPACE ZZIP UTIL GEO MATH TIME
+RUN_AIRSPACE_WARNING_DIALOG_DEPENDS = FORM WIDGET DATA_FIELD SCREEN AUDIO EVENT RESOURCE IO ASYNC OS THREAD AIRSPACE ZZIP UTIL GEO MATH TIME
 $(eval $(call link-program,RunAirspaceWarningDialog,RUN_AIRSPACE_WARNING_DIALOG))
 
 RUN_PROFILE_LIST_DIALOG_SOURCES = \
@@ -2389,15 +2436,17 @@ RUN_PROFILE_LIST_DIALOG_DEPENDS = PROFILE FORM WIDGET DATA_FIELD SCREEN EVENT RE
 $(eval $(call link-program,RunProfileListDialog,RUN_PROFILE_LIST_DIALOG))
 
 PLAY_TONE_SOURCES = \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/PlayTone.cpp
-PLAY_TONE_DEPENDS = AUDIO MATH SCREEN EVENT THREAD OS UTIL
+PLAY_TONE_DEPENDS = AUDIO MATH SCREEN EVENT ASYNC THREAD OS UTIL
 $(eval $(call link-program,PlayTone,PLAY_TONE))
 
 PLAY_VARIO_SOURCES = \
 	$(DEBUG_REPLAY_SOURCES) \
+	$(TEST_SRC_DIR)/FakeLogFile.cpp \
 	$(TEST_SRC_DIR)/PlayVario.cpp
-PLAY_VARIO_LDADD = $(filter-out $(OS_LIBS),$(DEBUG_REPLAY_LDADD))
-PLAY_VARIO_DEPENDS = AUDIO GEO MATH SCREEN EVENT OS TIME UTIL
+PLAY_VARIO_LDADD = $(filter-out $(THREAD_LIBS),$(filter-out $(OS_LIBS),$(DEBUG_REPLAY_LDADD)))
+PLAY_VARIO_DEPENDS = AUDIO GEO MATH SCREEN EVENT ASYNC THREAD OS TIME UTIL
 $(eval $(call link-program,PlayVario,PLAY_VARIO))
 
 DUMP_VARIO_SOURCES = \

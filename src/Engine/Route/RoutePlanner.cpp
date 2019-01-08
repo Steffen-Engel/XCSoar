@@ -35,7 +35,8 @@ RoutePlanner::RoutePlanner()
 void
 RoutePlanner::ClearReach()
 {
-  reach.Reset();
+  reach_terrain.Reset();
+  reach_working.Reset();
 }
 
 void
@@ -54,14 +55,25 @@ RoutePlanner::Reset()
 }
 
 bool
-RoutePlanner::SolveReach(const AGeoPoint &origin,
-                         const RoutePlannerConfig &config,
-                         const int h_ceiling, const bool do_solve)
+RoutePlanner::SolveReachTerrain(const AGeoPoint &origin,
+                                const RoutePlannerConfig &config,
+                                const int h_ceiling, const bool do_solve)
 {
   rpolars_reach.SetConfig(config, origin.altitude, h_ceiling);
   reach_polar_mode = config.reach_polar_mode;
 
-  return reach.Solve(origin, rpolars_reach, terrain, do_solve);
+  return reach_terrain.Solve(origin, rpolars_reach, terrain, do_solve);
+}
+
+bool
+RoutePlanner::SolveReachWorking(const AGeoPoint &origin,
+                                const RoutePlannerConfig &config,
+                                const int h_ceiling, const bool do_solve)
+{
+  rpolars_reach_working.SetConfig(config, origin.altitude, h_ceiling);
+  // reach_polar_mode previously set by SolveReachTerrain
+
+  return reach_working.Solve(origin, rpolars_reach_working, terrain, do_solve);
 }
 
 bool
@@ -364,10 +376,13 @@ RoutePlanner::AddEdges(const RouteLink &e)
 
 void
 RoutePlanner::UpdatePolar(const GlideSettings &settings,
+                          const RoutePlannerConfig &config,
                           const GlidePolar &task_polar,
-                           const GlidePolar &safety_polar,
-                           const SpeedVector &wind)
+                          const GlidePolar &safety_polar,
+                          const SpeedVector &wind,
+                          const int height_min_working)
 {
+  rpolars_route.SetConfig(config);
   rpolars_route.Initialise(settings, task_polar, wind);
   switch (reach_polar_mode) {
   case RoutePlannerConfig::Polar::TASK:
@@ -378,6 +393,8 @@ RoutePlanner::UpdatePolar(const GlideSettings &settings,
     rpolars_reach.Initialise(settings, safety_polar, wind);
     break;
   }
+  rpolars_reach_working.SetConfig(config);
+  rpolars_reach_working.Initialise(settings, task_polar, wind, height_min_working);
 }
 
 /*
@@ -504,3 +521,13 @@ RoutePlanner::Intersection(const AGeoPoint& origin,
     acknowledged in the airspace warning manager.
   - more documentation
  */
+
+void
+RoutePlanner::AcceptInRange(const GeoBounds &bounds,
+                            FlatTriangleFanVisitor &visitor, bool working) const
+{
+  if (working)
+    reach_working.AcceptInRange(bounds, visitor);
+  else
+    reach_terrain.AcceptInRange(bounds, visitor);
+}

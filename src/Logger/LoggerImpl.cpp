@@ -31,9 +31,9 @@
 #include "OS/FileUtil.hpp"
 #include "Formatter/IGCFilenameFormatter.hpp"
 #include "Interface.hpp"
-#include "Util/CharUtil.hpp"
 #include "IGCFileCleanup.hpp"
 #include "IGC/IGCWriter.hpp"
+#include "Util/CharUtil.hxx"
 
 #include <tchar.h>
 #include <algorithm>
@@ -97,6 +97,8 @@ LoggerImpl::StopLogger(const NMEAInfo &gps_info)
 
   if (!simulator)
     writer->Sign();
+
+  writer->Flush();
 
   LogFormat(_T("Logger stopped: %s"), filename.c_str());
 
@@ -249,11 +251,11 @@ LoggerImpl::StartLogger(const NMEAInfo &gps_info,
   }
 
   frecord.Reset();
-  writer = new IGCWriter(filename);
-  if (!writer->IsOpen()) {
-    LogFormat(_T("Failed to create file %s"), filename.c_str());
-    delete writer;
-    writer = nullptr;
+
+  try {
+    writer = new IGCWriter(filename);
+  } catch (const std::runtime_error &e) {
+    LogError(e);
     return false;
   }
 

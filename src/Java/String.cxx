@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010-2011 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2010-2011 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,7 +28,7 @@
  */
 
 #include "String.hxx"
-#include "Util/StringUtil.hpp"
+#include "Util/TruncateString.hpp"
 #include "Util/ScopeExit.hxx"
 
 char *
@@ -39,7 +39,7 @@ Java::String::CopyTo(JNIEnv *env, jstring value,
 	if (p == nullptr)
 		return nullptr;
 
-	char *result = CopyString(buffer, p, max_size);
+	char *result = CopyTruncateString(buffer, max_size, p);
 	env->ReleaseStringUTFChars(value, p);
 	return result;
 }

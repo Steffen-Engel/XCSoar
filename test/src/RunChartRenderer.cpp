@@ -79,27 +79,29 @@ ChartWindow::DrawChart(ChartRenderer &renderer)
 
   if (chart == 0) {
     renderer.DrawLine(0, 10, 100, 70,
-                      look.GetPen(ChartLook::STYLE_BLUETHIN));
+                      look.GetPen(ChartLook::STYLE_BLUETHINDASH));
   } else if (chart == 1) {
     renderer.ScaleXFromValue(-50);
     renderer.ScaleXFromValue(110);
     renderer.ScaleYFromValue(110);
 
     renderer.DrawLine(0, 10, 100, 70,
-                      look.GetPen(ChartLook::STYLE_BLUETHIN));
+                      look.GetPen(ChartLook::STYLE_BLUETHINDASH));
 
     renderer.DrawLine(0, 10, 100, 80,
-                      look.GetPen(ChartLook::STYLE_DASHGREEN));
+                      look.GetPen(ChartLook::STYLE_GREENDASH));
 
     renderer.DrawLine(0, 10, 100, 100,
-                      look.GetPen(ChartLook::STYLE_MEDIUMBLACK));
+                      look.GetPen(ChartLook::STYLE_BLACK));
 
-    renderer.DrawXGrid(20, look.GetPen(ChartLook::STYLE_THINDASHPAPER),
-                       20, true);
+    renderer.DrawXGrid(20, 20, ChartRenderer::UnitFormat::NUMERIC);
 
-    renderer.DrawYGrid(20, look.GetPen(ChartLook::STYLE_THINDASHPAPER),
-                       20, true);
-}
+    renderer.DrawYGrid(20, 20, ChartRenderer::UnitFormat::NUMERIC);
+
+    renderer.DrawLabel(_T("hello"), 50, 50);
+    renderer.DrawXLabel(_T("VVV"),_T("m/s"));
+    renderer.DrawYLabel(_T("AAA"),_T("m/s"));
+  }
 }
 
 class TestWindow : public SingleWindow,

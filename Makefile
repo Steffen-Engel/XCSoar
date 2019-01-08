@@ -123,6 +123,7 @@ include $(topdir)/build/libtime.mk
 include $(topdir)/build/libprofile.mk
 include $(topdir)/build/libnet.mk
 include $(topdir)/build/sdl.mk
+include $(topdir)/build/alsa.mk
 include $(topdir)/build/zlib.mk
 include $(topdir)/build/zzip.mk
 include $(topdir)/build/jasper.mk
@@ -146,6 +147,8 @@ include $(topdir)/build/libpng.mk
 include $(topdir)/build/libjpeg.mk
 include $(topdir)/build/libtiff.mk
 include $(topdir)/build/coregraphics.mk
+include $(topdir)/build/appkit.mk
+include $(topdir)/build/uikit.mk
 include $(topdir)/build/screen.mk
 include $(topdir)/build/libthread.mk
 include $(topdir)/build/form.mk
@@ -157,6 +160,7 @@ include $(topdir)/build/harness.mk
 
 include $(topdir)/build/vali.mk
 include $(topdir)/build/main.mk
+include $(topdir)/build/cloud.mk
 include $(topdir)/build/kobo.mk
 include $(topdir)/build/test.mk
 include $(topdir)/build/hot.mk

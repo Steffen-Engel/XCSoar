@@ -30,6 +30,7 @@ Copyright_License {
 #include "Form/DataField/Listener.hpp"
 #include "Language/Language.hpp"
 #include "Tracking/TrackingSettings.hpp"
+#include "Tracking/SkyLines/Key.hpp"
 #include "Net/State.hpp"
 #include "Form/DataField/Base.hpp"
 #include "Widget/RowFormWidget.hpp"
@@ -45,23 +46,21 @@ enum ControlIndex {
   SL_ROAMING,
 #endif
   SL_INTERVAL,
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
   SL_TRAFFIC_ENABLED,
   SL_NEAR_TRAFFIC_ENABLED,
-#endif
   SL_KEY,
 #endif
 #if defined(HAVE_SKYLINES_TRACKING) && defined(HAVE_LIVETRACK24)
   SPACER,
 #endif
 #ifdef HAVE_LIVETRACK24
-  LT24Enabled,
-  TrackingInterval,
-  TrackingVehicleType,
-  TrackingVehicleName,
-  LT24Server,
-  LT24Username,
-  LT24Password
+  LT24_ENABLED,
+  LT24_INVERVAL,
+  LT24_VEHICLE_TYPE,
+  LT24_VEHICLE_NAME,
+  LT24_SERVER,
+  LT24_USERNAME,
+  LT24_PASSWORD
 #endif
 };
 
@@ -77,7 +76,7 @@ public:
 #endif
 
 #ifdef HAVE_LIVETRACK24
-  void SetEnabled(bool enabled);
+  void SetLiveTrack24Enabled(bool enabled);
 #endif
 
   /* methods from Widget */
@@ -98,11 +97,9 @@ TrackingConfigPanel::SetSkyLinesEnabled(bool enabled)
   SetRowEnabled(SL_ROAMING, enabled);
 #endif
   SetRowEnabled(SL_INTERVAL, enabled);
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
   SetRowEnabled(SL_TRAFFIC_ENABLED, enabled);
   SetRowEnabled(SL_NEAR_TRAFFIC_ENABLED,
                 enabled && GetValueBoolean(SL_TRAFFIC_ENABLED));
-#endif
   SetRowEnabled(SL_KEY, enabled);
 }
 
@@ -111,14 +108,14 @@ TrackingConfigPanel::SetSkyLinesEnabled(bool enabled)
 #ifdef HAVE_LIVETRACK24
 
 void
-TrackingConfigPanel::SetEnabled(bool enabled)
+TrackingConfigPanel::SetLiveTrack24Enabled(bool enabled)
 {
-  SetRowEnabled(TrackingInterval, enabled);
-  SetRowEnabled(TrackingVehicleType, enabled);
-  SetRowEnabled(TrackingVehicleName, enabled);
-  SetRowEnabled(LT24Server, enabled);
-  SetRowEnabled(LT24Username, enabled);
-  SetRowEnabled(LT24Password, enabled);
+  SetRowEnabled(LT24_INVERVAL, enabled);
+  SetRowEnabled(LT24_VEHICLE_TYPE, enabled);
+  SetRowEnabled(LT24_VEHICLE_NAME, enabled);
+  SetRowEnabled(LT24_SERVER, enabled);
+  SetRowEnabled(LT24_USERNAME, enabled);
+  SetRowEnabled(LT24_PASSWORD, enabled);
 }
 
 #endif
@@ -132,9 +129,7 @@ TrackingConfigPanel::OnModified(DataField &df)
     SetSkyLinesEnabled(dfb.GetAsBoolean());
     return;
   }
-#endif
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
   if (IsDataField(SL_TRAFFIC_ENABLED, df)) {
     const DataFieldBoolean &dfb = (const DataFieldBoolean &)df;
     SetRowEnabled(SL_NEAR_TRAFFIC_ENABLED, dfb.GetAsBoolean());
@@ -143,9 +138,9 @@ TrackingConfigPanel::OnModified(DataField &df)
 #endif
 
 #ifdef HAVE_LIVETRACK24
-  if (IsDataField(LT24Enabled, df)) {
+  if (IsDataField(LT24_ENABLED, df)) {
     const DataFieldBoolean &dfb = (const DataFieldBoolean &)df;
-    SetEnabled(dfb.GetAsBoolean());
+    SetLiveTrack24Enabled(dfb.GetAsBoolean());
   }
 #endif
 }
@@ -184,12 +179,12 @@ static constexpr StaticEnumChoice server_list[] = {
 };
 
 static constexpr StaticEnumChoice vehicle_type_list[] = {
-  { (unsigned) TrackingSettings::VehicleType::GLIDER, N_("Glider") },
-  { (unsigned) TrackingSettings::VehicleType::PARAGLIDER, N_("Paraglider") },
-  { (unsigned) TrackingSettings::VehicleType::POWERED_AIRCRAFT, N_("Powered aircraft") },
-  { (unsigned) TrackingSettings::VehicleType::HOT_AIR_BALLOON, N_("Hot-air balloon") },
-  { (unsigned) TrackingSettings::VehicleType::HANGGLIDER_FLEX, N_("Hangglider (Flex/FAI1)") },
-  { (unsigned) TrackingSettings::VehicleType::HANGGLIDER_RIGID, N_("Hangglider (Rigid/FAI5)") },
+  { (unsigned) LiveTrack24::Settings::VehicleType::GLIDER, N_("Glider") },
+  { (unsigned) LiveTrack24::Settings::VehicleType::PARAGLIDER, N_("Paraglider") },
+  { (unsigned) LiveTrack24::Settings::VehicleType::POWERED_AIRCRAFT, N_("Powered aircraft") },
+  { (unsigned) LiveTrack24::Settings::VehicleType::HOT_AIR_BALLOON, N_("Hot-air balloon") },
+  { (unsigned) LiveTrack24::Settings::VehicleType::HANGGLIDER_FLEX, N_("Hangglider (Flex/FAI1)") },
+  { (unsigned) LiveTrack24::Settings::VehicleType::HANGGLIDER_RIGID, N_("Hangglider (Rigid/FAI5)") },
   { 0 },
 };
 
@@ -211,7 +206,6 @@ TrackingConfigPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
   AddEnum(_("Tracking Interval"), nullptr, tracking_intervals,
           settings.skylines.interval);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
   AddBoolean(_("Track friends"),
              _("Download the position of your friends live from the SkyLines server."),
              settings.skylines.traffic_enabled, this);
@@ -219,7 +213,6 @@ TrackingConfigPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
   AddBoolean(_("Show nearby traffic"),
              _("Download the position of your nearby traffic live from the SkyLines server."),
              settings.skylines.near_traffic_enabled, this);
-#endif
 
   StaticString<64> buffer;
   if (settings.skylines.key != 0)
@@ -236,12 +229,12 @@ TrackingConfigPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
 #ifdef HAVE_LIVETRACK24
   AddBoolean(_T("LiveTrack24"),  _T(""), settings.livetrack24.enabled, this);
 
-  AddTime(_("Tracking Interval"), _T(""), 5, 3600, 5, settings.interval);
+  AddTime(_("Tracking Interval"), _T(""), 5, 3600, 5, settings.livetrack24.interval);
 
   AddEnum(_("Vehicle Type"), _("Type of vehicle used."), vehicle_type_list,
-          (unsigned) settings.vehicleType);
+          (unsigned) settings.livetrack24.vehicleType);
   AddText(_("Vehicle Name"), _T("Name of vehicle used."),
-          settings.vehicle_name);
+          settings.livetrack24.vehicle_name);
 
   WndProperty *edit = AddEnum(_("Server"), _T(""), server_list, 0);
   ((DataFieldEnum *)edit->GetDataField())->Set(settings.livetrack24.server);
@@ -256,7 +249,7 @@ TrackingConfigPanel::Prepare(ContainerWindow &parent, const PixelRect &rc)
 #endif
 
 #ifdef HAVE_LIVETRACK24
-  SetEnabled(settings.livetrack24.enabled);
+  SetLiveTrack24Enabled(settings.livetrack24.enabled);
 #endif
 }
 
@@ -285,13 +278,13 @@ TrackingConfigPanel::Save(bool &_changed)
     CommonInterface::SetComputerSettings().tracking;
 
 #ifdef HAVE_LIVETRACK24
-  changed |= SaveValue(TrackingInterval, ProfileKeys::TrackingInterval, settings.interval);
+  changed |= SaveValue(LT24_INVERVAL, ProfileKeys::LiveTrack24TrackingInterval, settings.livetrack24.interval);
 
-  changed |= SaveValueEnum(TrackingVehicleType, ProfileKeys::TrackingVehicleType,
-                           settings.vehicleType);
+  changed |= SaveValueEnum(LT24_VEHICLE_TYPE, ProfileKeys::LiveTrack24TrackingVehicleType,
+                           settings.livetrack24.vehicleType);
 
-  changed |= SaveValue(TrackingVehicleName, ProfileKeys::TrackingVehicleName,
-                       settings.vehicle_name);
+  changed |= SaveValue(LT24_VEHICLE_NAME, ProfileKeys::LiveTrack24TrackingVehicleName,
+                       settings.livetrack24.vehicle_name);
 #endif
 
 #ifdef HAVE_SKYLINES_TRACKING
@@ -306,28 +299,26 @@ TrackingConfigPanel::Save(bool &_changed)
   changed |= SaveValue(SL_INTERVAL, ProfileKeys::SkyLinesTrackingInterval,
                        settings.skylines.interval);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
   changed |= SaveValue(SL_TRAFFIC_ENABLED, ProfileKeys::SkyLinesTrafficEnabled,
                        settings.skylines.traffic_enabled);
   changed |= SaveValue(SL_NEAR_TRAFFIC_ENABLED,
                        ProfileKeys::SkyLinesNearTrafficEnabled,
                        settings.skylines.near_traffic_enabled);
-#endif
 
   changed |= SaveKey(*this, SL_KEY, ProfileKeys::SkyLinesTrackingKey,
                      settings.skylines.key);
 #endif
 
 #ifdef HAVE_LIVETRACK24
-  changed |= SaveValue(LT24Enabled, ProfileKeys::LiveTrack24Enabled, settings.livetrack24.enabled);
+  changed |= SaveValue(LT24_ENABLED, ProfileKeys::LiveTrack24Enabled, settings.livetrack24.enabled);
 
-  changed |= SaveValue(LT24Server, ProfileKeys::LiveTrack24Server,
+  changed |= SaveValue(LT24_SERVER, ProfileKeys::LiveTrack24Server,
                        settings.livetrack24.server);
 
-  changed |= SaveValue(LT24Username, ProfileKeys::LiveTrack24Username,
+  changed |= SaveValue(LT24_USERNAME, ProfileKeys::LiveTrack24Username,
                        settings.livetrack24.username);
 
-  changed |= SaveValue(LT24Password, ProfileKeys::LiveTrack24Password,
+  changed |= SaveValue(LT24_PASSWORD, ProfileKeys::LiveTrack24Password,
                        settings.livetrack24.password);
 #endif
 

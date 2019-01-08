@@ -23,6 +23,7 @@ Copyright_License {
 
 #include "VarioGlue.hpp"
 #include "PCMPlayer.hpp"
+#include "PCMPlayerFactory.hpp"
 #include "VarioSynthesiser.hpp"
 #include "VarioSettings.hpp"
 
@@ -63,8 +64,8 @@ AudioVarioGlue::Initialise()
     return;
 #endif
 
-  player = new PCMPlayer();
-  synthesiser = new VarioSynthesiser();
+  player = PCMPlayerFactory::CreateInstance();
+  synthesiser = new VarioSynthesiser(sample_rate);
 }
 
 void
@@ -94,7 +95,7 @@ AudioVarioGlue::Configure(const VarioSoundSettings &settings)
                                 settings.max_frequency);
     synthesiser->SetPeriods(settings.min_period_ms, settings.max_period_ms);
     synthesiser->SetDeadBandRange(settings.min_dead, settings.max_dead);
-    player->Start(*synthesiser, sample_rate);
+    player->Start(*synthesiser);
   } else
     player->Stop();
 }
@@ -110,7 +111,7 @@ AudioVarioGlue::SetValue(double vario)
   assert(player != nullptr);
   assert(synthesiser != nullptr);
 
-  synthesiser->SetVario(sample_rate, vario);
+  synthesiser->SetVario(vario);
 }
 
 void

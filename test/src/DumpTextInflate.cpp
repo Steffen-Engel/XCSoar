@@ -21,35 +21,30 @@ Copyright_License {
 }
 */
 
-#include "IO/InflateLineReader.hpp"
-#include "IO/FileSource.hpp"
+#include "IO/FileReader.hxx"
+#include "IO/GunzipReader.hxx"
+#include "IO/BufferedReader.hxx"
 #include "OS/Args.hpp"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
 
 #include <stdio.h>
 
 int main(int argc, char **argv)
-{
+try {
   Args args(argc, argv, "FILE");
   const auto path = args.ExpectNextPath();
   args.ExpectEnd();
 
-  Error error;
-  FileSource file(path, error);
-  if (file.error()) {
-    fprintf(stderr, "%s\n", error.GetMessage());
-    return EXIT_FAILURE;
-  }
-
-  InflateLineReader reader(file);
-  if (reader.HasFailed()) {
-    fprintf(stderr, "Failed to inflate file\n");
-    return EXIT_FAILURE;
-  }
+  FileReader file(path);
+  GunzipReader gunzip(file);
+  BufferedReader reader(gunzip);
 
   char *line;
   while ((line = reader.ReadLine()) != nullptr)
     puts(line);
 
   return EXIT_SUCCESS;
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }

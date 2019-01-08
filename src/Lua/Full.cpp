@@ -23,7 +23,7 @@ Copyright_License {
 
 #include "Full.hpp"
 #include "Basic.hpp"
-#include "Util.hpp"
+#include "Util.hxx"
 #include "Log.hpp"
 #include "Persistent.hpp"
 #include "Timer.hpp"
@@ -41,6 +41,8 @@ Copyright_License {
 #include "Wind.hpp"
 #include "Logger.hpp"
 #include "Tracking.hpp"
+#include "Replay.hpp"
+#include "InputEvent.hpp"
 
 lua_State *
 Lua::NewFullState()
@@ -60,10 +62,12 @@ Lua::NewFullState()
   InitWind(L);
   InitLogger(L);
   InitTracking(L);
+  InitReplay(L);
+  InitInputEvent(L);
 
   {
     SetPackagePath(L,
-                   WideToUTF8Converter(LocalPath(_T("lua" DIR_SEPARATOR_S "lib" DIR_SEPARATOR_S "?.lua")).c_str()));
+                   WideToUTF8Converter(LocalPath(_T("lua" DIR_SEPARATOR_S "?.lua")).c_str()));
   }
 
   return L;

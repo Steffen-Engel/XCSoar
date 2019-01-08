@@ -32,6 +32,7 @@ Copyright_License {
 #include "Units/Descriptor.hpp"
 #include "Time/RoughTime.hpp"
 #include "Math/Angle.hpp"
+#include "Math/Util.hpp"
 #include "Renderer/SymbolRenderer.hpp"
 #include "Geo/CoordinateFormat.hpp"
 
@@ -274,9 +275,12 @@ DigitEntry::CalculateLayout()
     last_right = 0;
     for (unsigned i = 0; i < length; ++i) {
       Column &digit = columns[i];
-      unsigned value_width = digit.GetWidth();
+
+      unsigned old_width = digit.right - digit.left;
+      unsigned new_width = std::max(old_width - width_adjust, padding);
+
       digit.left = last_right;
-      last_right = digit.right = digit.left + value_width - width_adjust;
+      last_right = digit.right = digit.left + new_width;
     }
   }
 }
@@ -657,7 +661,7 @@ DigitEntry::GetGeoAngle(CoordinateFormat format) const
   assert(columns[1].type == Column::Type::DIGIT ||
          columns[1].type == Column::Type::DIGIT19);
   assert(columns[2].type == Column::Type::DIGIT);
-  auto degrees = columns[1].value * 10 + columns[2].value;
+  double degrees = columns[1].value * 10 + columns[2].value;
 
   // Read columns according to specified format
   /// \todo support UTM format

@@ -24,7 +24,8 @@ Copyright_License {
 #include "Polar/PolarFileGlue.hpp"
 #include "Parser.hpp"
 #include "IO/FileLineReader.hpp"
-#include "IO/TextWriter.hpp"
+#include "IO/FileOutputStream.hxx"
+#include "IO/BufferedOutputStream.hxx"
 
 bool
 PolarGlue::LoadFromFile(PolarInfo &polar, NLineReader &reader)
@@ -37,34 +38,28 @@ PolarGlue::LoadFromFile(PolarInfo &polar, NLineReader &reader)
   return false;
 }
 
-bool
-PolarGlue::LoadFromFile(PolarInfo &polar, Path path, Error &error)
+void
+PolarGlue::LoadFromFile(PolarInfo &polar, Path path)
 {
-  FileLineReaderA *reader = new FileLineReaderA(path, error);
-  if (reader->error()) {
-    delete reader;
-    return false;
-  }
-
-  LoadFromFile(polar, *reader);
-  delete reader;
-  return true;
+  FileLineReaderA reader(path);
+  LoadFromFile(polar, reader);
 }
 
-bool
-PolarGlue::SaveToFile(const PolarInfo &polar, TextWriter &writer)
+void
+PolarGlue::SaveToFile(const PolarInfo &polar, BufferedOutputStream &writer)
 {
   char buffer[256];
   FormatPolar(polar, buffer, 256);
-  return writer.WriteLine(buffer);
+  writer.Write(buffer);
+  writer.Write('\n');
 }
 
-bool
+void
 PolarGlue::SaveToFile(const PolarInfo &polar, Path path)
 {
-  TextWriter writer(path);
-  if (!writer.IsOpen())
-    return false;
-
-  return SaveToFile(polar, writer);
+  FileOutputStream file(path);
+  BufferedOutputStream writer(file);
+  SaveToFile(polar, writer);
+  writer.Flush();
+  file.Commit();
 }

@@ -23,18 +23,20 @@ Copyright_License {
 
 #include "Blackboard.hpp"
 #include "Geo.hpp"
-#include "Util.hpp"
+#include "Util.hxx"
 #include "Util/StringAPI.hxx"
 #include "Interface.hpp"
 
 namespace Lua {
-  template<typename V>
-  static void PushOptional(lua_State *L, bool available, V &&value) {
-    if (available)
-      Push(L, value);
-    else
-      lua_pushnil(L);
-  }
+
+template<typename V>
+static void PushOptional(lua_State *L, bool available, V &&value) {
+  if (available)
+    Push(L, value);
+  else
+    lua_pushnil(L);
+}
+
 }
 
 static int
@@ -70,7 +72,8 @@ l_blackboard_index(lua_State *L)
   else if (StringIsEqual(name, "dynamic_pressure"))
     Lua::PushOptional(L, basic.dyn_pressure_available, basic.dyn_pressure.GetPascal());
   else if (StringIsEqual(name, "temperature"))
-    Lua::PushOptional(L, basic.temperature_available, basic.temperature);
+    Lua::PushOptional(L, basic.temperature_available,
+                      basic.temperature.ToKelvin());
   else if (StringIsEqual(name, "humidity"))
     Lua::PushOptional(L, basic.humidity_available, basic.humidity);
   else if (StringIsEqual(name, "voltage"))

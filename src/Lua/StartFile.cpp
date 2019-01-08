@@ -32,19 +32,12 @@ extern "C" {
 #include <lua.h>
 }
 
-bool
-Lua::StartFile(Path path, Error &error)
+void
+Lua::StartFile(Path path)
 {
-  lua_State *L = Lua::NewFullState();
-  if (!RunFile(L, path, error)) {
-    lua_close(L);
-    return false;
-  }
+  StatePtr state(Lua::NewFullState());
+  RunFile(state.get(), path);
 
-  if (IsPersistent(L))
-    AddBackground(L);
-  else
-    lua_close(L);
-
-  return true;
+  if (IsPersistent(state.get()))
+    AddBackground(std::move(state));
 }

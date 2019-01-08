@@ -108,6 +108,8 @@ Profile::Load(const ProfileMap &map, SoundSettings &settings)
   map.Get(ProfileKeys::SoundModes, settings.sound_modes_enabled);
   map.Get(ProfileKeys::SoundDeadband, settings.sound_deadband);
 
+  map.Get(ProfileKeys::MasterAudioVolume, settings.master_volume);
+
   Load(map, settings.vario);
 }
 
@@ -121,6 +123,10 @@ Profile::Load(const ProfileMap &map, UISettings &settings)
   map.Get(ProfileKeys::UIScale, settings.scale);
   if (settings.scale < 50 || settings.scale > 200)
     settings.scale = 100;
+
+  map.Get(ProfileKeys::CustomDPI, settings.custom_dpi);
+  if (settings.custom_dpi < 120 || settings.custom_dpi > 520)
+    settings.custom_dpi = 0;
 
   map.Get(ProfileKeys::EnableTAGauge, settings.enable_thermal_assistant_gauge);
 

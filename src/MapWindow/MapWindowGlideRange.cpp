@@ -229,13 +229,6 @@ public:
   }
 };
 
-/**
- * Draw the final glide groundline (and shading) to the buffer
- * and copy the transparent buffer to the canvas
- * @param canvas The drawing canvas
- * @param rc The area to draw in
- * @param buffer The drawing buffer
- */
 void
 MapWindow::DrawTerrainAbove(Canvas &canvas)
 {
@@ -246,31 +239,56 @@ MapWindow::DrawTerrainAbove(Canvas &canvas)
   // .. feature inaccessible
   if (!Basic().location_available
       || !Calculated().flight.flying
-      || GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::OFF
       || route_planner == nullptr)
     return;
 
+  if ((GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::WORKING) ||
+      (GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::WORKING_TERRAIN_LINE) ||
+      (GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::WORKING_TERRAIN_SHADE)) {
+    RenderTerrainAbove(canvas, true);
+  }
+
+  if ((GetComputerSettings().features.final_glide_terrain != FeaturesSettings::FinalGlideTerrain::OFF) &&
+      (GetComputerSettings().features.final_glide_terrain != FeaturesSettings::FinalGlideTerrain::WORKING)) {
+    RenderTerrainAbove(canvas, false);
+  }
+}
+
+/**
+ * Draw the final glide groundline (and shading) to the buffer
+ * and copy the transparent buffer to the canvas
+ * @param canvas The drawing canvas
+ * @param rc The area to draw in
+ * @param buffer The drawing buffer
+ */
+void
+MapWindow::RenderTerrainAbove(Canvas &canvas, bool working)
+{
   // Create a visitor for the Reach code
-  TriangleCompound visitor(route_planner->GetReachProjection(),
+  TriangleCompound visitor(route_planner->GetTerrainReachProjection(),
                            render_projection);
 
   // Fill the TriangleCompound with all TriangleFans in range
   {
     const ProtectedRoutePlanner::Lease lease(*route_planner);
-    lease->AcceptInRange(render_projection.GetScreenBounds(), visitor);
+    lease->AcceptInRange(render_projection.GetScreenBounds(), visitor, working);
   }
 
   // Exit early if not fans found
   if (visitor.fans.empty())
     return;
 
+  const Pen& reach_pen = working? look.reach_working_pen : look.reach_terrain_pen;
+  const Pen& reach_pen_thick = working? look.reach_working_pen_thick : look.reach_terrain_pen_thick;
   // @todo: update this rendering
 
   // Don't draw shade if
   // .. shade feature disabled
   // .. pan mode activated
-  if (GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::SHADE &&
-      IsNearSelf()) {
+  // .. working reach (rather than terrain reach)
+  if (IsNearSelf() && !working &&
+      ((GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::TERRAIN_SHADE) ||
+       (GetComputerSettings().features.final_glide_terrain == FeaturesSettings::FinalGlideTerrain::WORKING_TERRAIN_SHADE))) {
 
 #ifdef ENABLE_OPENGL
 
@@ -310,7 +328,7 @@ MapWindow::DrawTerrainAbove(Canvas &canvas)
 
     // Select the TerrainLine pen
     buffer.SelectHollowBrush();
-    buffer.Select(look.reach_pen_thick);
+    buffer.Select(reach_pen_thick);
     buffer.SetBackgroundColor(Color(0xf0, 0xf0, 0xf0));
 
     // Draw the TerrainLine polygons
@@ -343,11 +361,11 @@ MapWindow::DrawTerrainAbove(Canvas &canvas)
 
 #ifdef ENABLE_OPENGL
     const ScopeVertexPointer vp(&visitor.fans.points[0]);
-    look.reach_pen.Bind();
+    reach_pen.Bind();
 #else
     // Select the TerrainLine pen
     canvas.SelectHollowBrush();
-    canvas.Select(look.reach_pen);
+    canvas.Select(reach_pen);
     canvas.SetBackgroundOpaque();
     canvas.SetBackgroundColor(COLOR_WHITE);
 
@@ -359,7 +377,7 @@ MapWindow::DrawTerrainAbove(Canvas &canvas)
     visitor.fans.DrawOutline(canvas);
 
 #ifdef ENABLE_OPENGL
-    look.reach_pen.Unbind();
+    reach_pen.Unbind();
 #endif
   } else {
     /* more than one fan (turning reach enabled): we have to use a
@@ -383,9 +401,9 @@ MapWindow::DrawTerrainAbove(Canvas &canvas)
   glStencilFunc(GL_NOTEQUAL, 1, 1);
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
-  look.reach_pen_thick.Bind();
+  reach_pen_thick.Bind();
   visitor.fans.DrawOutline(canvas);
-  look.reach_pen_thick.Unbind();
+  reach_pen_thick.Unbind();
 
   glDisable(GL_STENCIL_TEST);
 
@@ -399,7 +417,7 @@ MapWindow::DrawTerrainAbove(Canvas &canvas)
 
   // Select the TerrainLine pen
   buffer.SelectHollowBrush();
-  buffer.Select(look.reach_pen_thick);
+  buffer.Select(reach_pen_thick);
   buffer.SetBackgroundOpaque();
   buffer.SetBackgroundColor(Color(0xf0, 0xf0, 0xf0));
 

@@ -28,10 +28,8 @@ Copyright_License {
 #include "LogFile.hpp"
 #include "Operation/Operation.hpp"
 #include "IO/MapFile.hpp"
+#include "IO/ZipArchive.hpp"
 #include "IO/ZipLineReader.hpp"
-#include "Util/Error.hxx"
-
-#include <zzip/zzip.h>
 
 /**
  * Load topography from the map file (ZIP), load the other files from
@@ -40,21 +38,17 @@ Copyright_License {
 static bool
 LoadConfiguredTopographyZip(TopographyStore &store,
                             OperationEnvironment &operation)
-{
-  auto dir = OpenMapFile();
-  if (dir == nullptr)
+try {
+  auto archive = OpenMapFile();
+  if (!archive)
     return false;
 
-  ZipLineReaderA reader(dir, "topology.tpl", IgnoreError());
-  if (reader.error()) {
-    zzip_dir_close(dir);
-    LogFormat(_T("No topography in map file"));
-    return false;
-  }
-
-  store.Load(operation, reader, nullptr, dir);
-  zzip_dir_close(dir);
+  ZipLineReaderA reader(archive->get(), "topology.tpl");
+  store.Load(operation, reader, nullptr, archive->get());
   return true;
+} catch (const std::runtime_error &e) {
+  LogError("No topography in map file", e);
+  return false;
 }
 
 bool

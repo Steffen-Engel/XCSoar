@@ -22,6 +22,7 @@ Copyright_License {
 */
 
 #include "Assemble.hpp"
+#include "Export.hpp"
 #include "Protocol.hpp"
 #include "NMEA/Info.hpp"
 #include "OS/ByteOrder.hpp"
@@ -45,6 +46,59 @@ SkyLinesTracking::MakePing(uint64_t key, uint16_t id)
   return packet;
 }
 
+SkyLinesTracking::ACKPacket
+SkyLinesTracking::MakeAck(uint64_t key, uint16_t id, uint32_t flags)
+{
+  assert(key != 0);
+
+  ACKPacket packet;
+  packet.header.magic = ToBE32(MAGIC);
+  packet.header.crc = 0;
+  packet.header.type = ToBE16(Type::ACK);
+  packet.header.key = ToBE64(key);
+  packet.id = ToBE16(id);
+  packet.reserved = 0;
+  packet.flags = ToBE32(flags);
+
+  packet.header.crc = ToBE16(UpdateCRC16CCITT(&packet, sizeof(packet), 0));
+  return packet;
+}
+
+SkyLinesTracking::FixPacket
+SkyLinesTracking::MakeFix(uint64_t key, uint32_t flags, uint32_t time,
+                          ::GeoPoint location, Angle track,
+                          double ground_speed, double airspeed,
+                          int altitude, double vario, unsigned enl)
+{
+  assert(key != 0);
+
+  FixPacket packet;
+  packet.header.magic = ToBE32(MAGIC);
+  packet.header.crc = 0;
+  packet.header.type = ToBE16(Type::FIX);
+  packet.header.key = ToBE64(key);
+  packet.flags = 0;
+
+  packet.flags = ToBE32(flags);
+  packet.time = ToBE32(time);
+  packet.reserved = 0;
+
+  if (location.IsValid())
+    packet.location = ExportGeoPoint(location);
+  else
+    packet.location.latitude = packet.location.longitude = 0;
+
+  packet.track = ToBE16(uint16_t(track.AsBearing().Degrees()));
+  packet.ground_speed = ToBE16(uint16_t(ground_speed * 16));
+  packet.airspeed = ToBE16(uint16_t(airspeed * 16));
+  packet.altitude = ToBE16(altitude);
+  packet.vario = ToBE16(int(vario * 256));
+  packet.engine_noise_level = ToBE16(enl);
+
+  packet.header.crc = ToBE16(UpdateCRC16CCITT(&packet, sizeof(packet), 0));
+  return packet;
+}
+
 SkyLinesTracking::FixPacket
 SkyLinesTracking::ToFix(uint64_t key, const NMEAInfo &basic)
 {
@@ -63,10 +117,7 @@ SkyLinesTracking::ToFix(uint64_t key, const NMEAInfo &basic)
 
   if (basic.location_available) {
     packet.flags |= ToBE32(FixPacket::FLAG_LOCATION);
-    ::GeoPoint location = basic.location;
-    location.Normalize();
-    packet.location.latitude = ToBE32(int(location.latitude.Degrees() * 1000000));
-    packet.location.longitude = ToBE32(int(location.longitude.Degrees() * 1000000));
+    packet.location = ExportGeoPoint(basic.location);
   } else
     packet.location.latitude = packet.location.longitude = 0;
 
@@ -119,7 +170,61 @@ SkyLinesTracking::ToFix(uint64_t key, const NMEAInfo &basic)
   return packet;
 }
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+SkyLinesTracking::Thermal
+SkyLinesTracking::MakeThermal(uint32_t time,
+                              ::GeoPoint bottom_location,
+                              int bottom_altitude,
+                              ::GeoPoint top_location,
+                              int top_altitude,
+                              double lift)
+{
+  Thermal thermal;
+  thermal.time = time;
+  thermal.reserved1 = 0;
+  thermal.bottom_location = ExportGeoPoint(bottom_location);
+  thermal.top_location = ExportGeoPoint(top_location);
+  thermal.bottom_altitude = ToBE16(bottom_altitude);
+  thermal.top_altitude = ToBE16(top_altitude);
+  thermal.lift = ToBE16(lround(lift * 256));
+  thermal.reserved2 = 0;
+  return thermal;
+}
+
+SkyLinesTracking::ThermalSubmitPacket
+SkyLinesTracking::MakeThermalSubmit(uint64_t key, uint32_t time,
+                                    ::GeoPoint bottom_location,
+                                    int bottom_altitude,
+                                    ::GeoPoint top_location,
+                                    int top_altitude,
+                                    double lift)
+{
+  ThermalSubmitPacket packet;
+  packet.header.magic = ToBE32(MAGIC);
+  packet.header.crc = 0;
+  packet.header.type = ToBE16(Type::THERMAL_SUBMIT);
+  packet.header.key = ToBE64(key);
+  packet.thermal = MakeThermal(time, bottom_location, bottom_altitude,
+                               top_location, top_altitude, lift);
+  packet.header.crc = ToBE16(UpdateCRC16CCITT(&packet, sizeof(packet), 0));
+  return packet;
+}
+
+SkyLinesTracking::ThermalRequestPacket
+SkyLinesTracking::MakeThermalRequest(uint64_t key)
+{
+  assert(key != 0);
+
+  ThermalRequestPacket packet;
+  packet.header.magic = ToBE32(MAGIC);
+  packet.header.crc = 0;
+  packet.header.type = ToBE16(Type::THERMAL_REQUEST);
+  packet.header.key = ToBE64(key);
+  packet.flags = 0;
+  packet.reserved1 = 0;
+
+  packet.header.crc = ToBE16(UpdateCRC16CCITT(&packet, sizeof(packet), 0));
+  return packet;
+}
 
 SkyLinesTracking::TrafficRequestPacket
 SkyLinesTracking::MakeTrafficRequest(uint64_t key, bool followees, bool club,
@@ -157,5 +262,3 @@ SkyLinesTracking::MakeUserNameRequest(uint64_t key, uint32_t user_id)
   packet.header.crc = ToBE16(UpdateCRC16CCITT(&packet, sizeof(packet), 0));
   return packet;
 }
-
-#endif

@@ -32,16 +32,11 @@
 #include "Polar/PolarStore.hpp"
 #include "Util/ConvertString.hpp"
 #include "Util/Macros.hpp"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-TLineReader*
-OpenConfiguredTextFile(const char *profile_key, Charset cs)
-{
-  return NULL;
-}
 
 static void
 TestBasic()
@@ -82,7 +77,7 @@ TestFileImport()
 {
   // Test LoadFromFile()
   PolarInfo polar;
-  PolarGlue::LoadFromFile(polar, Path(_T("test/data/test.plr")), IgnoreError());
+  PolarGlue::LoadFromFile(polar, Path(_T("test/data/test.plr")));
   ok1(equals(polar.reference_mass, 318));
   ok1(equals(polar.max_ballast, 100));
   ok1(equals(polar.shape[0].v, 22.2222222));
@@ -190,7 +185,7 @@ TestBuiltInPolarsPlausibility()
 }
 
 int main(int argc, char **argv)
-{
+try {
   unsigned num_tests = 19 + 9 + PolarStore::Count();
 
   // NOTE: Plausibility tests disabled for now since many fail
@@ -208,4 +203,7 @@ int main(int argc, char **argv)
     TestBuiltInPolarsPlausibility();
 
   return exit_status();
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }

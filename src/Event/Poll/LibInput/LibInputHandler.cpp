@@ -42,7 +42,7 @@ LibInputHandler::Open()
   if ((nullptr != udev_context)
       || (nullptr != li_if)
       || (nullptr != li)
-      || fd.IsDefined())
+      || fd.is_open())
     return false;
 
   if (nullptr == udev_context) {
@@ -71,20 +71,21 @@ LibInputHandler::Open()
   if (0 != assign_seat_ret)
     return false;
 
-  fd.Set(libinput_get_fd(li));
-  if (!fd.IsDefined())
+  int _fd = libinput_get_fd(li);
+  if (_fd < 0)
     return false;
-  io_loop.Add(fd, io_loop.READ, *this);
 
+  fd.assign(_fd);
+  AsyncRead();
   return true;
 }
 
 void
 LibInputHandler::Close()
 {
-  if (fd.IsDefined()) {
-    io_loop.Remove(fd);
-    fd.SetUndefined();
+  if (fd.is_open()) {
+    fd.cancel();
+    fd.release();
   }
 
   if (nullptr != li)
@@ -151,10 +152,12 @@ LibInputHandler::HandleEvent(struct libinput_event *li_event)
       uint32_t key_code = libinput_event_keyboard_get_key(kb_li_event);
       libinput_key_state key_state =
         libinput_event_keyboard_get_key_state(kb_li_event);
-      queue.Push(Event(key_state == LIBINPUT_KEY_STATE_PRESSED
-                       ? Event::KEY_DOWN
-                       : Event::KEY_UP,
-                       TranslateKeyCode(key_code)));
+      bool is_char;
+      Event e(key_state == LIBINPUT_KEY_STATE_PRESSED
+                  ? Event::KEY_DOWN : Event::KEY_UP,
+              TranslateKeyCode(key_code, is_char));
+      e.is_char = is_char;
+      queue.Push(e);
     }
     break;
   case LIBINPUT_EVENT_POINTER_MOTION:
@@ -255,10 +258,12 @@ LibInputHandler::HandlePendingEvents()
     HandleEvent(li_event);
 }
 
-bool
-LibInputHandler::OnFileEvent(FileDescriptor fd, unsigned mask)
+void
+LibInputHandler::OnReadReady(const boost::system::error_code &ec)
 {
-  HandlePendingEvents();
+  if (ec)
+    return;
 
-  return true;
+  HandlePendingEvents();
+  AsyncRead();
 }

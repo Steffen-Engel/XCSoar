@@ -123,7 +123,7 @@ protected:
 
   RasterTerrain *terrain = nullptr;
 
-  const RaspStore *rasp_store = nullptr;
+  std::shared_ptr<RaspStore> rasp_store;
 
   /**
    * The current RASP renderer.  Modifications to this pointer (but
@@ -154,7 +154,7 @@ protected:
   NOAAStore *noaa_store = nullptr;
 #endif
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   const SkyLinesTracking::Data *skylines_data = nullptr;
 #endif
 
@@ -222,7 +222,12 @@ public:
 
   void SetTopography(TopographyStore *_topography);
   void SetTerrain(RasterTerrain *_terrain);
-  void SetWeather(const RaspStore *_weather);
+
+  const std::shared_ptr<RaspStore> &GetRasp() const {
+    return rasp_store;
+  }
+
+  void SetRasp(const std::shared_ptr<RaspStore> &_rasp_store);
 
 #ifdef ENABLE_OPENGL
   void SetOverlay(std::unique_ptr<MapOverlay> &&_overlay);
@@ -238,7 +243,7 @@ public:
   }
 #endif
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   void SetSkyLinesData(const SkyLinesTracking::Data *_data) {
     skylines_data = _data;
   }
@@ -286,7 +291,7 @@ protected:
   virtual void RenderTrail(Canvas &canvas, PixelPoint aircraft_pos);
   virtual void RenderTrackBearing(Canvas &canvas, PixelPoint aircraft_pos);
 
-#ifdef HAVE_SKYLINES_TRACKING_HANDLER
+#ifdef HAVE_SKYLINES_TRACKING
   void DrawSkyLinesTraffic(Canvas &canvas) const;
 #endif
 
@@ -340,6 +345,8 @@ private:
   void RenderTerrain(Canvas &canvas);
 
   void RenderRasp(Canvas &canvas);
+
+  void RenderTerrainAbove(Canvas &canvas, bool working);
 
   /**
    * Renders the topography

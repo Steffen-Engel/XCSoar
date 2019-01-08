@@ -45,10 +45,13 @@ test_troute(const RasterMap &map, double mwind, double mc, int ceiling)
 {
   GlideSettings settings;
   settings.SetDefaults();
+  RoutePlannerConfig config;
+  config.mode = RoutePlannerConfig::Mode::BOTH;
+
   GlidePolar polar(mc);
   SpeedVector wind(Angle::Degrees(0), mwind);
   TerrainRoute route;
-  route.UpdatePolar(settings, polar, polar, wind);
+  route.UpdatePolar(settings, config, polar, polar, wind);
   route.SetTerrain(&map);
 
   GeoPoint origin(map.GetMapCenter());
@@ -78,9 +81,6 @@ test_troute(const RasterMap &map, double mwind, double mc, int ceiling)
     fout << "\n";
   }
 
-  RoutePlannerConfig config;
-  config.mode = RoutePlannerConfig::Mode::BOTH;
-
   unsigned i=0;
   for (double ang = 0; ang < M_2PI; ang += M_PI / 8) {
     GeoPoint dest = GeoVector(40000.0, Angle::Radians(ang)).EndPoint(origin);
@@ -94,7 +94,7 @@ test_troute(const RasterMap &map, double mwind, double mc, int ceiling)
                                    ? hdest
                                    : std::max(hdest, 3200)),
                          config, ceiling);
-    char buffer[80];
+    char buffer[128];
     sprintf(buffer,"terrain route solve, dir=%g, wind=%g, mc=%g ceiling=%d",
             (double)ang, (double)mwind, (double)mc, (int)ceiling);
     ok(retval, buffer, 0);
@@ -130,6 +130,8 @@ int main(int argc, char** argv) {
     zzip_dir_close(dir);
     return EXIT_FAILURE;
   }
+
+  map.UpdateProjection();
 
   SharedMutex mutex;
   do {

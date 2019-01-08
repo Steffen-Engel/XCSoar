@@ -24,44 +24,17 @@ Copyright_License {
 #ifndef NET_SESSION_HPP
 #define NET_SESSION_HPP
 
-#include "Features.hpp"
-
-#ifdef HAVE_WININET
-#include "WinINet/WinINet.hpp"
-#endif
-
-#ifdef HAVE_CURL
-#include "CURL/Multi.hpp"
-#endif
+#include "Multi.hpp"
 
 namespace Net {
   class Session {
-#ifdef HAVE_WININET
-    /** Internal session handle */
-    WinINet::SessionHandle handle;
-#endif
-
-#ifdef HAVE_CURL
     CurlMulti multi;
-#endif
 
   public:
-#ifdef HAVE_WININET
-    friend class Connection;
-    friend class Request;
-
-    /**
-     * Opens a session that can be used for
-     * connections and registers the necessary callback.
-     */
-    Session();
-#endif
-
     /**
      * Was the session created successfully
      * @return True if session was created successfully
      */
-#ifdef HAVE_CURL
     void Add(CURL *easy) {
       multi.Add(easy);
     }
@@ -79,7 +52,6 @@ namespace Net {
     CURLcode InfoRead(const CURL *easy) {
       return multi.InfoRead(easy);
     }
-#endif
   };
 }
 

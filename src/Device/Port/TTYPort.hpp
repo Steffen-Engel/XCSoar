@@ -25,8 +25,8 @@ Copyright_License {
 #define XCSOAR_DEVICE_TTY_PORT_HPP
 
 #include "BufferedPort.hpp"
-#include "OS/TTYDescriptor.hpp"
-#include "IO/Async/FileEventHandler.hpp"
+
+#include <boost/asio/serial_port.hpp>
 
 #include <atomic>
 
@@ -35,11 +35,9 @@ Copyright_License {
 /**
  * A serial port class for POSIX (/dev/ttyS*, /dev/ttyUSB*).
  */
-class TTYPort : public BufferedPort, protected FileEventHandler
+class TTYPort : public BufferedPort
 {
-  unsigned baud_rate;
-
-  TTYDescriptor tty;
+  boost::asio::serial_port serial_port;
 
   std::atomic<bool> valid;
 
@@ -50,9 +48,8 @@ public:
    * @param _handler the callback object for input received on the
    * port
    */
-  TTYPort(PortListener *_listener, DataHandler &_handler)
-    :BufferedPort(_listener, _handler) {}
-
+  TTYPort(boost::asio::io_service &io_service,
+          PortListener *_listener, DataHandler &_handler);
   virtual ~TTYPort();
 
   /**
@@ -79,9 +76,14 @@ public:
   virtual unsigned GetBaudrate() const override;
   virtual size_t Write(const void *data, size_t length) override;
 
-protected:
-  /* virtual methods from class FileEventHandler */
-  bool OnFileEvent(FileDescriptor fd, unsigned mask) override;
+private:
+  void OnReadReady(const boost::system::error_code &ec);
+
+  void AsyncRead() {
+    serial_port.async_read_some(boost::asio::null_buffers(),
+                                std::bind(&TTYPort::OnReadReady, this,
+                                          std::placeholders::_1));
+  }
 };
 
 #endif

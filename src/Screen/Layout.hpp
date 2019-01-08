@@ -51,6 +51,7 @@ namespace Layout
   extern unsigned small_scale;
 
   extern unsigned pen_width_scale;
+  extern unsigned fine_pen_width_scale;
 
   /**
    * Fixed-point scaling factor to convert a point (1/72th inch) to
@@ -87,8 +88,10 @@ namespace Layout
    *
    * @param screen_size the size of the screen in pixels
    * @param ui_scale the UI scale setting in percent
+   * @param custom_dpi user defined DPI setting or 0 for system settings
    */
-  void Initialize(PixelSize screen_size, unsigned ui_scale=100);
+  void Initialize(PixelSize screen_size, unsigned ui_scale=100,
+                  unsigned custom_dpi=0);
 
   /**
    * Is scaling supported by this platform?
@@ -188,6 +191,16 @@ namespace Layout
       return width;
 
     return (width * pen_width_scale) >> 10;
+  }
+
+  gcc_const
+  static inline unsigned
+  ScaleFinePenWidth(unsigned width)
+  {
+    if (!ScaleSupported())
+      return width;
+
+    return (width * fine_pen_width_scale) >> 10;
   }
 
   /**

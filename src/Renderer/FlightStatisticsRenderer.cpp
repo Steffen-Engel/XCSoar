@@ -42,6 +42,7 @@ Copyright_License {
 #include "Renderer/TaskPointRenderer.hpp"
 #include "Renderer/OZRenderer.hpp"
 #include "Renderer/AircraftRenderer.hpp"
+#include "Renderer/MapScaleRenderer.hpp"
 #include "Engine/Contest/Solvers/Retrospective.hpp"
 #include "Computer/Settings.hpp"
 
@@ -92,12 +93,13 @@ FlightStatisticsRenderer::RenderOLC(Canvas &canvas, const PixelRect rc,
                                     const TraceComputer &trace_computer,
                                     const Retrospective &retrospective) const
 {
+  ChartRenderer chart(chart_look, canvas, rc);
   if (!trail_renderer.LoadTrace(trace_computer)) {
-    ChartRenderer chart(chart_look, canvas, rc);
     chart.DrawNoData();
     return;
   }
 
+  const PixelRect &rc_chart = chart.GetChartRect();
   GeoBounds bounds(nmea_info.location);
   trail_renderer.ScanBounds(bounds);
 
@@ -110,7 +112,7 @@ FlightStatisticsRenderer::RenderOLC(Canvas &canvas, const PixelRect rc,
     }
   }
 
-  const ChartProjection proj(rc, TaskProjection(bounds));
+  const ChartProjection proj(rc_chart, TaskProjection(bounds));
 
   {
     // draw place names found in the retrospective task
@@ -161,6 +163,8 @@ FlightStatisticsRenderer::RenderOLC(Canvas &canvas, const PixelRect rc,
     DrawContestTriangle(canvas, proj, contest, 1);
     break;
   }
+
+  RenderMapScale(canvas, proj, rc_chart, map_look.overlay);
 }
 
 void
@@ -250,6 +254,8 @@ FlightStatisticsRenderer::RenderTask(Canvas &canvas, const PixelRect rc,
 
   ChartProjection proj;
 
+  const PixelRect &rc_chart = chart.GetChartRect();
+
   {
     ProtectedTaskManager::Lease task_manager(_task_manager);
     const OrderedTask &task = task_manager->GetOrderedTask();
@@ -259,7 +265,7 @@ FlightStatisticsRenderer::RenderTask(Canvas &canvas, const PixelRect rc,
       return;
     }
 
-    proj.Set(rc, task, nmea_info.location);
+    proj.Set(rc_chart, task);
 
     OZRenderer ozv(map_look.task, map_look.airspace, settings_map.airspace);
     TaskPointRenderer tpv(canvas, proj, map_look.task,
@@ -279,6 +285,8 @@ FlightStatisticsRenderer::RenderTask(Canvas &canvas, const PixelRect rc,
     AircraftRenderer::Draw(canvas, settings_map, map_look.aircraft,
                            nmea_info.attitude.heading, aircraft_pos);
   }
+
+  RenderMapScale(canvas, proj, rc_chart, map_look.overlay);
 }
 
 void

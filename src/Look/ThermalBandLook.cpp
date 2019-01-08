@@ -23,25 +23,23 @@ Copyright_License {
 
 #include "ThermalBandLook.hpp"
 #include "Screen/Layout.hpp"
-
-static Color
-ColorWithAlpha(const Color &c, uint8_t a)
-{
-#ifdef ENABLE_OPENGL
-  return c.WithAlpha(a);
-#else
-  return c;
-#endif
-}
+#include "Look/Colors.hpp"
 
 void
 ThermalBandLook::Initialise(bool _inverse, Color sky_color)
 {
+  const uint8_t alpha = ALPHA_OVERLAY;
+
   inverse = _inverse;
 
-  brush.Create(ColorWithAlpha(sky_color, 0xA0));
-  pen.Create(Layout::ScalePenWidth(1), DarkColor(sky_color));
+  brush_active.Create(ColorWithAlpha(sky_color, alpha));
+  brush_inactive.Create(ColorWithAlpha(DarkColor(sky_color), alpha/2));
 
-  white_pen.Create(2, COLOR_WHITE);
-  black_pen.Create(2, COLOR_BLACK);
+  pen_active.Create(Layout::ScalePenWidth(1), DarkColor(sky_color));
+  pen_inactive.Create(Layout::ScalePenWidth(1), sky_color);
+
+  white_pen.Create(Layout::ScalePenWidth(2), COLOR_WHITE);
+  black_pen.Create(Layout::ScalePenWidth(2), COLOR_BLACK);
+
+  working_band_pen.Create(Layout::ScalePenWidth(2), COLOR_GRAY);
 }

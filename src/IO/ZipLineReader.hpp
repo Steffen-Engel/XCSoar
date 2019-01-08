@@ -24,26 +24,21 @@ Copyright_License {
 #ifndef XCSOAR_IO_ZIP_LINE_READER_HPP
 #define XCSOAR_IO_ZIP_LINE_READER_HPP
 
-#include "ZipSource.hpp"
-#include "LineSplitter.hpp"
+#include "ZipReader.hpp"
+#include "BufferedReader.hxx"
 #include "ConvertLineReader.hpp"
 
 /**
- * Glue class which combines ZipSource, LineSplitter and
- * ConvertLineReader, and provides a public TLineReader interface.
+ * Glue class which combines ZipReader and BufferedReader, and provides
+ * a public NLineReader interface.
  */
 class ZipLineReaderA : public NLineReader {
-protected:
-  ZipSource zip;
-  LineSplitter splitter;
+  ZipReader zip;
+  BufferedReader buffered;
 
 public:
-  ZipLineReaderA(struct zzip_dir *dir, const char *path, Error &error)
-    :zip(dir, path, error), splitter(zip) {}
-
-  bool error() const {
-    return zip.error();
-  }
+  ZipLineReaderA(struct zzip_dir *dir, const char *path)
+    :zip(dir, path), buffered(zip) {}
 
 public:
   /* virtual methods from class NLineReader */
@@ -52,30 +47,14 @@ public:
   long Tell() const override;
 };
 
-/**
- * Glue class which combines ZipSource, LineSplitter and
- * ConvertLineReader, and provides a public TLineReader interface.
- */
-class ZipLineReader : public TLineReader {
-protected:
-  ZipSource zip;
-  LineSplitter splitter;
-  ConvertLineReader convert;
-
+class ZipLineReader : public ConvertLineReader {
 public:
-  ZipLineReader(struct zzip_dir *dir, const char *path, Error &error,
+  /**
+   * Throws std::runtime_errror on error.
+   */
+  ZipLineReader(struct zzip_dir *dir, const char *path,
                 Charset cs=Charset::UTF8)
-    :zip(dir, path, error), splitter(zip), convert(splitter, cs) {}
-
-  bool error() const {
-    return zip.error();
-  }
-
-public:
-  /* virtual methods from class TLineReader */
-  TCHAR *ReadLine() override;
-  long GetSize() const override;
-  long Tell() const override;
+    :ConvertLineReader(std::make_unique<ZipLineReaderA>(dir, path), cs) {}
 };
 
 #endif

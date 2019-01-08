@@ -91,8 +91,12 @@ InfoBoxWindow::PaintTitle(Canvas &canvas)
 
   if (settings.border_style == InfoBoxSettings::BorderStyle::TAB &&
       halftextwidth > Layout::Scale(3)) {
+
+    const auto pad = Layout::Scale(2);
+    const auto text_pad = Layout::GetTextPadding()*2;
+
     int ytop = title_rect.top + font.GetCapitalHeight() / 2;
-    int ytopedge = ytop + Layout::GetTextPadding();
+    int ytopedge = ytop + pad;
     int ybottom = title_rect.top + Layout::Scale(6)
       + font.GetCapitalHeight();
 
@@ -101,13 +105,13 @@ InfoBoxWindow::PaintTitle(Canvas &canvas)
     BulkPixelPoint tab[8];
     tab[0].x = tab[1].x = title_rect.left;
     tab[0].y = tab[7].y = ybottom;
-    tab[2].x = title_rect.left + Layout::GetTextPadding();
+    tab[2].x = title_rect.left + pad;
     tab[2].y = tab[5].y = tab[3].y = tab[4].y = ytop;
     tab[1].y = tab[6].y = ytopedge;
-    tab[5].x = title_rect.right - Layout::GetTextPadding();
+    tab[5].x = title_rect.right - pad;
     tab[6].x = tab[7].x = title_rect.right;
-    tab[3].x = title_rect.left + halftextwidth - Layout::Scale(1);
-    tab[4].x = title_rect.right - halftextwidth + Layout::Scale(1);
+    tab[3].x = title_rect.left + halftextwidth - text_pad;
+    tab[4].x = title_rect.right - halftextwidth + text_pad;
 
     canvas.DrawPolyline(tab, 4);
     canvas.DrawPolyline(tab + 4, 4);
@@ -300,6 +304,7 @@ void
 InfoBoxWindow::OnDestroy()
 {
   focus_timer.Cancel();
+  dialog_timer.Cancel();
   PaintWindow::OnDestroy();
 }
 
@@ -326,7 +331,9 @@ InfoBoxWindow::OnResize(PixelSize new_size)
   title_rect.bottom = rc.top + look.title_font.GetHeight();
 
   comment_rect = rc;
-  comment_rect.top = comment_rect.bottom - (look.title_font.GetHeight() + 2);
+  comment_rect.bottom -= Layout::Scale(2);
+  comment_rect.top = comment_rect.bottom - (look.title_font.GetHeight() + Layout::Scale(2));
+
   value_rect = rc;
   value_rect.top = title_rect.bottom;
   value_rect.bottom = comment_rect.top;
@@ -446,7 +453,7 @@ InfoBoxWindow::OnMouseMove(PixelPoint p, unsigned keys)
 }
 
 void
-InfoBoxWindow::OnPaint(Canvas &canvas)
+InfoBoxWindow::OnPaintBuffer(Canvas &canvas)
 {
   Paint(canvas);
 }

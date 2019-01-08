@@ -12,7 +12,7 @@
 #include "Task/LoadFile.hpp"
 #include "NMEA/Info.hpp"
 #include "Engine/Waypoint/Waypoints.hpp"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
 #include "test_debug.hpp"
 
 #include <fstream>
@@ -35,8 +35,8 @@ task_load(const TaskBehaviour &task_behaviour)
 class ReplayLoggerSim: public IgcReplay
 {
 public:
-  ReplayLoggerSim(NLineReader *reader)
-    :IgcReplay(reader),
+  explicit ReplayLoggerSim(std::unique_ptr<NLineReader> &&_reader)
+    :IgcReplay(std::move(_reader)),
      started(false) {}
 
   AircraftState state;
@@ -102,15 +102,7 @@ test_replay()
 
   // task_manager.get_task_advance().get_advance_state() = TaskAdvance::AUTO;
 
-  Error error;
-  FileLineReaderA *reader = new FileLineReaderA(replay_file, error);
-  if (reader->error()) {
-    delete reader;
-    fprintf(stderr, "%s\n", error.GetMessage());
-    return false;
-  }
-
-  ReplayLoggerSim sim(reader);
+  ReplayLoggerSim sim(std::make_unique<FileLineReaderA>(replay_file));
   sim.state.netto_vario = 0;
 
   bool do_print = verbose;
@@ -184,7 +176,7 @@ test_replay()
 
 
 int main(int argc, char** argv) 
-{
+try {
   output_skip = 60;
 
   replay_file = Path(_T("test/data/apf-bug554.igc"));
@@ -199,5 +191,7 @@ int main(int argc, char** argv)
   ok(test_replay(),"replay task",0);
 
   return exit_status();
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }
-

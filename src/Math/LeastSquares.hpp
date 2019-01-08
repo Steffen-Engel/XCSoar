@@ -48,9 +48,18 @@ Copyright_License {
 #ifndef _LEASTSQS_H
 #define _LEASTSQS_H
 
-#include "Util/TrivialArray.hxx"
+#include "XYDataStore.hpp"
+#include "Angle.hpp"
 
-#include <type_traits>
+#include <assert.h>
+
+struct ErrorEllipse {
+  double x;
+  double y;
+  double halfmajor;
+  double halfminor;
+  Angle angle;
+};
 
 /**
  * A solver for least squares problems
@@ -73,11 +82,9 @@ Copyright_License {
  *     (y_i - \hat{y}_i)^2
  * \f]
  */
-class LeastSquares
+class LeastSquares: public XYDataStore
 {
-  double sum_xi, sum_yi, sum_xi_2, sum_xi_yi;
-
-  unsigned sum_n;
+  double sum_xxw, sum_xyw;
 
   /**
   * \f[
@@ -92,85 +99,37 @@ class LeastSquares
   * \f]
   */
   double b;
-  double sum_error;
 
+  double sum_error;
   double rms_error;
   double max_error;
-  double sum_weights;
-  double y_max;
-  double y_min;
-  double x_min;
-  double x_max;
 
   double y_ave;
 
-  struct Slot {
-    double x, y;
-
-#ifdef LEASTSQS_WEIGHT_STORE
-    double weight;
-#endif
-
-    Slot() = default;
-
-    constexpr
-    Slot(double _x, double _y, double _weight)
-      :x(_x), y(_y)
-#ifdef LEASTSQS_WEIGHT_STORE
-      , weight(_weight)
-#endif
-    {}
-  };
-
-  TrivialArray<Slot, 1000> slots;
+  double x_mean, y_mean, x_S, y_S, xy_C;
+  double x_var, y_var, xy_var;
 
 public:
-  bool IsEmpty() const {
-    return sum_n == 0;
-  }
-
-  bool HasResult() const {
-    return sum_n >= 2;
-  }
-
-  unsigned GetCount() const {
-    return sum_n;
-  }
-
   /**
    * Reset the LeastSquares calculator.
    */
   void Reset();
 
   double GetGradient() const {
+    assert(!IsEmpty());
+
     return m;
   }
 
-  double GetMinX() const {
-    return x_min;
-  }
-
-  double GetMaxX() const {
-    return x_max;
-  }
-
-  double GetMiddleX() const {
-    return (x_min + x_max) / 2.;
-  }
-
-  double GetMinY() const {
-    return y_min;
-  }
-
-  double GetMaxY() const {
-    return y_max;
-  }
-
   double GetAverageY() const {
+    assert(!IsEmpty());
+
     return y_ave;
   }
 
   double GetYAt(double x) const {
+    assert(!IsEmpty());
+
     return x * m + b;
   }
 
@@ -182,8 +141,34 @@ public:
     return GetYAt(GetMaxX());
   }
 
-  const TrivialArray<Slot, 1000> &GetSlots() const {
-    return slots;
+  double GetMeanY() const {
+    assert(!IsEmpty());
+
+    return y_mean;
+  }
+
+  double GetMeanX() const {
+    assert(!IsEmpty());
+
+    return x_mean;
+  }
+
+  double GetVarX() const {
+    assert(!IsEmpty());
+
+    return x_var;
+  }
+
+  double GetVarY() const {
+    assert(!IsEmpty());
+
+    return y_var;
+  }
+
+  double GetCovXY() const {
+    assert(!IsEmpty());
+
+    return xy_var;
   }
 
   /**
@@ -204,7 +189,12 @@ public:
    */
   void Update(double x, double y, double weight=1);
 
-private:
+  /**
+   * Calculate the 1 std error ellipse fitting the data
+   */
+  ErrorEllipse GetErrorEllipse() const;
+
+protected:
   /**
    * Calculate the least squares average.
    */
@@ -223,6 +213,14 @@ private:
    * @param weight Weight of the new data point (optional)
    */
   void Add(double x, double y, double weight=1);
+
+  /**
+   * Remove data point to the values.
+   * This updates the least squares statistics but not x/y min/max.
+   * If weights aren't stored, this assumes weight = 1
+   */
+  void Remove(const unsigned i);
+
 };
 
 static_assert(std::is_trivial<LeastSquares>::value, "type is not trivial");

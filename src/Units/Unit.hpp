@@ -50,7 +50,9 @@ enum class Unit: uint8_t {
   LB_PER_FT2,
   KG,
   LB,
-
+  PERCENT,
+  GRADIENT,
+  VOLT,
   /**
    * The sentinel: the number of units in this enum.
    */

@@ -26,8 +26,4 @@ Copyright_License {
 
 #define HAVE_SKYLINES_TRACKING
 
-#if defined(HAVE_POSIX) && !defined(KOBO)
-#define HAVE_SKYLINES_TRACKING_HANDLER
-#endif
-
 #endif

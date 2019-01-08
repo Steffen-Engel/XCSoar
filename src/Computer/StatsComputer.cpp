@@ -70,29 +70,34 @@ StatsComputer::DoLogging(const MoreData &basic,
 
     if (basic.NavAltitudeAvailable())
       flightstats.AddAltitude(calculated.flight.flight_time,
-                              basic.nav_altitude);
+                              basic.nav_altitude,
+                              calculated.task_stats.flight_mode_final_glide);
 
-    if (calculated.task_stats.IsPirkerSpeedAvailable())
+    if (calculated.task_stats.task_valid &&
+        calculated.task_stats.inst_speed_slow >= 0)
       flightstats.AddTaskSpeed(calculated.flight.flight_time,
-                               calculated.task_stats.get_pirker_speed());
+                               calculated.task_stats.inst_speed_slow);
+  }
+
+  if (calculated.flight.flying) {
+    flightstats.AddClimbRate(calculated.flight.flight_time,
+                             calculated.average,
+                             calculated.turn_mode == CirclingMode::CLIMB);
   }
 
   return true;
 }
 
 void
-StatsComputer::OnClimbBase(const DerivedInfo &calculated, double StartAlt)
+StatsComputer::OnClimbBase(const DerivedInfo &calculated)
 {
-  flightstats.AddClimbBase(calculated.climb_start_time -
-                           calculated.flight.takeoff_time, StartAlt);
+  // nothing to do here now
 }
 
 void
 StatsComputer::OnClimbCeiling(const DerivedInfo &calculated)
 {
-  flightstats.AddClimbCeiling(calculated.cruise_start_time -
-                              calculated.flight.takeoff_time,
-                              calculated.cruise_start_altitude);
+  // nothing to do here now
 }
 
 /**
@@ -104,7 +109,20 @@ StatsComputer::OnDepartedThermal(const DerivedInfo &calculated)
 {
   assert(calculated.last_thermal.IsDefined());
 
-  flightstats.AddThermalAverage(calculated.last_thermal.lift_rate);
+  auto t_start = calculated.last_thermal.start_time - calculated.flight.takeoff_time;
+  auto t_end = calculated.last_thermal.end_time - calculated.flight.takeoff_time;
+
+  flightstats.AddThermalAverage(t_start, t_end, calculated.last_thermal.lift_rate);
+
+  // ignore failed climbs
+  if (calculated.last_thermal.gain<= 0)
+    return;
+
+  flightstats.AddClimbCeiling(t_end,
+                              calculated.last_thermal.gain
+                              + calculated.last_thermal.start_altitude);
+
+  flightstats.AddClimbBase(t_start, calculated.last_thermal.start_altitude);
 }
 
 void
@@ -114,7 +132,7 @@ StatsComputer::ProcessClimbEvents(const DerivedInfo &calculated)
   case CirclingMode::CLIMB:
     if (calculated.climb_start_time > last_climb_start_time)
       // set altitude for start of circling (as base of climb)
-      OnClimbBase(calculated, calculated.climb_start_altitude);
+      OnClimbBase(calculated);
     break;
 
   case CirclingMode::CRUISE:

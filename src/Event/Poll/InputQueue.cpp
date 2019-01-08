@@ -25,37 +25,25 @@ Copyright_License {
 #include "../Shared/Event.hpp"
 #include "DisplayOrientation.hpp"
 
-InputEventQueue::InputEventQueue(IOLoop &io_loop, EventQueue &queue)
+InputEventQueue::InputEventQueue(boost::asio::io_service &io_service,
+                                 EventQueue &queue)
   :
-#ifdef USE_LIBINPUT
-   libinput_handler(io_loop, queue)
-#else /* !USE_LIBINPUT */
 #ifdef KOBO
-   keyboard(io_loop, queue, merge_mouse),
-   mouse(io_loop, queue, merge_mouse)
-#elif defined(USE_LINUX_INPUT)
-   all_input(io_loop, queue, merge_mouse)
+   keyboard(io_service, queue, merge_mouse),
+   mouse(io_service, queue, merge_mouse)
 #else
-   keyboard(queue, io_loop),
-   mouse(io_loop, merge_mouse)
+   libinput_handler(io_service, queue)
 #endif
-#endif /* !USE_LIBINPUT */
 {
-#ifdef USE_LIBINPUT
-  libinput_handler.Open();
-#else /* !USE_LIBINPUT */
 #ifdef KOBO
   /* power button */
   keyboard.Open("/dev/input/event0");
 
   /* Kobo touch screen */
   mouse.Open("/dev/input/event1");
-#elif defined(USE_LINUX_INPUT)
-  all_input.Open();
 #else
-  mouse.Open();
+  libinput_handler.Open();
 #endif
-#endif /* !USE_LIBINPUT */
 }
 
 InputEventQueue::~InputEventQueue()
@@ -65,7 +53,7 @@ InputEventQueue::~InputEventQueue()
 bool
 InputEventQueue::Generate(Event &event)
 {
-#ifndef USE_LIBINPUT
+#ifdef KOBO
   event = merge_mouse.Generate();
   if (event.type != Event::Type::NOP)
     return true;

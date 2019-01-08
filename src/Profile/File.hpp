@@ -26,11 +26,17 @@ Copyright_License {
 
 class ProfileMap;
 class Path;
-class Error;
 
 namespace Profile {
-  bool LoadFile(ProfileMap &map, Path path, Error &error);
-  bool SaveFile(const ProfileMap &map, Path path);
+  /**
+   * Throws std::runtime_errror on error.
+   */
+  void LoadFile(ProfileMap &map, Path path);
+
+/**
+ * Throws std::runtime_errror on error.
+ */
+void SaveFile(const ProfileMap &map, Path path);
 }
 
 #endif

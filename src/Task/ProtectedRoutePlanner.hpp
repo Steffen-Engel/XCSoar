@@ -60,16 +60,18 @@ public:
   }
 
   gcc_pure
-  bool IsReachEmpty() const {
+  bool IsTerrainReachEmpty() const {
     Lease lease(*this);
-    return lease->IsReachEmpty();
+    return lease->IsTerrainReachEmpty();
   }
 
   void SetTerrain(const RasterTerrain *terrain);
 
   void SetPolars(const GlideSettings &settings,
+                 const RoutePlannerConfig &config,
                  const GlidePolar &glide_polar, const GlidePolar &safety_polar,
-                 const SpeedVector &wind);
+                 const SpeedVector &wind,
+                 const int height_min_working);
 
   void SolveRoute(const AGeoPoint &dest, const AGeoPoint &start,
                   const RoutePlannerConfig &config,
@@ -83,7 +85,7 @@ public:
                   int h_ceiling, bool do_solve);
 
   gcc_pure
-  const FlatProjection GetReachProjection() const;
+  const FlatProjection GetTerrainReachProjection() const;
 };
 
 #endif

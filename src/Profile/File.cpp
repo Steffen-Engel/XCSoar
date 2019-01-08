@@ -25,19 +25,16 @@ Copyright_License {
 #include "Map.hpp"
 #include "IO/KeyValueFileReader.hpp"
 #include "IO/FileLineReader.hpp"
-#include "IO/FileTransaction.hpp"
-#include "IO/TextWriter.hpp"
+#include "IO/FileOutputStream.hxx"
+#include "IO/BufferedOutputStream.hxx"
 #include "IO/KeyValueFileWriter.hpp"
 #include "OS/Path.hpp"
 #include "Util/StringAPI.hxx"
 
-bool
-Profile::LoadFile(ProfileMap &map, Path path, Error &error)
+void
+Profile::LoadFile(ProfileMap &map, Path path)
 {
-  FileLineReaderA reader(path, error);
-  if (reader.error())
-    return false;
-
+  FileLineReaderA reader(path);
   KeyValueFileReader kvreader(reader);
   KeyValuePair pair;
   while (kvreader.Read(pair))
@@ -46,34 +43,18 @@ Profile::LoadFile(ProfileMap &map, Path path, Error &error)
        interface */
     if (!StringIsEqual(pair.key, "Vega", 4))
       map.Set(pair.key, pair.value);
-
-  return true;
 }
 
-namespace Profile {
-  static bool SaveFile(const ProfileMap &map,
-                       const FileTransaction &transaction);
-}
-
-inline bool
-Profile::SaveFile(const ProfileMap &map,
-                  const FileTransaction &transaction)
+void
+Profile::SaveFile(const ProfileMap &map, Path path)
 {
-  TextWriter writer(transaction.GetTemporaryPath());
-  // ... on error -> return
-  if (!writer.IsOpen())
-    return false;
+  FileOutputStream file(path);
+  BufferedOutputStream buffered(file);
+  KeyValueFileWriter kvwriter(buffered);
 
-  KeyValueFileWriter kvwriter(writer);
   for (const auto &i : map)
     kvwriter.Write(i.first.c_str(), i.second.c_str());
 
-  return writer.Flush();
-}
-
-bool
-Profile::SaveFile(const ProfileMap &map, Path path)
-{
-  FileTransaction transaction(path);
-  return SaveFile(map, transaction) && transaction.Commit();
+  buffered.Flush();
+  file.Commit();
 }

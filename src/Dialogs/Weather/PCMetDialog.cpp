@@ -38,7 +38,7 @@ Copyright_License {
 #include "Widget/TextListWidget.hpp"
 #include "Widget/ViewImageWidget.hpp"
 #include "Widget/LargeTextWidget.hpp"
-#include "Weather/PCMet.hpp"
+#include "Weather/PCMet/Images.hpp"
 #include "Interface.hpp"
 
 static void
@@ -160,7 +160,7 @@ Widget *
 CreatePCMetWidget()
 {
   const auto &settings = CommonInterface::GetComputerSettings().weather.pcmet;
-  if (settings.username.empty() || settings.password.empty())
+  if (!settings.www_credentials.IsDefined())
     return new LargeTextWidget(UIGlobals::GetDialogLook(),
                                _T("No account was configured."));
 

@@ -28,7 +28,6 @@ Copyright_License {
 #include "Look/DialogLook.hpp"
 #include "UIGlobals.hpp"
 #include "Util/StringCompare.hxx"
-#include "Util/Error.hxx"
 #include "IO/DataFile.hpp"
 #include "IO/LineReader.hpp"
 #include "Language/Language.hpp"
@@ -72,7 +71,7 @@ addChecklist(const TCHAR *name, const TCHAR *details)
 
 static void
 LoadChecklist()
-{
+try {
   nLists = 0;
 
   free(ChecklistText[0]);
@@ -81,9 +80,7 @@ LoadChecklist()
   free(ChecklistTitle[0]);
   ChecklistTitle[0] = NULL;
 
-  TLineReader *reader = OpenDataTextFile(_T(XCSCHKLIST), IgnoreError());
-  if (reader == NULL)
-    return;
+  auto reader = OpenDataTextFile(_T(XCSCHKLIST));
 
   StaticString<MAXDETAILS> Details;
   TCHAR Name[100];
@@ -120,11 +117,10 @@ LoadChecklist()
     }
   }
 
-  delete reader;
-
   if (inDetails) {
     addChecklist(Name, Details);
   }
+} catch (const std::runtime_error &e) {
 }
 
 void

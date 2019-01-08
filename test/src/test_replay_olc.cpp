@@ -10,7 +10,7 @@
 #include "NMEA/MoreData.hpp"
 #include "NMEA/Derived.hpp"
 #include "test_debug.hpp"
-#include "Util/Error.hxx"
+#include "Util/PrintException.hxx"
 
 #include <fstream>
 
@@ -91,8 +91,8 @@ inline void load_scores(unsigned &contest_handicap) {
 class ReplayLoggerSim: public IgcReplay
 {
 public:
-  ReplayLoggerSim(NLineReader *reader)
-    :IgcReplay(reader) {}
+  explicit ReplayLoggerSim(std::unique_ptr<NLineReader> &&_reader)
+    :IgcReplay(std::move(_reader)) {}
 
   void print(std::ostream &f, const MoreData &basic) {
     f << (double)basic.time << " " 
@@ -113,15 +113,7 @@ test_replay(const Contest olc_type,
 
   GlidePolar glide_polar(2);
 
-  Error error;
-  FileLineReaderA *reader = new FileLineReaderA(replay_file, error);
-  if (reader->error()) {
-    delete reader;
-    fprintf(stderr, "%s\n", error.GetMessage());
-    return false;
-  }
-
-  ReplayLoggerSim sim(reader);
+  ReplayLoggerSim sim(std::make_unique<FileLineReaderA>(replay_file));
 
   ComputerSettings settings_computer;
   settings_computer.SetDefaults();
@@ -207,7 +199,7 @@ test_replay(const Contest olc_type,
 
 
 int main(int argc, char** argv) 
-{
+try {
   if (!ParseArgs(argc,argv)) {
     return 0;
   }
@@ -226,5 +218,7 @@ int main(int argc, char** argv)
      "replay plus", 0);
 
   return exit_status();
+} catch (const std::runtime_error &e) {
+  PrintException(e);
+  return EXIT_FAILURE;
 }
-

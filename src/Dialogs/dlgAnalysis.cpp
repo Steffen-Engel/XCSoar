@@ -44,6 +44,9 @@ Copyright_License {
 #include "Renderer/ThermalBandRenderer.hpp"
 #include "Renderer/WindChartRenderer.hpp"
 #include "Renderer/CuRenderer.hpp"
+#include "Renderer/MacCreadyRenderer.hpp"
+#include "Renderer/VarioHistogramRenderer.hpp"
+#include "Renderer/TaskSpeedRenderer.hpp"
 #include "UIUtil/GestureManager.hpp"
 #include "Blackboard/FullBlackboard.hpp"
 #include "Language/Language.hpp"
@@ -93,7 +96,7 @@ public:
      cross_section_look(_cross_section_look),
      thermal_band_renderer(_thermal_band_look, chart_look),
      fs_renderer(chart_look, map_look),
-     cross_section_renderer(cross_section_look, airspace_look, chart_look),
+     cross_section_renderer(cross_section_look, airspace_look, chart_look, false),
      dragging(false),
      blackboard(_blackboard), glide_computer(_glide_computer) {
     cross_section_renderer.SetAirspaces(airspaces);
@@ -344,7 +347,6 @@ ChartControl::OnPaint(Canvas &canvas)
   GLCanvasScissor scissor(canvas);
 #endif
 
-  canvas.Clear(COLOR_WHITE);
   canvas.SetTextColor(COLOR_BLACK);
 
   PixelRect rcgfx = GetClientRect();
@@ -358,9 +360,18 @@ ChartControl::OnPaint(Canvas &canvas)
                     basic, calculated, protected_task_manager);
     break;
   case AnalysisPage::CLIMB:
-    RenderClimbChart(canvas, rcgfx, chart_look,
-                     glide_computer.GetFlightStats(),
-                     settings_computer.polar.glide_polar_task);
+    if (protected_task_manager != NULL) {
+      ProtectedTaskManager::Lease task(*protected_task_manager);
+      RenderClimbChart(canvas, rcgfx, chart_look,
+                       glide_computer.GetFlightStats(),
+                       settings_computer.polar.glide_polar_task,
+                       basic, calculated, task);
+    }
+    break;
+  case AnalysisPage::VARIO_HISTOGRAM:
+    RenderVarioHistogram(canvas, rcgfx, chart_look,
+                         glide_computer.GetFlightStats(),
+                         settings_computer.polar.glide_polar_task);
     break;
   case AnalysisPage::THERMAL_BAND:
   {
@@ -388,6 +399,10 @@ ChartControl::OnPaint(Canvas &canvas)
                      calculated.climb_history,
                      settings_computer.polar.glide_polar_task);
     break;
+    case AnalysisPage::MACCREADY:
+      RenderMacCready(canvas, rcgfx, chart_look,
+                      settings_computer.polar.glide_polar_task);
+    break;
   case AnalysisPage::TEMPTRACE:
     RenderTemperatureChart(canvas, rcgfx, chart_look,
                            glide_computer.GetCuSonde());
@@ -414,7 +429,8 @@ ChartControl::OnPaint(Canvas &canvas)
       ProtectedTaskManager::Lease task(*protected_task_manager);
       RenderSpeed(canvas, rcgfx, chart_look,
                   glide_computer.GetFlightStats(),
-                  basic, calculated, task);
+                  basic, calculated, task,
+                  settings_computer.polar.glide_polar_task);
     }
     break;
 
@@ -481,6 +497,14 @@ AnalysisWidget::Update()
     SetCalcCaption(_T(""));
     break;
 
+  case AnalysisPage::VARIO_HISTOGRAM:
+    StringFormatUnsafe(sTmp, _T("%s: %s"), _("Analysis"),
+                       _("Vario Histogram"));
+    dialog.SetCaption(sTmp);
+    info.SetText(_T(""));
+    SetCalcCaption(_T(""));
+    break;
+
   case AnalysisPage::WIND:
     StringFormatUnsafe(sTmp, _T("%s: %s"), _("Analysis"),
                        _("Wind at Altitude"));
@@ -499,9 +523,18 @@ AnalysisWidget::Update()
     SetCalcCaption(_("Settings"));
     break;
 
+  case AnalysisPage::MACCREADY:
+    StringFormatUnsafe(sTmp, _T("%s: %s"), _("Analysis"),
+                       _("MacCready Speeds"));
+    dialog.SetCaption(sTmp);
+    MacCreadyCaption(sTmp, settings_computer.polar.glide_polar_task);
+    info.SetText(sTmp);
+    SetCalcCaption(_("Settings"));
+    break;
+
   case AnalysisPage::TEMPTRACE:
     StringFormatUnsafe(sTmp, _T("%s: %s"), _("Analysis"),
-                       _("Temp Trace"));
+                       _("Temperature Trace"));
     dialog.SetCaption(sTmp);
     TemperatureChartCaption(sTmp, glide_computer.GetCuSonde());
     info.SetText(sTmp);
@@ -512,7 +545,9 @@ AnalysisWidget::Update()
     StringFormatUnsafe(sTmp, _T("%s: %s"), _("Analysis"),
                        _("Task Speed"));
     dialog.SetCaption(sTmp);
-    info.SetText(_T(""));
+    TaskSpeedCaption(sTmp, glide_computer.GetFlightStats(),
+                     settings_computer.polar.glide_polar_task);
+    info.SetText(sTmp);
     SetCalcCaption(_("Task Calc"));
     break;
 
@@ -657,11 +692,16 @@ AnalysisWidget::OnCalcClicked()
     dlgBasicSettingsShowModal();
     break;
 
+  case AnalysisPage::MACCREADY:
+    dlgBasicSettingsShowModal();
+    break;
+
   case AnalysisPage::AIRSPACE:
     dlgAirspaceWarningsShowModal(glide_computer.GetAirspaceWarnings());
     break;
 
   case AnalysisPage::THERMAL_BAND:
+  case AnalysisPage::VARIO_HISTOGRAM:
   case AnalysisPage::OLC:
   case AnalysisPage::COUNT:
     break;

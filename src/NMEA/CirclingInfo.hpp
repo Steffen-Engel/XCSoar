@@ -94,15 +94,31 @@ struct CirclingInfo
   bool circling;
 
   /**
-   * Circling/Cruise ratio in percent.  Negative value means
+   * Circling/total time ratio in percent.  Negative value means
    * "unknown".
    */
   double circling_percentage;
 
+  /**
+   * Time spent climbing and circling, ratio in percent.  Negative value means
+   * "unknown".
+   */
+  double circling_climb_percentage;
+
+  /**
+   * Time spent climbing and not circling, ratio in percent.  Negative value means
+   * "unknown".
+   */
+  double noncircling_climb_percentage;
+
   /** Time spent in cruise mode */
   double time_cruise;
   /** Time spent in circling mode */
-  double time_climb;
+  double time_circling;
+  /** Time spent in circling mode and climbing */
+  double time_climb_circling;
+  /** Time spent in non-circling climb */
+  double time_climb_noncircling;
 
   /** Maximum height gain (from MinAltitude) during task */
   double max_height_gain;

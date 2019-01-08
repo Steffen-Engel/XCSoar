@@ -31,7 +31,8 @@ Copyright_License {
 #include "WaypointFileType.hpp"
 #include "IO/ZipLineReader.hpp"
 #include "IO/FileLineReader.hpp"
-#include "Util/Error.hxx"
+
+#include <memory>
 
 static WaypointReaderBase *
 CreateWaypointReader(WaypointFileType type, WaypointFactory factory)
@@ -66,21 +67,17 @@ bool
 ReadWaypointFile(Path path, WaypointFileType file_type,
                  Waypoints &way_points,
                  WaypointFactory factory, OperationEnvironment &operation)
-{
-  auto *reader = CreateWaypointReader(file_type, factory);
-  if (reader == nullptr)
+try {
+  std::unique_ptr<WaypointReaderBase> reader(CreateWaypointReader(file_type,
+                                                                  factory));
+  if (!reader)
     return false;
 
-  bool success = false;
-
-  FileLineReader line_reader(path, IgnoreError(), Charset::AUTO);
-  if (!line_reader.error()) {
-    reader->Parse(way_points, line_reader, operation);
-    success = true;
-  }
-
-  delete reader;
-  return success;
+  FileLineReader line_reader(path, Charset::AUTO);
+  reader->Parse(way_points, line_reader, operation);
+  return true;
+} catch (const std::runtime_error &) {
+  return false;
 }
 
 bool
@@ -95,19 +92,15 @@ bool
 ReadWaypointFile(struct zzip_dir *dir, const char *path,
                  WaypointFileType file_type, Waypoints &way_points,
                  WaypointFactory factory, OperationEnvironment &operation)
-{
-  auto *reader = CreateWaypointReader(file_type, factory);
-  if (reader == nullptr)
+try {
+  std::unique_ptr<WaypointReaderBase> reader(CreateWaypointReader(file_type,
+                                                                  factory));
+  if (!reader)
     return false;
 
-  bool success = false;
-
-  ZipLineReader line_reader(dir, path, IgnoreError(), Charset::AUTO);
-  if (!line_reader.error()) {
-    reader->Parse(way_points, line_reader, operation);
-    success = true;
-  }
-
-  delete reader;
-  return success;
+  ZipLineReader line_reader(dir, path, Charset::AUTO);
+  reader->Parse(way_points, line_reader, operation);
+  return true;
+} catch (const std::runtime_error &e) {
+  return false;
 }

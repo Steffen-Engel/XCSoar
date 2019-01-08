@@ -30,10 +30,12 @@
 #include "Renderer/TaskPointRenderer.hpp"
 #include "Renderer/TaskRenderer.hpp"
 #include "Renderer/FAITriangleAreaRenderer.hpp"
+#include "Renderer/MapScaleRenderer.hpp"
 #include "Look/AirspaceLook.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Engine/Task/Ordered/Points/OrderedTaskPoint.hpp"
 #include "Look/TaskLook.hpp"
+#include "Look/MapLook.hpp"
 #include "MapSettings.hpp"
 
 #ifndef ENABLE_OPENGL
@@ -111,6 +113,8 @@ PaintTask(Canvas &canvas, const WindowProjection &projection,
           bool fai_sectors,
           int highlight_index)
 {
+  assert(!task.IsEmpty());
+
   BackgroundRenderer background;
   background.SetTerrain(terrain);
   background.Draw(canvas, projection, settings_map.terrain);
@@ -195,16 +199,23 @@ PaintTask(Canvas &canvas, const PixelRect &rc, const OrderedTask &task,
           const MapSettings &settings_map,
           const TaskLook &task_look,
           const AirspaceLook &airspace_look,
+          const OverlayLook &overlay_look,
           const RasterTerrain *terrain, const Airspaces *airspaces,
           bool fai_sectors,
           int highlight_index)
 {
-  /* TODO: check location_available in ChartProjection */
-  ChartProjection projection(rc, task, location);
+  if (task.IsEmpty()) {
+    canvas.ClearWhite();
+    return;
+  }
+
+  ChartProjection projection(rc, task);
   PaintTask(canvas, projection, task, location,
             settings_map,
             task_look, airspace_look, terrain, airspaces,
             fai_sectors, highlight_index);
+
+  RenderMapScale(canvas, projection, rc, overlay_look);
 }
 
 void
@@ -213,13 +224,15 @@ PaintTaskPoint(Canvas &canvas, const PixelRect &rc,
                const GeoPoint &location,
                const MapSettings &settings_map, const TaskLook &task_look,
                const AirspaceLook &airspace_look,
+               const OverlayLook &overlay_look,
                const RasterTerrain *terrain, const Airspaces *airspaces,
                int highlight_index)
 {
-  /* TODO: check location_available in ChartProjection */
-  ChartProjection projection(rc, point, point.GetLocation());
+  ChartProjection projection(rc, point);
   PaintTask(canvas, projection, task, location,
             settings_map,
             task_look, airspace_look, terrain, airspaces,
             false, highlight_index);
+
+  RenderMapScale(canvas, projection, rc, overlay_look);
 }

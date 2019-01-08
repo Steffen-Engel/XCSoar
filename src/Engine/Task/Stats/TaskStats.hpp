@@ -58,6 +58,12 @@ public:
   double distance_scored;
 
   /**
+   * Calculated instantaneous speed (m/s).  Negative if unknown.
+   */
+  double inst_speed_slow;
+  double inst_speed_fast;
+
+  /**
    * Index of the active task point.
    */
   unsigned active_index;
@@ -99,18 +105,6 @@ public:
 
   double GetEstimatedTotalTime() const {
     return total.time_elapsed + total.time_remaining_start;
-  }
-
-  /**
-   * Check whether get_pirker_speed() is available.
-   */
-  bool IsPirkerSpeedAvailable() const {
-    return total.pirker.IsDefined();
-  }
-
-  /** Incremental task speed adjusted for mc, target changes */
-  double get_pirker_speed() const {
-    return total.pirker.GetSpeedIncremental();
   }
 
   /** Reset each element (for incremental speeds). */

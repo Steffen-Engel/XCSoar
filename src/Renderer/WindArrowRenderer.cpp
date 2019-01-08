@@ -26,12 +26,17 @@ Copyright_License {
 #include "Look/WindArrowLook.hpp"
 #include "Screen/Canvas.hpp"
 #include "Math/Angle.hpp"
+#include "Math/Util.hpp"
 #include "Math/Screen.hpp"
 #include "NMEA/Derived.hpp"
 #include "Units/Units.hpp"
 #include "Util/Macros.hpp"
 
 #include <tchar.h>
+
+#ifdef ENABLE_OPENGL
+#include "Screen/OpenGL/Scope.hpp"
+#endif
 
 void
 WindArrowRenderer::DrawArrow(Canvas &canvas, PixelPoint pos, Angle angle,
@@ -52,7 +57,12 @@ WindArrowRenderer::DrawArrow(Canvas &canvas, PixelPoint pos, Angle angle,
 
   canvas.Select(look.arrow_pen);
   canvas.Select(look.arrow_brush);
-  canvas.DrawPolygon(arrow, ARRAY_SIZE(arrow));
+  {
+#ifdef ENABLE_OPENGL
+    const ScopeAlphaBlend alpha_blend;
+#endif
+    canvas.DrawPolygon(arrow, ARRAY_SIZE(arrow));
+  }
 
   // Draw arrow tail
 

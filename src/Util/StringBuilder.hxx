@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Max Kellermann <max@duempel.org>
+ * Copyright (C) 2015 Max Kellermann <max.kellermann@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +30,7 @@
 #ifndef STRING_BUILDER_HXX
 #define STRING_BUILDER_HXX
 
-#include "StringUtil.hpp"
+#include "TruncateString.hpp"
 #include "StringAPI.hxx"
 
 #include <utility>
@@ -73,7 +73,7 @@ public:
 	}
 
 	void Append(const_pointer src) {
-		p = CopyString(p, src, GetRemainingSize());
+		p = CopyTruncateString(p, GetRemainingSize(), src);
 	}
 
 	void Append(const_pointer src, size_t length) {

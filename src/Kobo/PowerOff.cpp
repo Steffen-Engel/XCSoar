@@ -37,9 +37,10 @@ Copyright_License {
 #include "IO/FileLineReader.hpp"
 #include "Resources.hpp"
 #include "Model.hpp"
-#include "Util/Error.hxx"
 
 #include <algorithm>
+#include <stdexcept>
+
 #include <stdio.h>
 
 static void
@@ -93,10 +94,8 @@ DrawBanner(Canvas &canvas, PixelRect &rc)
 
 static void
 DrawFlights(Canvas &canvas, const PixelRect &rc)
-{
-  FileLineReaderA file(Path("/mnt/onboard/XCSoarData/flights.log"), IgnoreError());
-  if (file.error())
-    return;
+try {
+  FileLineReaderA file(Path("/mnt/onboard/XCSoarData/flights.log"));
 
   FlightListRenderer renderer(normal_font, bold_font);
 
@@ -106,6 +105,7 @@ DrawFlights(Canvas &canvas, const PixelRect &rc)
     renderer.AddFlight(flight);
 
   renderer.Draw(canvas, rc);
+} catch (const std::runtime_error &e) {
 }
 
 static void

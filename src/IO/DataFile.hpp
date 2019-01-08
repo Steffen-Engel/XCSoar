@@ -26,51 +26,43 @@ Copyright_License {
 
 #include "Charset.hpp"
 
+#include <memory>
+
 #include <tchar.h>
 
-template<class T> class Source;
+class Reader;
 class TLineReader;
 class NLineReader;
-class TextWriter;
-class Error;
 
 /**
  * Opens a file from the data directory.
  *
+ * Throws exception on error.
+ *
  * @param name the file name relative to the data directory
- * @return a Source which must be deleted by the caller; nullptr if an
- * error occurred opening the file
  */
-Source<char> *
-OpenDataFile(const TCHAR *name, Error &error);
+std::unique_ptr<Reader>
+OpenDataFile(const TCHAR *name);
 
 /**
  * Opens a text file from the data directory.
+ *
+ * Throws exception on error.
  *
  * @param name the file name relative to the data directory
  * @param cs the character set of the input file
- * @return a TLineReader which must be deleted by the caller; nullptr if
- * an error occurred opening the file
  */
-TLineReader *
-OpenDataTextFile(const TCHAR *name, Error &error,
-                 Charset cs=Charset::UTF8);
+std::unique_ptr<TLineReader>
+OpenDataTextFile(const TCHAR *name, Charset cs=Charset::UTF8);
 
 /**
  * Opens a text file from the data directory.
  *
+ * Throws exception on error.
+ *
  * @param name the file name relative to the data directory
- * @return a TLineReader which must be deleted by the caller; nullptr if
- * an error occurred opening the file
  */
-NLineReader *
-OpenDataTextFileA(const TCHAR *name, Error &error);
-
-/**
- * Creates a text file in the data directory.  If the file already
- * exists, it is truncated, unless "append" is true.
- */
-TextWriter *
-CreateDataTextFile(const TCHAR *name, bool append=false);
+std::unique_ptr<NLineReader>
+OpenDataTextFileA(const TCHAR *name);
 
 #endif

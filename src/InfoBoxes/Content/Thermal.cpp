@@ -29,6 +29,7 @@ Copyright_License {
 #include "Interface.hpp"
 #include "UIGlobals.hpp"
 #include "Look/Look.hpp"
+#include "Renderer/ClimbPercentRenderer.hpp"
 
 #include <tchar.h>
 
@@ -96,25 +97,19 @@ UpdateInfoBoxThermalLastTime(InfoBoxData &data)
     return;
   }
 
-  // Set Value
-
-  TCHAR value[32], comment[32];
-  FormatTimeTwoLines(value, comment, (int)thermal.duration);
-
-  data.SetValue(value);
-  data.SetComment(comment);
+  data.SetValueFromTimeTwoLines((int)thermal.duration);
 }
 
 void
 UpdateInfoBoxThermalAllAvg(InfoBoxData &data)
 {
-  if (CommonInterface::Calculated().time_climb <= 0) {
+  if (CommonInterface::Calculated().time_circling <= 0) {
     data.SetInvalid();
     return;
   }
 
   SetVSpeed(data, CommonInterface::Calculated().total_height_gain /
-            CommonInterface::Calculated().time_climb);
+            CommonInterface::Calculated().time_circling);
 }
 
 void
@@ -152,9 +147,21 @@ UpdateInfoBoxThermalRatio(InfoBoxData &data)
 
   if (CommonInterface::Calculated().circling_percentage < 0)
     data.SetInvalid();
+  else {
+    data.SetValueFromPercent(CommonInterface::Calculated().circling_percentage);
+    data.SetCommentFromPercent(CommonInterface::Calculated().circling_climb_percentage);
+  }
+}
+
+void
+UpdateInfoBoxNonCirclingClimbRatio(InfoBoxData &data)
+{
+  // Set Value
+
+  if (CommonInterface::Calculated().noncircling_climb_percentage < 0)
+    data.SetInvalid();
   else
-    data.SetValue(_T("%2.0f%%"),
-                  CommonInterface::Calculated().circling_percentage);
+    data.SetValueFromPercent(CommonInterface::Calculated().noncircling_climb_percentage);
 }
 
 void
@@ -249,4 +256,20 @@ InfoBoxContentThermalAssistant::OnCustomPaint(Canvas &canvas,
 {
   renderer.UpdateLayout(rc);
   renderer.Paint(canvas);
+}
+
+void
+InfoBoxContentClimbPercent::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
+{
+  const Look &look = UIGlobals::GetLook();
+  ClimbPercentRenderer renderer(look.circling_percent);
+  renderer.Draw(CommonInterface::Calculated(),
+                canvas, rc,
+                look.info_box.inverse);
+}
+
+void
+InfoBoxContentClimbPercent::Update(InfoBoxData &data)
+{
+  data.SetCustom();
 }

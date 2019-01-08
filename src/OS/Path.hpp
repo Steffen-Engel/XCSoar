@@ -28,8 +28,10 @@ Copyright_License {
 #include "Util/AllocatedString.hxx"
 #include "Compiler.h"
 
+#include <string>
+
 #ifdef _UNICODE
-#include <tchar.h>
+#include <wchar.h>
 #endif
 
 #include <cstddef>
@@ -46,13 +48,13 @@ class AllocatedPath;
 class Path {
 public:
 #ifdef _UNICODE
-  typedef TCHAR char_type;
+  typedef wchar_t char_type;
 #else
   typedef char char_type;
 #endif
   typedef StringPointer<char_type> value_type;
-  typedef value_type::const_pointer const_pointer;
-  typedef value_type::pointer pointer;
+  typedef value_type::const_pointer_type const_pointer_type;
+  typedef value_type::pointer_type pointer_type;
 
   static constexpr auto SENTINEL = value_type::SENTINEL;
 
@@ -61,11 +63,11 @@ private:
 
 public:
   Path() = default;
-  explicit constexpr Path(const_pointer _value):value(_value) {}
+  explicit constexpr Path(const_pointer_type _value):value(_value) {}
   Path(std::nullptr_t n):value(n) {}
 
   gcc_pure
-  AllocatedPath operator+(const_pointer other) const;
+  AllocatedPath operator+(const_pointer_type other) const;
 
   constexpr bool IsNull() const {
     return value.IsNull();
@@ -75,9 +77,17 @@ public:
     return value.empty();
   }
 
-  constexpr const_pointer c_str() const {
+  constexpr const_pointer_type c_str() const {
     return value.c_str();
   }
+
+  /**
+   * Convert the path to UTF-8.
+   * Returns empty string on error or if this instance is "nulled"
+   * (#IsNull returns true).
+   */
+  gcc_pure
+  std::string ToUTF8() const;
 
   gcc_pure
   bool operator==(Path other) const;
@@ -127,14 +137,14 @@ public:
   Path RelativeTo(Path parent) const;
 
   gcc_pure
-  bool MatchesExtension(const_pointer extension) const;
+  bool MatchesExtension(const_pointer_type extension) const;
 
   /**
    * Returns the filename extension (starting with a dot) or nullptr
    * if the base name doesn't have one.
    */
   gcc_pure
-  const_pointer GetExtension() const;
+  const_pointer_type GetExtension() const;
 
   /**
    * Return the path with its filename extension replaced with the given one.
@@ -143,7 +153,7 @@ public:
    * a dot)
    */
   gcc_pure
-  AllocatedPath WithExtension(const_pointer new_extension) const;
+  AllocatedPath WithExtension(const_pointer_type new_extension) const;
 };
 
 /**
@@ -157,8 +167,8 @@ class AllocatedPath {
 
 public:
   typedef Path::char_type char_type;
-  typedef Path::const_pointer const_pointer;
-  typedef Path::pointer pointer;
+  typedef Path::const_pointer_type const_pointer_type;
+  typedef Path::pointer_type pointer_type;
   typedef AllocatedString<char_type> value_type;
 
   static constexpr auto SENTINEL = value_type::SENTINEL;
@@ -171,7 +181,6 @@ private:
   AllocatedPath(value_type &&src):value(std::move(src)) {}
 
 public:
-  AllocatedPath(const AllocatedPath &) = default;
   AllocatedPath(AllocatedPath &&) = default;
 
   AllocatedPath(std::nullptr_t n):value(n) {}
@@ -179,21 +188,21 @@ public:
   AllocatedPath(Path src)
     :value(src.IsNull() ? nullptr : value_type::Duplicate(src.c_str())) {}
 
-  explicit AllocatedPath(const_pointer src)
+  explicit AllocatedPath(const_pointer_type src)
     :AllocatedPath(Path(src)) {}
 
-  AllocatedPath(const_pointer _begin, const_pointer _end)
+  AllocatedPath(const_pointer_type _begin, const_pointer_type _end)
     :AllocatedPath(value_type::Duplicate(_begin, _end)) {}
 
-  static AllocatedPath Donate(pointer value) {
+  static AllocatedPath Donate(pointer_type value) {
     return value_type::Donate(value);
   }
 
   gcc_pure
-  static AllocatedPath Build(const_pointer a, const_pointer b);
+  static AllocatedPath Build(const_pointer_type a, const_pointer_type b);
 
   gcc_pure
-  static AllocatedPath Build(Path a, const_pointer b) {
+  static AllocatedPath Build(Path a, const_pointer_type b) {
     return Build(a.c_str(), b);
   }
 
@@ -202,7 +211,6 @@ public:
     return Build(a, b.c_str());
   }
 
-  AllocatedPath &operator=(const AllocatedPath &) = default;
   AllocatedPath &operator=(AllocatedPath &&) = default;
 
   AllocatedPath &operator=(std::nullptr_t n) {
@@ -215,7 +223,7 @@ public:
   }
 
   gcc_pure
-  AllocatedPath operator+(const_pointer other) const {
+  AllocatedPath operator+(const_pointer_type other) const {
     return Path(*this) + other;
   }
 
@@ -227,8 +235,12 @@ public:
     return value.empty();
   }
 
-  const_pointer c_str() const {
+  const_pointer_type c_str() const {
     return value.c_str();
+  }
+
+  std::string ToUTF8() const {
+    return Path(*this).ToUTF8();
   }
 
   gcc_pure
@@ -284,17 +296,17 @@ public:
   }
 
   gcc_pure
-  bool MatchesExtension(const_pointer extension) const {
+  bool MatchesExtension(const_pointer_type extension) const {
     return Path(*this).MatchesExtension(extension);
   }
 
   gcc_pure
-  const_pointer GetExtension() const {
+  const_pointer_type GetExtension() const {
     return Path(*this).GetExtension();
   }
 
   gcc_pure
-  AllocatedPath WithExtension(const_pointer new_extension) const {
+  AllocatedPath WithExtension(const_pointer_type new_extension) const {
     return Path(*this).WithExtension(new_extension);
   }
 };
