@@ -371,7 +371,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
 
 #if 0
       info.attitude.heading_available.Update(info.clock);
-      info.attitude.heading = Angle::Degrees((LoggerData.angle[2]+360)%360);
+      info.attitude.heading = Angle::Degrees(0.1*LoggerData.angle[2]);
 #endif
 
       info.acceleration.ProvideGLoad(0.01*LoggerData.accel[2], true);
