@@ -151,7 +151,7 @@ void
 UpdateInfoBoxHeading(InfoBoxData &data)
 {
   // Set Value
-  data.UnsafeFormatValue(_T("%d"), (LoggerData.angle[2]+360)%360);
+  data.UnsafeFormatValue(_T("%d"), LoggerData.angle[2]/10);
 }
 
 void
