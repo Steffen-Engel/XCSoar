@@ -9,6 +9,8 @@
 #include "Interface.hpp"
 #include "Device/Parser.hpp"
 #include "Math/SelfTimingKalmanFilter1d.hpp"
+#include "Blackboard/DeviceBlackboard.hpp"
+#include "Components.hpp"
 
 #include "LocalPath.hpp"
 #include "OS/FileUtil.hpp"
@@ -498,7 +500,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
           info.gps.nonexpiring_internal_gps = false;
 #endif
         }
-
+        device_blackboard->ScheduleMerge();
       }
 
       if (flying)
