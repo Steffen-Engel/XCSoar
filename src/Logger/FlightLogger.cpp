@@ -310,7 +310,12 @@ FlightLogger::WriteSummary(const BrokenDateTime &date_time)
 
   const auto out_path = MakeLocalPath(_T("out"));
 
-  const auto outfile    = AllocatedPath::Build(out_path, _T("Flugbuch.txt"));
+  StaticString<64> temp;
+  sprintf((char*)temp.buffer(), "%04u%02u%02u%02u%02u.txt",
+                    date_time.year, date_time.month, date_time.day,
+                    date_time.hour, date_time.minute);
+
+  const auto outfile    = AllocatedPath::Build(out_path, temp);
 
 
   TextWriter writer(outfile, false);
