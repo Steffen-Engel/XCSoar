@@ -56,6 +56,7 @@ Copyright_License {
 #include "Device/Driver/Vaulter.hpp"
 #include "Device/Driver/yAll/yAllDriver.hpp"
 #include "Device/Driver/ATR833.hpp"
+#include "Device/Driver/Taranis.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
 #include "Util/Macros.hpp"
@@ -100,6 +101,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &krt2_driver,
   &yall_driver,
   &atr833_driver,
+  &taranis_driver,
   &xctracer_driver,
   &thermalexpress_driver,
   nullptr

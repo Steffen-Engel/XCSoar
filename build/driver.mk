@@ -86,6 +86,10 @@ BLUEFLY_SOURCES = \
 	$(DRIVER_SRC_DIR)/BlueFly/Settings.cpp \
 	$(DRIVER_SRC_DIR)/BlueFly/Register.cpp
 
+TARANIS_SOURCES = \
+	$(DRIVER_SRC_DIR)/Taranis/Taranis.cpp \
+	$(DRIVER_SRC_DIR)/Taranis/TaranisDriver.cpp
+
 XCTRACER_SOURCES = \
 	$(DRIVER_SRC_DIR)/XCTracer/Parser.cpp \
 	$(DRIVER_SRC_DIR)/XCTracer/Register.cpp
@@ -105,6 +109,7 @@ DRIVER_SOURCES = \
 	$(VEGA_SOURCES) \
 	$(yall_SOURCES) \
 	$(BLUEFLY_SOURCES) \
+	$(TARANIS_SOURCES) \
 	$(XCTRACER_SOURCES) \
 	$(THERMALEXPRESS_SOURCES) \
 	$(DRIVER_SRC_DIR)/AltairPro.cpp \
