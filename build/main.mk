@@ -641,8 +641,6 @@ XCSOAR_SOURCES := \
 	\
 	$(SRC)/RateLimiter.cpp \
 	\
-	$(SRC)/Tracking/TrackingSettings.cpp \
-	\
 	$(SRC)/Math/Screen.cpp \
 	$(SRC)/Math/SunEphemeris.cpp \
 	\

@@ -30,7 +30,7 @@ Copyright_License {
 #include "Util/Macros.hpp"
 
 static LiveTrack24::VehicleType
-MapVehicleTypeToLivetrack24(TrackingSettings::VehicleType vt)
+MapVehicleTypeToLivetrack24(LiveTrack24::Settings::VehicleType vt)
 {
   static constexpr LiveTrack24::VehicleType vehicleTypeMap[] = {
     LiveTrack24::VehicleType::GLIDER,
@@ -113,7 +113,7 @@ TrackingGlue::OnTimer(const MoreData &basic, const DerivedInfo &calculated)
     /* can't track without a valid GPS fix */
     return;
 
-  if (!clock.CheckUpdate(settings.interval * 1000))
+  if (!clock.CheckUpdate(settings.livetrack24.interval * 1000))
     /* later */
     return;
 
@@ -152,8 +152,8 @@ TrackingGlue::Tick()
     /* settings have been cleared meanwhile, bail out */
     return;
 
-  unsigned tracking_interval = settings.interval;
-  LiveTrack24Settings copy = this->settings.livetrack24;
+  unsigned tracking_interval = settings.livetrack24.interval;
+  LiveTrack24::Settings copy = this->settings.livetrack24;
 
   const ScopeUnlock unlock(mutex);
 
@@ -197,8 +197,8 @@ TrackingGlue::Tick()
 
       if (!LiveTrack24::StartTracking(state.session_id, copy.username,
                                       copy.password, tracking_interval,
-                                      MapVehicleTypeToLivetrack24(settings.vehicleType),
-                                      settings.vehicle_name,
+                                      MapVehicleTypeToLivetrack24(settings.livetrack24.vehicleType),
+                                      settings.livetrack24.vehicle_name,
                                       env)) {
         state.ResetSession();
         return;

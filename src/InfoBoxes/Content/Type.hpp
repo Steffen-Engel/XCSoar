@@ -181,6 +181,9 @@ namespace InfoBoxFactory
 
     e_Startline_Distance,
 
+    e_NbrSat, /* Number of used Sat by GPS module */
+
+
     e_NUM_TYPES /* Last item */
   };
 

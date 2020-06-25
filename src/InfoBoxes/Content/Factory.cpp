@@ -1176,6 +1176,15 @@ static constexpr MetaData meta_data[] = {
        "by warning level."),
     IBFHelper<InfoBoxStartlineDistance>::Create,
   },
+
+  // NbrSat
+  {
+    N_("Number of used satellites"),
+    N_("Satellites"),
+    N_("The number of actually used (seen) satellites by GPS module. If this information is unavailable, the displayed value is '---'."),
+    UpdateInfoBoxNbrSat,
+  },
+
 };
 
 static_assert(ARRAY_SIZE(meta_data) == NUM_TYPES,

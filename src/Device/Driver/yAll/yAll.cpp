@@ -9,6 +9,8 @@
 #include "Interface.hpp"
 #include "Device/Parser.hpp"
 #include "Math/SelfTimingKalmanFilter1d.hpp"
+#include "Blackboard/DeviceBlackboard.hpp"
+#include "Components.hpp"
 
 #include "LocalPath.hpp"
 #include "OS/FileUtil.hpp"
@@ -371,7 +373,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
 
 #if 0
       info.attitude.heading_available.Update(info.clock);
-      info.attitude.heading = Angle::Degrees((LoggerData.angle[2]+360)%360);
+      info.attitude.heading = Angle::Degrees(0.1*LoggerData.angle[2]);
 #endif
 
       info.acceleration.ProvideGLoad(0.01*LoggerData.accel[2], true);
@@ -498,7 +500,7 @@ void cyAll::evaluateCommand(uint8_t cmd, int dataSize, struct NMEAInfo &info)
           info.gps.nonexpiring_internal_gps = false;
 #endif
         }
-
+        device_blackboard->ScheduleMerge();
       }
 
       if (flying)

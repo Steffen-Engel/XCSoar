@@ -46,6 +46,10 @@ bool
 PlayResource(const TCHAR *resource_name)
 {
 #ifdef ANDROID
+
+  if (_tcsstr(resource_name, _T(".wav")))
+    return SoundUtil::PlayExternal(Java::GetEnv(), context->Get(), resource_name);
+
   // check local path for file
   AllocatedPath sndfile = LocalPath(resource_name);
   if (File::Exists(sndfile))

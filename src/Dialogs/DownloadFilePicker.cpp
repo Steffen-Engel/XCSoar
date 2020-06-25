@@ -267,6 +267,8 @@ try {
   FileLineReaderA reader2(path2);
   ParseFileRepository(repository, reader2);
 
+  items.clear();
+
   for (auto &i : repository)
     if (i.type == file_type)
       items.emplace_back(std::move(i));

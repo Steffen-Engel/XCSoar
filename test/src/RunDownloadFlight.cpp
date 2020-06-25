@@ -35,6 +35,7 @@ Copyright_License {
 #include "OS/Args.hpp"
 #include "IO/Async/GlobalAsioThread.hpp"
 #include "IO/Async/AsioThread.hpp"
+#include "IO/NullDataHandler.hpp"
 #include "Util/ConvertString.hpp"
 #include "Util/PrintException.hxx"
 
@@ -104,7 +105,8 @@ try {
 
   ScopeGlobalAsioThread global_asio_thread;
 
-  auto port = debug_port.Open(*asio_thread, *(DataHandler *)nullptr);
+  NullDataHandler handler;
+  auto port = debug_port.Open(*asio_thread, handler);
 
   const struct DeviceRegister *driver = FindDriverByName(driver_name.c_str());
   if (driver == NULL) {
