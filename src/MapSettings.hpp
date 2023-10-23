@@ -16,6 +16,7 @@
 #include <cstdint>
 
 enum class AircraftSymbol : uint8_t {
+  ARROW,
   SIMPLE,
   DETAILED,
   SIMPLE_LARGE,

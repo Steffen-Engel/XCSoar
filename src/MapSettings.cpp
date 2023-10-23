@@ -26,7 +26,7 @@ MapSettings::SetDefaults() noexcept
   max_auto_zoom_distance = 100000; /* 100 km */
   topography_enabled = true;
   terrain.SetDefaults();
-  aircraft_symbol = AircraftSymbol::SIMPLE;
+  aircraft_symbol = AircraftSymbol::ARROW;
   detour_cost_markers_enabled = false;
   display_ground_track = DisplayGroundTrack::AUTO;
   auto_zoom_enabled = false;
