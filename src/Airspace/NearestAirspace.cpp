@@ -131,3 +131,92 @@ NearestAirspace::FindVertical(const MoreData &basic,
 
   return NearestAirspace(*nearest, nearest_delta);
 }
+
+[[gnu::pure]]
+NearestAirspace
+NearestAirspace::FindAbove(const MoreData &basic,
+                      const DerivedInfo &calculated,
+                      const ProtectedAirspaceWarningManager &airspace_warnings,
+                      const Airspaces &airspace_database)
+{
+  if (!basic.location_available ||
+      (!basic.baro_altitude_available && !basic.gps_altitude_available))
+    /* can't check for airspaces without a GPS fix and altitude
+       value */
+    return NearestAirspace();
+
+  /* find the nearest airspace */
+
+  AltitudeState altitude;
+  altitude.altitude = basic.nav_altitude;
+  altitude.altitude_agl = calculated.altitude_agl;
+
+  const AbstractAirspace *nearest = nullptr;
+  double nearest_delta = 100000;
+  const ActiveAirspacePredicate active_predicate(&airspace_warnings);
+
+  for (const auto &i : airspace_database.QueryInside(basic.location)) {
+    const AbstractAirspace &airspace = i.GetAirspace();
+
+    if (!active_predicate(airspace))
+      continue;
+
+    /* check delta below */
+    auto base = airspace.GetBase().GetAltitude(altitude);
+    auto base_delta = base - altitude.altitude;
+    if (base_delta >= 0 && base_delta < fabs(nearest_delta)) {
+      nearest = &airspace;
+      nearest_delta = base_delta;
+    }
+  }
+
+  if (nearest == nullptr)
+    return NearestAirspace();
+
+  return NearestAirspace(*nearest, nearest_delta);
+}
+
+[[gnu::pure]]
+NearestAirspace
+NearestAirspace::FindBelow(const MoreData &basic,
+                      const DerivedInfo &calculated,
+                      const ProtectedAirspaceWarningManager &airspace_warnings,
+                      const Airspaces &airspace_database)
+{
+  if (!basic.location_available ||
+      (!basic.baro_altitude_available && !basic.gps_altitude_available))
+    /* can't check for airspaces without a GPS fix and altitude
+       value */
+    return NearestAirspace();
+
+  /* find the nearest airspace */
+
+  AltitudeState altitude;
+  altitude.altitude = basic.nav_altitude;
+  altitude.altitude_agl = calculated.altitude_agl;
+
+  const AbstractAirspace *nearest = nullptr;
+  double nearest_delta = 100000;
+  const ActiveAirspacePredicate active_predicate(&airspace_warnings);
+
+  for (const auto &i : airspace_database.QueryInside(basic.location)) {
+    const AbstractAirspace &airspace = i.GetAirspace();
+
+    if (!active_predicate(airspace))
+      continue;
+
+    /* check delta above */
+    auto top = airspace.GetTop().GetAltitude(altitude);
+    auto top_delta = altitude.altitude - top;
+    if (top_delta >= 0 && top_delta < fabs(nearest_delta)) {
+      nearest = &airspace;
+      nearest_delta = -top_delta;
+    }
+
+  }
+
+  if (nearest == nullptr)
+    return NearestAirspace();
+
+  return NearestAirspace(*nearest, nearest_delta);
+}

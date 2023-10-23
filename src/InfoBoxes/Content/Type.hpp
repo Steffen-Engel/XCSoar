@@ -137,6 +137,10 @@ namespace InfoBoxFactory
     NEXT_ARROW,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
 
+    e_Airspace_Distances,  /* airspace above, aside and below, distances and colored warnings */
+    e_Airspace_Names,      /* airspace above, aside and below, names of airspaces */
+    e_Airspace_Altitudes,  /* airspace above, aside and below, altitudes of airspaces */
+
     e_NonCircling_Climb_Perc,
 
     e_Climb_Perc_Chart,

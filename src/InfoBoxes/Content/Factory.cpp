@@ -1025,6 +1025,28 @@ static constexpr MetaData meta_data[] = {
     next_waypoint_infobox_panels,
   },
 
+  // e_Airspace_Distances
+  {
+    N_("Nearest airspaces, distance"),
+    N_("Airspace Dist"),
+    N_("List of nearest airspace below, above and to the side"),
+    IBFHelper<InfoBoxContentAirspaces_Distance>::Create,
+  },
+  // e_Airspace_Names
+  {
+    N_("Nearest airspaces, names"),
+    N_("Airspace Name"),
+    N_("List of nearest airspace below, above and to the side"),
+    IBFHelper<InfoBoxContentAirspaces_Name>::Create,
+  },
+  // e_Airspace_Altitudes
+  {
+    N_("Nearest airspaces, altitudes"),
+    N_("Airspace Alt"),
+    N_("List of nearest airspace below, above and to the side"),
+    IBFHelper<InfoBoxContentAirspaces_Altitude>::Create,
+  },
+
   // e_NonCircling_Climb_Perc
   {
     N_("Percentage non-circling climb"),

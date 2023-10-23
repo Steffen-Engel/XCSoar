@@ -39,4 +39,16 @@ public:
                const DerivedInfo &calculated,
                const ProtectedAirspaceWarningManager *airspace_warnings,
                const Airspaces &airspace_database) noexcept;
+
+  static NearestAirspace
+  FindAbove(const MoreData &basic,
+               const DerivedInfo &calculated,
+               const ProtectedAirspaceWarningManager &airspace_warnings,
+               const Airspaces &airspace_database);
+
+  static NearestAirspace
+  FindBelow(const MoreData &basic,
+               const DerivedInfo &calculated,
+               const ProtectedAirspaceWarningManager &airspace_warnings,
+               const Airspaces &airspace_database);
 };
