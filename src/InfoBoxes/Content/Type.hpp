@@ -135,6 +135,7 @@ namespace InfoBoxFactory
 
     /* 110..119 */
     NEXT_ARROW,
+    e_ClimbInfo,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
 
     e_NonCircling_Climb_Perc,

@@ -1016,6 +1016,13 @@ static constexpr MetaData meta_data[] = {
     IBFHelper<InfoBoxContentNextArrow>::Create,
   },
 
+  {
+    N_("expected altitude at goal"),
+    N_("ClimbAltitude"),
+    N_("Arrival altitude at the next waypoint with average climb speed of the last 30 seconds."),
+    UpdateInfoBoxClimbAltitude,
+  },
+
   // e_WP_ETA_VMG
   {
     N_("Next waypoint arrival time (ground speed)"),

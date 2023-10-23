@@ -136,4 +136,8 @@ public:
 };
 
 void
+UpdateInfoBoxClimbAltitude(InfoBoxData &data) noexcept;
+
+
+void
 UpdateInfoTaskETAorAATdT(InfoBoxData &data) noexcept;

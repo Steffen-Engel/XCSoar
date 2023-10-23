@@ -22,6 +22,8 @@
 
 #include <tchar.h>
 
+#include "LogFile.hpp"
+
 static void
 ShowNextWaypointDetails() noexcept
 {
@@ -926,6 +928,88 @@ InfoBoxContentNextArrow::OnCustomPaint(Canvas &canvas,
 
   NextArrowRenderer renderer(UIGlobals::GetLook().wind_arrow_info_box);
   renderer.DrawArrow(canvas, rc, bd);
+}
+
+
+void
+UpdateInfoBoxClimbAltitude(InfoBoxData &data) noexcept
+{
+
+  // get active waypoint and name it
+  const auto way_point = backend_components->protected_task_manager != nullptr
+      ? backend_components->protected_task_manager->GetActiveWaypoint()
+          : nullptr;
+
+  if (!way_point) {
+    data.SetInvalid();
+    return;
+  }
+
+  // set title to next waypoint
+  if (way_point) {
+    data.SetTitle(way_point->name.c_str());
+  }
+
+
+  const NMEAInfo &basic = CommonInterface::Basic();
+  const TaskStats &task_stats = CommonInterface::Calculated().task_stats;
+  const DerivedInfo &info = CommonInterface::Calculated();
+  const GeoVector &vector_remaining = task_stats.current_leg.vector_remaining;
+  if (!basic.track_available || !task_stats.task_valid ||
+      !vector_remaining.IsValid()) {
+    data.SetValueInvalid();
+    LogFormat(_T("no track or no task"));
+    return;
+  }
+
+  // Set Comment field to relative bearing to goal
+  Angle Value = vector_remaining.bearing - basic.track;
+  data.SetCommentFromBearingDifference(Value);
+
+  if (!task_stats.task_valid || !basic.location_available) {
+    data.SetInvalid();
+    LogFormat(_T("location invalid"));
+    return;
+  }
+
+  const GeoVector vector(basic.location, way_point->location);
+
+  if (!vector.IsValid()) {
+    data.SetInvalid();
+    LogFormat(_T("vector invalid"));
+    return;
+  }
+
+
+  // time to go there
+  float headwind = 0;
+  float speed = 0;
+  float headwindtogoal = 0;
+  float timetogoal = 0;
+  float averageclimb = CommonInterface::Calculated().average;
+  float actualaltitude = basic.gps_altitude;
+
+  if (info.head_wind_available) {
+    headwind = info.head_wind;
+  }
+
+  if (false || basic.airspeed_available) {
+    speed = basic.true_airspeed;
+  }
+  else {
+    speed = basic.ground_speed + headwind;
+  }
+
+  Angle windtocourse = info.wind.bearing - vector_remaining.bearing;
+  headwindtogoal = info.wind.norm * windtocourse.cos();
+
+  timetogoal = vector.distance / (speed - headwindtogoal);
+
+  LogFormat(_T("headwind %2.0fkm/h headwindtogoal %2.0fkm/h speed %2.0fkm/h, time %3.0f"), headwind*3.6, headwindtogoal*3.6, speed*3.6, timetogoal);
+
+  // expected altitude
+  float expectaltitude = actualaltitude + timetogoal * averageclimb;
+  data.SetValueFromAltitude(expectaltitude);
 }
 
 /*
