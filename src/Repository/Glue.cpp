@@ -8,6 +8,7 @@
 #include <tchar.h>
 
 #define REPOSITORY_URI "http://download.xcsoar.org/repository"
+#define REPOSITORY2_URI "http://vpn.nutrimat.de/download/XCSoar/repository"
 
 static bool repository_downloaded = false;
 
@@ -19,4 +20,5 @@ EnqueueRepositoryDownload(bool force)
 
   repository_downloaded = true;
   Net::DownloadManager::Enqueue(REPOSITORY_URI, Path(_T("repository")));
+  Net::DownloadManager::Enqueue(REPOSITORY2_URI, Path(_T("repository2")));
 }
