@@ -288,18 +288,25 @@ Startup(UI::Display &display)
 #ifdef SIMULATOR_AVAILABLE
   // prompt for simulator if not set by command line argument "-simulator" or "-fly"
   if (!sim_set_in_cmd_line_flag) {
-    SimulatorPromptResult result = dlgSimulatorPromptShowModal();
-    switch (result) {
-    case SPR_QUIT:
-      return false;
-
-    case SPR_FLY:
+#ifdef ANDROID
+    const auto startfile = LocalPath(_T("autostart.fly"));
+    if (access((const char*)startfile.c_str(), F_OK) != -1){
       global_simulator_flag = false;
-      break;
-
-    case SPR_SIMULATOR:
-      global_simulator_flag = true;
-      break;
+    }
+    else
+#endif
+    {
+      SimulatorPromptResult result = dlgSimulatorPromptShowModal();
+      switch (result) {
+      case SPR_QUIT:
+        return false;
+      case SPR_FLY:
+        global_simulator_flag = false;
+        break;
+      case SPR_SIMULATOR:
+        global_simulator_flag = true;
+        break;
+      }
     }
   }
 #endif
