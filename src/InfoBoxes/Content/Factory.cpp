@@ -1033,6 +1033,14 @@ static constexpr MetaData meta_data[] = {
     UpdateInfoBoxNonCirclingClimbRatio,
   },
 
+  // e_Empty
+  {
+    N_("empty box"),
+    N_(" "),
+    N_("an empty box to fill unused boxes"),
+    UpdateInfoBoxEmpty,
+  },
+
   // e_Climb_Perc_Chart
   {
     N_("Percentage climb chart"),

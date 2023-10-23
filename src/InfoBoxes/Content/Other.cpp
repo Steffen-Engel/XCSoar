@@ -18,6 +18,13 @@
 #include <tchar.h>
 
 void
+UpdateInfoBoxEmpty(InfoBoxData &data) noexcept
+{
+  // Set Value
+  data.SetValue(_T(" "));
+}
+
+void
 UpdateInfoBoxHeartRate(InfoBoxData &data) noexcept
 {
   const auto &basic = CommonInterface::Basic();

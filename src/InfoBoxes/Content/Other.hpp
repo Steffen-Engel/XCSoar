@@ -15,6 +15,9 @@ void
 UpdateInfoBoxBattery(InfoBoxData &data) noexcept;
 
 void
+UpdateInfoBoxEmpty(InfoBoxData &data) noexcept;
+
+void
 UpdateInfoBoxExperimental1(InfoBoxData &data) noexcept;
 
 void

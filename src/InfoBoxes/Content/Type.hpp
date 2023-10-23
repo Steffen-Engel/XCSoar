@@ -134,6 +134,7 @@ namespace InfoBoxFactory
     FIN_MC0_ALTD,
 
     /* 110..119 */
+    e_Empty,
     NEXT_ARROW,
     e_WP_ETA_VMG, /* Estimated arrival time at next waypoint assuming current speed is maintained*/
 
