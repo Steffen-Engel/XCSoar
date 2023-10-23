@@ -8,6 +8,9 @@
 #include "Android/Main.hpp"
 #include "Android/SoundUtil.hpp"
 #include "Android/Context.hpp"
+#include "system/FileUtil.hpp"
+#include "LocalPath.hpp"
+
 #endif
 
 #if defined(_WIN32)
@@ -22,10 +25,15 @@ bool
 PlayResource(const TCHAR *resource_name)
 {
 #ifdef ANDROID
-
   if (_tcsstr(resource_name, _T(".wav")))
     return SoundUtil::PlayExternal(Java::GetEnv(), context->Get(), resource_name);
-  return SoundUtil::Play(Java::GetEnv(), context->Get(), resource_name);
+
+  // check local path for file
+  AllocatedPath sndfile = LocalPath(resource_name);
+  if (File::Exists(sndfile))
+    return SoundUtil::Play(Java::GetEnv(), context->Get(), sndfile.c_str());
+  else
+    return SoundUtil::Play(Java::GetEnv(), context->Get(), resource_name);
 
 #elif defined(_WIN32)
 

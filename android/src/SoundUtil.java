@@ -9,6 +9,7 @@ import java.io.File;
 import android.media.MediaPlayer;
 import android.content.Context;
 import android.net.Uri;
+import java.io.IOException;
 
 public class SoundUtil {
   private static Map<String, Integer> resources = new HashMap<String, Integer>();
@@ -25,7 +26,26 @@ public class SoundUtil {
   public static boolean play(Context context, String name) {
     Integer id = resources.get(name);
     if (id == null)
+    {
+      // no internal resource, try to load external file
+      try {
+        MediaPlayer mp = new MediaPlayer();
+        mp.setDataSource(name);
+        mp.prepare();
+        mp.start();
+        return true;
+      }
+      catch (IllegalArgumentException e) {
+        // dummy, we actually do not care
+      }
+      catch (IllegalStateException e) {
+        // dummy, we actually do not care
+      }
+      catch (IOException e) {
+        // dummy, we actually do not care
+      }
       return false;
+    }
 
     return run(MediaPlayer.create(context, id));
   }
