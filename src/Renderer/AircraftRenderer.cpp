@@ -253,9 +253,9 @@ DrawArrow(Canvas &canvas, [[maybe_unused]] const AircraftLook &look,
   canvas.Select(pen3);
   canvas.SelectHollowBrush();
   int radius = Layout::Scale(12);
-  canvas.DrawCircle(aircraft_pos, radius-1);
+//  canvas.DrawCircle(aircraft_pos, radius-1);
   canvas.DrawCircle(aircraft_pos, radius);
-  canvas.DrawCircle(aircraft_pos, radius+1);
+//  canvas.DrawCircle(aircraft_pos, radius+1);
 
   canvas.Select(brush1);
   canvas.Select(pen1);
