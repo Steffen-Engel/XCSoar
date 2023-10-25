@@ -2,21 +2,21 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="10"
    height="20"
    id="svg2"
    version="1.1"
-   inkscape:version="0.91 r13725"
-   sodipodi:docname="progress_border_yAll.svg"
-   style="enable-background:new">
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="progress_border_yall.svg"
+   style="enable-background:new"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs4">
     <linearGradient
@@ -49,10 +49,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="46.117648"
-     inkscape:cx="3.0077734"
-     inkscape:cy="9.8381993"
+     inkscape:cx="1.1167092"
+     inkscape:cy="9.7901784"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer2"
      showgrid="false"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -64,11 +64,13 @@
      inkscape:snap-midpoints="true"
      showborder="true"
      inkscape:showpageshadow="false"
-     inkscape:window-width="2495"
-     inkscape:window-height="1416"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1" />
+     inkscape:window-width="3840"
+     inkscape:window-height="2066"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -77,7 +79,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -86,10 +88,9 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(-677.85712,-746.57648)"
-     style="display:inline"
-     sodipodi:insensitive="true">
+     style="display:inline">
     <rect
-       style="fill:#f8cc00;fill-opacity:1;stroke:none"
+       style="fill:#800080;fill-opacity:1;stroke:none"
        id="rect2996"
        width="10"
        height="20"
@@ -101,10 +102,9 @@
      id="layer2"
      inkscape:label="Highlights"
      style="display:inline"
-     transform="translate(0,3)"
-     sodipodi:insensitive="true">
+     transform="translate(0,3)">
     <rect
-       style="fill:#ffcc00;fill-opacity:1;stroke:none"
+       style="fill:#800080;fill-opacity:1;stroke:none"
        id="rect3780"
        width="1"
        height="20"
@@ -112,7 +112,7 @@
        y="-3"
        transform="scale(-1,1)" />
     <rect
-       style="display:inline;fill:#ffcc00;fill-opacity:1;stroke:none"
+       style="display:inline;fill:#800080;fill-opacity:1;stroke:none"
        id="rect3780-9"
        width="1"
        height="20"
@@ -120,15 +120,16 @@
        y="-3"
        transform="scale(-1,1)" />
     <rect
-       style="display:inline;fill:#ffcc00;fill-opacity:1;stroke:none"
+       style="display:inline;fill:#800080;fill-opacity:1;stroke:none"
        id="rect3780-5"
        width="1"
        height="20"
        x="-3"
        y="-3"
-       transform="scale(-1,1)" />
+       transform="scale(-1,1)"
+       inkscape:label="rect3780-5" />
     <rect
-       style="display:inline;fill:#ffcc00;fill-opacity:1;stroke:none"
+       style="display:inline;fill:#800080;fill-opacity:1;stroke:none"
        id="rect3780-8"
        width="1"
        height="20"
@@ -141,8 +142,7 @@
      id="layer3"
      inkscape:label="Shadow"
      style="display:inline;opacity:0.3"
-     transform="translate(0,3)"
-     sodipodi:insensitive="true">
+     transform="translate(0,3)">
     <rect
        style="fill:url(#linearGradient3776);fill-opacity:1;stroke:none"
        id="rect3768"
@@ -150,6 +150,6 @@
        height="11"
        x="-10"
        y="-8"
-       transform="scale(-1,-1)" />
+       transform="scale(-1)" />
   </g>
 </svg>

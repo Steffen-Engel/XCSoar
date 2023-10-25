@@ -2,25 +2,25 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="267"
    height="267"
    id="svg6431"
    version="1.1"
-   inkscape:version="0.91 r13725"
-   sodipodi:docname="logo_yAll.svg"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="logo_yall.svg"
    inkscape:export-filename="C:\Documents and Settings\Administrator\Desktop\XCSoar 48x48_10.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
    style="display:inline;enable-background:new"
-   enable-background="new">
+   enable-background="new"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <defs
      id="defs6433">
     <linearGradient
@@ -176,7 +176,11 @@
     <filter
        inkscape:collect="always"
        id="filter3765"
-       color-interpolation-filters="sRGB">
+       color-interpolation-filters="sRGB"
+       x="0"
+       y="0"
+       width="1"
+       height="1">
       <feBlend
          inkscape:collect="always"
          mode="lighten"
@@ -186,7 +190,11 @@
     <filter
        inkscape:collect="always"
        id="filter3884"
-       color-interpolation-filters="sRGB">
+       color-interpolation-filters="sRGB"
+       x="-3.4961682"
+       y="-1.7979348"
+       width="4.5219949"
+       height="2.8246436">
       <feBlend
          inkscape:collect="always"
          mode="multiply"
@@ -212,7 +220,11 @@
     </filter>
     <filter
        inkscape:collect="always"
-       id="filter3909">
+       id="filter3909"
+       x="-0.026708872"
+       y="-0.026708872"
+       width="1.0534177"
+       height="1.0534177">
       <feGaussianBlur
          inkscape:collect="always"
          stdDeviation="0.35560528"
@@ -220,7 +232,11 @@
     </filter>
     <filter
        inkscape:collect="always"
-       id="filter3913">
+       id="filter3913"
+       x="-0.056359878"
+       y="-0.058108493"
+       width="1.1127198"
+       height="1.116217">
       <feGaussianBlur
          inkscape:collect="always"
          stdDeviation="1.0123589"
@@ -228,7 +244,11 @@
     </filter>
     <filter
        inkscape:collect="always"
-       id="filter3917">
+       id="filter3917"
+       x="-0.033679255"
+       y="-0.038311092"
+       width="1.0673585"
+       height="1.0766222">
       <feGaussianBlur
          inkscape:collect="always"
          stdDeviation="2.826689"
@@ -243,20 +263,23 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.5938318"
-     inkscape:cx="267.35965"
-     inkscape:cy="212.30415"
+     inkscape:cx="215.31851"
+     inkscape:cy="212.81257"
      inkscape:document-units="px"
      inkscape:current-layer="layer3"
      showgrid="false"
-     inkscape:window-width="2495"
-     inkscape:window-height="1416"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
+     inkscape:window-width="3840"
+     inkscape:window-height="2066"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
      inkscape:window-maximized="1"
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:snap-page="true"
-     inkscape:snap-global="false" />
+     inkscape:snap-global="false"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#ff00ff" />
   <metadata
      id="metadata6436">
     <rdf:RDF>
@@ -265,7 +288,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -332,7 +355,7 @@
      style="display:inline"
      transform="translate(2.9999921,211)">
     <circle
-       style="display:inline;fill:#ffcc00;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       style="display:inline;fill:#800080;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path5438"
        transform="matrix(7.9489511,0,0,7.9489511,1,-206.66478)"
        cx="15.976951"
