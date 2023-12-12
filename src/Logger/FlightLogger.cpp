@@ -248,10 +248,11 @@ try {
   }
   else
   {
-  writer.Format("%04u-%02u-%02uT%02u:%02u:%02u %s",
+    temp.Format("%04u-%02u-%02uT%02u:%02u:%02u %s",
                     date_time.year, date_time.month, date_time.day,
                     date_time.hour, date_time.minute, date_time.second,
                     type);
+    writer.Write(temp.buffer());
   }
 
   writer.Flush();
@@ -382,9 +383,11 @@ try{
         writer.Write(Line);
         writer.NewLine();
 #else
-        writer.Format("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d",
+        StaticString<128> temp;
+        temp.Format("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d",
                             type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,
                             starthour, startminute, landhour, landminute, flighthours, flightminutes);
+        writer.Write(temp.buffer());
 #endif
       }
     }
@@ -393,9 +396,11 @@ try{
   if (flight.count > 0)
   {
     writer.NewLine();
-    writer.Format("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours",
+    StaticString<128> temp;
+    temp.Format("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours",
                       type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,
                       flight.count, flight.minutes/60, flight.minutes%60);
+    writer.Write(temp.buffer());
   }
 
   writer.Flush();
