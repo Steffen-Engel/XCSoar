@@ -9,7 +9,7 @@ endif
 
 ####### market icons
 
-SVG_MARKET_ICONS = Data/graphics/logo.svg Data/graphics/logo_red.svg
+SVG_MARKET_ICONS = Data/graphics/logo.svg Data/graphics/logo_yall.svg
 PNG_MARKET_ICONS = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%_market.png,$(SVG_MARKET_ICONS))
 
 market-icons: $(PNG_MARKET_ICONS)
@@ -56,7 +56,7 @@ $(eval $(call convert-to-bmp,$(BMP_ICONS_ALL),%.bmp,%_tile.png))
 
 ####### splash logo
 
-SVG_SPLASH = Data/graphics/logo.svg Data/graphics/logo_red.svg
+SVG_SPLASH = Data/graphics/logo.svg Data/graphics/logo_yall.svg
 PNG_SPLASH_320 = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%_320.png,$(SVG_SPLASH))
 BMP_SPLASH_320 = $(PNG_SPLASH_320:.png=.bmp)
 PNG_SPLASH_160 = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%_160.png,$(SVG_SPLASH))
@@ -82,7 +82,8 @@ $(ICNS_SPLASH_1024): %.icns: %.png
 
 ####### version
 
-SVG_TITLE = Data/graphics/title.svg Data/graphics/title_red.svg
+#SVG_TITLE = Data/graphics/title.svg Data/graphics/title_red.svg
+SVG_TITLE = Data/graphics/title.svg Data/graphics/title_yall.svg
 PNG_TITLE_110 = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%_110.png,$(SVG_TITLE))
 BMP_TITLE_110 = $(PNG_TITLE_110:.png=.bmp)
 PNG_TITLE_320 = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%_320.png,$(SVG_TITLE))
@@ -97,7 +98,8 @@ $(eval $(call convert-to-bmp-white,$(BMP_TITLE_110) $(BMP_TITLE_320),%.bmp,%.png
 
 ####### dialog title
 
-SVG_DIALOG_TITLE = Data/graphics/dialog_title.svg Data/graphics/dialog_title_red.svg
+#SVG_DIALOG_TITLE = Data/graphics/dialog_title.svg Data/graphics/dialog_title_red.svg
+SVG_DIALOG_TITLE = Data/graphics/dialog_title.svg Data/graphics/dialog_title_yall.svg
 PNG_DIALOG_TITLE = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%.png,$(SVG_DIALOG_TITLE))
 BMP_DIALOG_TITLE = $(PNG_DIALOG_TITLE:.png=.bmp)
 
@@ -109,7 +111,7 @@ $(eval $(call convert-to-bmp-white,$(BMP_DIALOG_TITLE),%.bmp,%.png))
 
 ####### progress bar border
 
-SVG_PROGRESS_BORDER = Data/graphics/progress_border.svg Data/graphics/progress_border_red.svg
+SVG_PROGRESS_BORDER = Data/graphics/progress_border.svg Data/graphics/progress_border_yall.svg
 PNG_PROGRESS_BORDER = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%.png,$(SVG_PROGRESS_BORDER))
 BMP_PROGRESS_BORDER = $(PNG_PROGRESS_BORDER:.png=.bmp)
 
@@ -121,7 +123,7 @@ $(eval $(call convert-to-bmp-white,$(BMP_PROGRESS_BORDER),%.bmp,%.png))
 
 ####### launcher graphics
 
-SVG_LAUNCH = Data/graphics/launcher.svg Data/graphics/launcher_red.svg
+SVG_LAUNCH = Data/graphics/launcher.svg Data/graphics/launcher_yall.svg
 PNG_LAUNCH_640 = $(patsubst Data/graphics/%.svg,$(DATA)/graphics/%_640.png,$(SVG_LAUNCH))
 BMP_LAUNCH_FLY_640 = $(PNG_LAUNCH_640:.png=_1.bmp)
 BMP_LAUNCH_SIM_640 = $(PNG_LAUNCH_640:.png=_2.bmp)

@@ -158,7 +158,7 @@ ANDROID_XML_RES := $(wildcard android/res/*/*.xml)
 ANDROID_XML_RES_COPIES := $(patsubst android/res/%,$(RES_DIR)/%,$(ANDROID_XML_RES))
 
 ifeq ($(TESTING),y)
-ICON_SVG = $(topdir)/Data/graphics/logo_red.svg
+ICON_SVG = $(topdir)/Data/graphics/logo_yall.svg
 else
 ICON_SVG = $(topdir)/Data/graphics/logo.svg
 endif
