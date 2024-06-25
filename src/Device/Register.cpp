@@ -37,11 +37,13 @@
 #include "Device/Driver/OpenVario.hpp"
 #include "Device/Driver/Larus.hpp"
 #include "Device/Driver/Vaulter.hpp"
+#include "Device/Driver/yAll/yAllDriver.hpp"
 #include "Device/Driver/ATR833/Register.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
+
 
 #include <cassert>
 
@@ -81,6 +83,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &larus_driver,
   &vaulter_driver,
   &krt2_driver,
+  &yall_driver,
   &atr833_driver,
   &xctracer_driver,
   &thermalexpress_driver,

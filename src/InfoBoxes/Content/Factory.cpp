@@ -15,6 +15,7 @@
 #include "InfoBoxes/Content/Places.hpp"
 #include "InfoBoxes/Content/Contest.hpp"
 #include "InfoBoxes/Content/Team.hpp"
+#include "InfoBoxes/Content/yAll.hpp"
 #include "InfoBoxes/Content/Terrain.hpp"
 #include "InfoBoxes/Content/Thermal.hpp"
 #include "InfoBoxes/Content/Time.hpp"
@@ -1004,6 +1005,76 @@ static constexpr MetaData meta_data[] = {
     UpdateInfoBoxFinalMC0AltitudeDiff,
   },
 
+  // e_eta_H
+  {
+    N_("eta HR"),
+    N_("eta_hr"),
+    NULL,
+    UpdateInfoBoxETAhr,
+  },
+  // e_eta_H
+  {
+    N_("eta SR"),
+    N_("eta_sr"),
+    NULL,
+    UpdateInfoBoxETAsr,
+  },
+  // e_eta_H
+  {
+    N_("eta QR"),
+    N_("eta_qr"),
+    NULL,
+    UpdateInfoBoxETAqr,
+  },
+  // e_Max_g
+  {
+    N_("Max g"),
+    N_("max_g"),
+    N_("Maximum recorded g-load since last takeoff"),
+    UpdateInfoBoxMaxg,
+  },
+  // e_Min_g
+  {
+    N_("Min g"),
+    N_("min_g"),
+    N_("Minimum recorded g-load since last takeoff"),
+    UpdateInfoBoxMing,
+  },
+  // e_MaxVIAS
+  {
+    N_("Max VIAS"),
+    N_("max_VIAS"),
+    N_("Maximum recorded VIAS since last takeoff"),
+    UpdateInfoBoxMaxVIAS,
+  },
+  // e_BankAngle
+  {
+    N_("bank angle"),
+    N_("bank"),
+    N_("bank angle of plane"),
+    UpdateInfoBoxBankAngle,
+  },
+  // e_PitchAngle
+  {
+    N_("pitch angle"),
+    N_("pitch"),
+    N_("pitch angle of plane"),
+    UpdateInfoBoxPitchAngle,
+  },
+  // e_Heading
+  {
+    N_("heading angle"),
+    N_("head"),
+    N_("heading angle of plane"),
+    UpdateInfoBoxHeading,
+  },
+  // e_Controls
+  {
+    N_("control position"),
+    N_("controls"),
+    N_("show position of controls"),
+    IBFHelper<InfoBoxContentControls>::Create,
+  },
   // NEXT_ARROW
   {
     N_("Next arrow"),
