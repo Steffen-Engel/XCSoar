@@ -84,6 +84,7 @@ AirspacePreviewRenderer::UnprepareFill([[maybe_unused]] Canvas &canvas)
 #ifdef ENABLE_OPENGL
   ::glDisable(GL_BLEND);
 #elif defined(USE_GDI)
+  canvas.SetTextColor(COLOR_BLACK);
   canvas.SetMixCopy();
 #endif
 }
@@ -125,7 +126,7 @@ AirspacePreviewRenderer::Draw(Canvas &canvas, const AbstractAirspace &airspace,
                               const AirspaceLook &look)
 {
   AbstractAirspace::Shape shape = airspace.GetShape();
-  AirspaceClass asclass = airspace.GetClass();
+  AirspaceClass asclass = airspace.GetClassType();
 
   // Container for storing the points of a polygon airspace
   std::vector<BulkPixelPoint> pts;

@@ -64,8 +64,13 @@ public:
 	}
 
 	template<typename T>
+	CURLcode TrySetOption(CURLoption option, T value) noexcept {
+		return curl_easy_setopt(handle, option, value);
+	}
+
+	template<typename T>
 	void SetOption(CURLoption option, T value) {
-		CURLcode code = curl_easy_setopt(handle, option, value);
+		CURLcode code = TrySetOption(option, value);
 		if (code != CURLE_OK)
 			throw Curl::MakeError(code, "Failed to set option");
 	}
@@ -123,6 +128,14 @@ public:
 
 	void SetVerifyPeer(bool value) {
 		SetOption(CURLOPT_SSL_VERIFYPEER, (long)value);
+	}
+
+	void SetProxyVerifyHost(bool value) {
+		SetOption(CURLOPT_PROXY_SSL_VERIFYHOST, value ? 2L : 0L);
+	}
+
+	void SetProxyVerifyPeer(bool value) {
+		SetOption(CURLOPT_PROXY_SSL_VERIFYPEER, value);
 	}
 
 	void SetConnectTimeout(long timeout) {
