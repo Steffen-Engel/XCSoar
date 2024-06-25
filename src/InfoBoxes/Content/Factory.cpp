@@ -1041,6 +1041,16 @@ static constexpr MetaData meta_data[] = {
     IBFHelper<InfoBoxContentClimbPercent>::Create,
   },
 
+  // e_Startline_Distance
+  {
+    N_("Startline Distance"),
+    N_("Startline"),
+    N_("Distance and arrival altitudes to the startline."
+        "arrival altitudes for actual McCready and maximum allowed startspeed are calculated and colored "
+        "by warning level."),
+    IBFHelper<InfoBoxStartlineDistance>::Create,
+  },
+
   // NbrSat
   {
     N_("Number of used satellites"),

@@ -131,6 +131,15 @@ UpdateInfoBoxStartOpen(InfoBoxData &data) noexcept;
 void
 UpdateInfoBoxStartOpenArrival(InfoBoxData &data) noexcept;
 
+class InfoBoxStartlineDistance : public InfoBoxContent
+{
+ public:
+  virtual void Update(InfoBoxData &data) noexcept override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) noexcept override;
+};
+
+
+
 class InfoBoxContentNextArrow: public InfoBoxContent
 {
 public:
