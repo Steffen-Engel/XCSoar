@@ -49,7 +49,7 @@ bitmap_icon_scaled IDB_CLOCK "clock"
 
 #ifdef EYE_CANDY
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_DIALOGTITLE "dialog_title_red"
+bitmap_graphic IDB_DIALOGTITLE "dialog_title_yall"
 #else
 bitmap_graphic IDB_DIALOGTITLE "dialog_title"
 #endif
@@ -62,8 +62,8 @@ bitmap_icon_scaled IDB_GPSSTATUS1 "gps_acquiring"
 bitmap_icon_scaled IDB_GPSSTATUS2 "gps_disconnected"
 bitmap_icon_scaled IDB_LANDABLE "winpilot_landable"
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_LAUNCHER1 "launcher_red_640_1"
-bitmap_graphic IDB_LAUNCHER2 "launcher_red_640_2"
+bitmap_graphic IDB_LAUNCHER1 "launcher_yall_640_1"
+bitmap_graphic IDB_LAUNCHER2 "launcher_yall_640_2"
 #else
 bitmap_graphic IDB_LAUNCHER1 "launcher_640_1"
 bitmap_graphic IDB_LAUNCHER2 "launcher_640_2"
@@ -79,7 +79,7 @@ bitmap_icon_scaled IDB_OUTFIELD_MARGINAL2 "alt2_marginal_field"
 bitmap_icon_scaled IDB_OUTFIELD_UNREACHABLE2 "alt2_landable_field"
 bitmap_icon_scaled IDB_MOUNTAIN_PASS "map_pass"
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_PROGRESSBORDER "progress_border_red"
+bitmap_graphic IDB_PROGRESSBORDER "progress_border_yall"
 #else
 bitmap_graphic IDB_PROGRESSBORDER "progress_border"
 #endif
@@ -87,8 +87,8 @@ bitmap_icon_scaled IDB_REACHABLE "winpilot_reachable"
 bitmap_icon_scaled IDB_MARGINAL "winpilot_marginal"
 bitmap_icon_scaled IDB_SMALL "map_small"
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_LOGO_HD "logo_red_160"
-bitmap_graphic IDB_LOGO "logo_red_80"
+bitmap_graphic IDB_LOGO_HD "logo_yall_160"
+bitmap_graphic IDB_LOGO "logo_yall_80"
 #else
 bitmap_graphic IDB_LOGO_HD "logo_160"
 bitmap_graphic IDB_LOGO "logo_80"
@@ -116,8 +116,8 @@ bitmap_icon_scaled IDB_PGTAKEOFF "map_pgtakeoff"
 bitmap_icon_scaled IDB_PGLANDING "map_pglanding"
 
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_TITLE "title_red_110"
-bitmap_graphic IDB_TITLE_HD "title_red_320"
+bitmap_graphic IDB_TITLE "title_yall_110"
+bitmap_graphic IDB_TITLE_HD "title_yall_320"
 #else
 bitmap_graphic IDB_TITLE "title_110"
 bitmap_graphic IDB_TITLE_HD "title_320"
