@@ -497,7 +497,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
       if (flying)
       {
         StaticString<256> temp;
-        temp.Format("%02d.%02d.%04d,%02d:%02d:%02d.%d,%8d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%6d,%6d,%5d,%4d,%4d,%4d,%4d,%1d,%2d,%5d,%6d,%9d,%9d\n",
+        temp.Format(_T("%02d.%02d.%04d,%02d:%02d:%02d.%d,%8d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%6d,%6d,%5d,%4d,%4d,%4d,%4d,%1d,%2d,%5d,%6d,%9d,%9d\n"),
                             info.date_time_utc.day,
                             info.date_time_utc.month,
                             info.date_time_utc.year,
