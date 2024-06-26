@@ -54,9 +54,9 @@ FlightLogger::Reset()
   auto primary_path = GetPrimaryDataPath();
 #endif
   Directory::Create(primary_path);
-  auto out_path = AllocatedPath::Build(primary_path, "out");
+  auto out_path = AllocatedPath::Build(primary_path, _T("out"));
   Directory::Create(out_path);
-  auto old_path = AllocatedPath::Build(out_path, "old");
+  auto old_path = AllocatedPath::Build(out_path, _T("old"));
   Directory::Create(old_path);
 
   last_time = TimeStamp::Undefined();
@@ -176,7 +176,7 @@ try {
   Directory::Create(out_path);
 
   // open logbook for parsing flights
-  const auto logbookpath = AllocatedPath::Build(out_path, "flightlog.txt");
+  const auto logbookpath = AllocatedPath::Build(out_path, _T("flightlog.txt"));
 
   FileOutputStream file(logbookpath, FileOutputStream::Mode::APPEND_OR_CREATE);
   BufferedOutputStream writer(file);
@@ -250,7 +250,7 @@ try {
   }
   else
   {
-    temp.Format("%04u-%02u-%02uT%02u:%02u:%02u %s",
+    temp.Format(_T("%04u-%02u-%02uT%02u:%02u:%02u %s"),
                     date_time.year, date_time.month, date_time.day,
                     date_time.hour, date_time.minute, date_time.second,
                     type);
@@ -323,10 +323,10 @@ try{
 #endif
 
   // open logbook for parsing flights
-  const auto logbookpath = AllocatedPath::Build(primary_path, "flightlog.txt");
+  const auto logbookpath = AllocatedPath::Build(primary_path, _T("flightlog.txt"));
   FileLineReaderA FlightLog(logbookpath);
 
-  const auto out_path = AllocatedPath::Build(primary_path, "out");
+  const auto out_path = AllocatedPath::Build(primary_path, _T("out"));
   Directory::Create(out_path);
 
   StaticString<64> temp;
@@ -364,7 +364,7 @@ try{
   flight.minutes = 0;
 
   TCHAR *Line;
-  while ((Line = FlightLog.ReadLine()) != NULL)
+  while ((Line = (TCHAR *)FlightLog.ReadLine()) != NULL)
   {
                           //    09.04.2014  15:46   15:47    00:01
     int day, month, year, starthour, startminute, landhour, landminute, flighthours, flightminutes;
@@ -387,7 +387,7 @@ try{
         writer.NewLine();
 #else
         StaticString<128> temp;
-        temp.Format("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d",
+        temp.Format(_T("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d"),
                             type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,
                             starthour, startminute, landhour, landminute, flighthours, flightminutes);
         writer.Write(temp.buffer());
@@ -400,7 +400,7 @@ try{
   {
     writer.NewLine();
     StaticString<128> temp;
-    temp.Format("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours",
+    temp.Format(_T("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours"),
                       type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,
                       flight.count, flight.minutes/60, flight.minutes%60);
     writer.Write(temp.buffer());
