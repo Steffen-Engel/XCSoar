@@ -29,6 +29,7 @@
 #include "Tracking/TrackingGlue.hpp"
 #include "Engine/Waypoint/Waypoints.hpp"
 #include "Components.hpp"
+#include "NetComponents.hpp"
 #include "DataComponents.hpp"
 #include "Pan.hpp"
 
@@ -385,8 +386,9 @@ TrafficListWidget::UpdateList()
 #ifdef HAVE_SKYLINES_TRACKING
     /* show SkyLines traffic unless this is a FLARM traffic picker
        dialog (from dlgTeamCode) */
-    if (buttons != nullptr) {
-      const auto &data = tracking->GetSkyLinesData();
+    if (buttons != nullptr && net_components != nullptr &&
+        net_components->tracking) {
+      const auto &data = net_components->tracking->GetSkyLinesData();
       const std::lock_guard lock{data.mutex};
       for (const auto &i : data.traffic) {
         const auto name_i = data.user_names.find(i.first);
@@ -461,8 +463,9 @@ TrafficListWidget::UpdateVolatile()
         i.vector.SetInvalid();
       }
 #ifdef HAVE_SKYLINES_TRACKING
-    } else if (i.IsSkyLines()) {
-      const auto &data = tracking->GetSkyLinesData();
+    } else if (i.IsSkyLines() && net_components != nullptr &&
+               net_components->tracking) {
+      const auto &data = net_components->tracking->GetSkyLinesData();
       const std::lock_guard lock{data.mutex};
 
       auto live = data.traffic.find(i.skylines_id);
@@ -505,8 +508,8 @@ TrafficListWidget::UpdateButtons()
   bool flarm_cursor = valid_cursor && items[cursor].IsFlarm();
   bool valid_location = valid_cursor && items[cursor].location.IsValid();
 
-  buttons->SetRowVisible(DETAILS, flarm_cursor);
-  buttons->SetRowVisible(MAP, valid_location);
+  buttons->SetRowEnabled(DETAILS, flarm_cursor);
+  buttons->SetRowEnabled(MAP, valid_location);
 }
 
 void
