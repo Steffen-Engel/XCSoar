@@ -22,6 +22,7 @@
 #include "InfoBoxes/Content/Weather.hpp"
 #include "InfoBoxes/Content/Airspace.hpp"
 #include "InfoBoxes/Content/Radio.hpp"
+#include "InfoBoxes/Content/CIVAHMD.hpp"
 #include "InfoBoxes/Content/Engine.hpp"
 
 #include "util/Macros.hpp"
@@ -1118,6 +1119,14 @@ static constexpr MetaData meta_data[] = {
     N_("RPM"),
     N_("Engine Revolutions Per Minute."),
     UpdateInfoBoxContentRPM,
+  },
+
+  // e_civa_hmd
+  {
+    N_("CIVA HMD"),
+    N_("CIVA HMD Focus"),
+    N_("Shows th actual Focus id of the CIVA HMD surveillance."),
+    IBFHelper<InfoBoxContentCIVAHMD>::Create,
   },
 
   // e_AAT_dT_or_ETA

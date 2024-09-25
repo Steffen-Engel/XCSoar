@@ -38,6 +38,7 @@
 #include "Device/Driver/Larus.hpp"
 #include "Device/Driver/Vaulter.hpp"
 #include "Device/Driver/ATR833/Register.hpp"
+#include "Device/Driver/CIVAHMD.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
 #include "util/Macros.hpp"
@@ -82,6 +83,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &vaulter_driver,
   &krt2_driver,
   &atr833_driver,
+  &civahmd_driver,
   &xctracer_driver,
   &thermalexpress_driver,
   &acd_driver,
