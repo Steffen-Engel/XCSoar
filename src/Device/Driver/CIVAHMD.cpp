@@ -10,6 +10,7 @@
 #include "NMEA/Checksum.hpp"
 #include "NMEA/Info.hpp"
 #include "NMEA/InputLine.hpp"
+#include "NMEA/MoreData.hpp"
 #include "LogFile.hpp"
 #include "Audio/Sound.hpp"
 #include "Audio/VarioGlue.hpp"
@@ -26,12 +27,14 @@ class CivaHmdDevice : public AbstractDevice {
 public:
   /* virtual methods from class Device */
   bool ParseNMEA(const char *line, struct NMEAInfo &info) override;
+  void OnSensorUpdate(const MoreData &basic) override;
 };
 
 // global var declaration
 int CIVATargetId = 0;
 int CIVAIsBeeping = 0;
 
+GeoPoint MyLocation;
 
 static bool
 cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
@@ -59,7 +62,6 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
   char id_string[16];
   line.Read(id_string, 16);
   HmdId = (int)strtol(id_string, NULL, 16)%256;
-
   // 1, 2, 3, 4 position
   GeoPoint location;
   [[maybe_unused]] bool valid_location = NMEAParser::ReadGeoPoint(line, location);
@@ -114,7 +116,6 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     info.ground_speed = Units::ToSysUnit(speed, Unit::METER_PER_SECOND);
     info.ground_speed_available.Update(info.clock);
 
-
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
     {
@@ -129,14 +130,15 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     traffic.location = location;
     traffic.location_available = true;
     traffic.alarm_level = FlarmTraffic::AlarmType::NONE;
-    traffic.name = id_string;
     traffic.id = FlarmId::Parse(id_string, nullptr);
     traffic.type = FlarmTraffic::AircraftType::GLIDER;
 
+
     Angle bearing;
     double distance;
-    DistanceBearing(info.location, location,
-                    &distance, &bearing) ;
+    DistanceBearing(MyLocation, location,
+                    &distance, &bearing);
+
     traffic.relative_north = bearing.cos()*distance;
     traffic.relative_east = bearing.sin()*distance;
     traffic.relative_altitude = altitude;
@@ -196,3 +198,8 @@ const struct DeviceRegister civahmd_driver = {
   GenericCreateOnPort,
 };
 
+void
+CivaHmdDevice::OnSensorUpdate(const MoreData &basic)
+{
+  MyLocation = basic.location;
+}
