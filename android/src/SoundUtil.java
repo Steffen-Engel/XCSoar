@@ -20,6 +20,7 @@ public class SoundUtil {
     resources.put("IDR_WAV_BEEPBWEEP", R.raw.beep_bweep);
     resources.put("IDR_WAV_CLEAR", R.raw.beep_clear);
     resources.put("IDR_WAV_DRIP", R.raw.beep_drip);
+    resources.put("IDR_WAV_BEEPCIVA", R.raw.beep_civa);
   }
 
   public static boolean play(Context context, String name) {

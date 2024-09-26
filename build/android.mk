@@ -200,7 +200,7 @@ $(RES_DIR)/drawable-xxxhdpi/notification_icon.png: $(ICON_WHITE_SVG) | $(RES_DIR
 
 OGGENC = oggenc --quiet --quality 1
 
-SOUNDS = fail insert remove beep_bweep beep_clear beep_drip
+SOUNDS = fail insert remove beep_bweep beep_clear beep_drip beep_civa
 SOUND_FILES = $(patsubst %,$(RAW_DIR)/%.ogg,$(SOUNDS))
 
 $(SOUND_FILES): $(RAW_DIR)/%.ogg: Data/sound/%.wav | $(RAW_DIR)/dirstamp
