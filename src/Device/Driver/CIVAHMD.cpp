@@ -108,6 +108,12 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     }
 
     info.ProvideBaroAltitudeTrue(altitude);
+    info.track = Angle::Degrees(track);
+    info.track_available.Update(info.clock);
+
+    info.ground_speed = Units::ToSysUnit(speed, Unit::METER_PER_SECOND);
+    info.ground_speed_available.Update(info.clock);
+
 
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
