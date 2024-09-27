@@ -55,6 +55,14 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
    10 max negative g load since last send
   */
 
+   // speed up the redraw after change of Id, if changed.
+  static int lastFocus = 0;
+  if (lastFocus != CIVATargetId)
+  {
+   info.Reset();
+   lastFocus = CIVATargetId;
+  }
+
   // read ID
   [[maybe_unused]] int HmdId;
 
