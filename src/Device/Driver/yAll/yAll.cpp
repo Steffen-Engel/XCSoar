@@ -233,7 +233,7 @@ void cyAll::StartLog(void)
   file = new FileOutputStream(path, FileOutputStream::Mode::APPEND_OR_CREATE);
   writer = new BufferedOutputStream(*file);
 
-  writer->Write("date, time, time/msec, nx/g, ny/g, nz/g, phi, psi, theta, rot_x/°/sec, rot_y/°/sec, rot_z/°/s, p_cabin/Pa, p_stat/Pa, p_diff/Pa,eta_hr, eta_qr, eta_sr, eta_fl, GPS_FIX, numSat, GPS_altitude, GPS_speed, longitude, latitude");
+  writer->Write("date, time, time/msec, nx/g, ny/g, nz/g, phi, psi, theta, rot_x/°/sec, rot_y/°/sec, rot_z/°/s, p_cabin/Pa, p_stat/Pa, p_diff/Pa,eta_hr, eta_qr, eta_sr, eta_fl, GPS_FIX, numSat, GPS_altitude, GPS_speed, longitude, latitude, GPS_track");
   writer->Flush();
 
 }
@@ -497,7 +497,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
       if (flying)
       {
         StaticString<256> temp;
-        temp.Format(_T("%02d.%02d.%04d,%02d:%02d:%02d.%d,%8d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%6d,%6d,%5d,%4d,%4d,%4d,%4d,%1d,%2d,%5d,%6d,%9d,%9d\n"),
+        temp.Format(_T("%02d.%02d.%04d,%02d:%02d:%02d.%d,%8d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%6d,%6d,%5d,%4d,%4d,%4d,%4d,%1d,%2d,%5d,%6d,%9d,%9d,%4d\n"),
                             info.date_time_utc.day,
                             info.date_time_utc.month,
                             info.date_time_utc.year,
@@ -512,7 +512,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
                             LoggerData.pressure[0], LoggerData.pressure[1], LoggerData.pressure[2],
                             LoggerData.eta[ETA_HR], LoggerData.eta[ETA_QR], LoggerData.eta[ETA_SR], LoggerData.eta[ETA_FLAP],
                             LoggerData.GPS_FIX, LoggerData.GPS_numSat, LoggerData.GPS_altitude, LoggerData.GPS_speed,
-                            LoggerData.GPS_longitude, LoggerData.GPS_latitude
+                            LoggerData.GPS_longitude, LoggerData.GPS_latitude, LoggerData.GPS_heading
                             );
         writer->Write(temp.buffer());
       }
