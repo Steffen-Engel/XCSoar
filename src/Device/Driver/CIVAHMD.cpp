@@ -109,8 +109,32 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
   {
   }
 
+  BrokenDateTime dt = BrokenDateTime::NowUTC();
+
+  info.date_time_utc.second = dt.second;
+  info.date_time_utc.minute = dt.minute;
+  info.date_time_utc.hour = dt.hour;
+
+  info.date_time_utc.day = dt.day;
+  info.date_time_utc.month = dt.month;
+  info.date_time_utc.year = dt.year;
+
+
+  TimeStamp this_time;
+  BrokenTime broken_time = BrokenTime(info.date_time_utc.hour, info.date_time_utc.minute, (unsigned)info.date_time_utc.second);
+          this_time = TimeStamp{broken_time.DurationSinceMidnight()};
+  static TimeStamp last_time;
+
+  if (NMEAParser::TimeHasAdvanced(this_time, last_time, info))
+  {
+  }
+
+  info.location_available.Update(info.clock);
+  info.alive.Update(info.clock);
+
   if (HmdId == CIVATargetId)
   {
+
     if (valid_location)
     {
       info.location_available.Update(info.clock);
@@ -123,6 +147,12 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
 
     info.ground_speed = Units::ToSysUnit(speed, Unit::METER_PER_SECOND);
     info.ground_speed_available.Update(info.clock);
+
+    if (max_g_load > min_g_load)
+      info.acceleration.ProvideGLoad(max_g_load, true);
+    else
+      info.acceleration.ProvideGLoad(-1*min_g_load, true);
+
 
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
