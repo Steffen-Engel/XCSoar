@@ -624,6 +624,14 @@ location=5
 
 mode=Config2
 type=key
+data=7
+event=UploadIGCFile
+event=Mode default
+label=Weglide Upload
+location=6
+
+mode=Config2
+type=key
 data=8
 event=WaypointEditor
 event=Mode default
@@ -1271,3 +1279,20 @@ data=0
 event=AirSpace toggle
 label=Airspace\n$(AirspaceToggleActionName)
 location=34
+
+mode=RemoteStick
+type=key
+data=0
+event=Exit
+label=Quit XCSoar
+location=35
+
+# -------------
+# Define gesture to open Quickmenu without keyboard or remote
+# ("Draw a button on the screen")
+# -------------
+
+mode=default
+type=gesture
+data=ULDR
+event=QuickMenu

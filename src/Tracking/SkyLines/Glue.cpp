@@ -10,6 +10,7 @@
 #include "net/State.hpp"
 #include "io/async/GlobalAsioThread.hpp"
 #include "util/ByteOrder.hxx"
+#include "util/Compiler.h"
 
 #include <cassert>
 
@@ -176,7 +177,7 @@ SkyLinesTracking::Glue::SetSettings(const Settings &settings)
   if (settings.cloud.enabled == TriState::TRUE && settings.cloud.key != 0) {
     cloud_client.SetKey(settings.cloud.key);
     if (!cloud_client.IsDefined()) {
-      cloud_client.Open(*global_cares_channel, "cloud.xcsoar.net");
+      cloud_client.Open(*global_cares_channel, "cloud.xcsoar.org");
     }
   } else
     cloud_client.Close();

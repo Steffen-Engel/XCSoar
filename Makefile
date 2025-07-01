@@ -98,6 +98,10 @@ include $(topdir)/build/glx.mk
 include $(topdir)/build/opengl.mk
 endif
 
+# this line should be in build/resource.mk but that file depends on
+# link.mk and compile-depends must be set before including compile.mk
+compile-depends += $(TARGET_OUTPUT_DIR)/include/MakeResource.hpp
+
 include $(topdir)/build/compile.mk
 include $(topdir)/build/host.mk
 include $(topdir)/build/flags.mk
@@ -108,7 +112,11 @@ include $(topdir)/build/link.mk
 include $(topdir)/build/resource.mk
 include $(topdir)/build/libdata.mk
 include $(topdir)/build/java.mk
+ifeq ($(ANDROID_BUNDLE_BUILD),y)
+include $(topdir)/build/android_bundle.mk
+else
 include $(topdir)/build/android.mk
+endif
 include $(topdir)/build/llvm.mk
 include $(topdir)/build/tools.mk
 include $(topdir)/build/version.mk
@@ -135,6 +143,7 @@ include $(topdir)/build/libstdcxx.mk
 include $(topdir)/build/libutil.mk
 include $(topdir)/build/libmath.mk
 include $(topdir)/build/libgeo.mk
+include $(topdir)/build/libunits.mk
 include $(topdir)/build/libnmea.mk
 include $(topdir)/build/libcomputer.mk
 include $(topdir)/build/libos.mk
@@ -155,7 +164,6 @@ include $(topdir)/build/libport.mk
 include $(topdir)/build/driver.mk
 include $(topdir)/build/libio.mk
 include $(topdir)/build/shapelib.mk
-include $(topdir)/build/libunits.mk
 include $(topdir)/build/libwaypoint.mk
 include $(topdir)/build/libairspace.mk
 include $(topdir)/build/libtask.mk
@@ -187,6 +195,7 @@ include $(topdir)/build/libtopo.mk
 include $(topdir)/build/libterrain.mk
 include $(topdir)/build/lua.mk
 include $(topdir)/build/harness.mk
+include $(topdir)/build/flarm.mk
 endif # FAT_BINARY=n
 
 ifeq ($(FUZZER),y)

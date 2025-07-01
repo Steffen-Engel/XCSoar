@@ -126,6 +126,7 @@ constexpr std::string_view AppInfoBoxColors = "AppInfoBoxColors";
 constexpr std::string_view TeamcodeRefWaypoint = "TeamcodeRefWaypoint";
 constexpr std::string_view AppInfoBoxBorder = "AppInfoBoxBorder";
 constexpr std::string_view ShowMenuButton = "ShowMenuButton";
+constexpr std::string_view ShowZoomButton = "ShowZoomButton";
 constexpr std::string_view CursorSize = "CursorSize";
 constexpr std::string_view CursorColorsInverted = "CursorColorsInverted";
 
@@ -215,13 +216,16 @@ constexpr std::string_view FontBugsBallastFont = "BugsBallastFont";
 constexpr std::string_view FontAirspacePressFont = "AirspacePressFont";
 constexpr std::string_view FontAirspaceColourDlgFont = "AirspaceColourDlgFont";
 constexpr std::string_view FontTeamCodeFont = "TeamCodeFont";
+constexpr std::string_view Show95PercentRuleHelpers = "Show95PercentRuleHelpers";
 
 constexpr std::string_view UseFinalGlideDisplayMode = "UseFinalGlideDisplayMode";
 constexpr std::string_view InfoBoxGeometry = "InfoBoxGeometry";
+constexpr std::string_view InfoBoxTitleScale = "InfoBoxTitleScale";
 
 constexpr std::string_view FlarmSideData = "FlarmRadarSideData";
 constexpr std::string_view FlarmAutoZoom = "FlarmRadarAutoZoom";
 constexpr std::string_view FlarmNorthUp = "FlarmRadarNorthUp";
+constexpr std::string_view FlarmRadarZoom = "FlarmRadarZoom";
 
 constexpr std::string_view IgnoreNMEAChecksum = "IgnoreNMEAChecksum";
 constexpr std::string_view MapOrientation = "DisplayOrientation";
@@ -286,4 +290,6 @@ constexpr std::string_view MasterAudioVolume = "MasterAudioVolume";
 
 constexpr std::string_view RaspFile = "RaspFile";
 
+constexpr std::string_view StratuxHorizontalRange = "StratuxHorizontalRange";
+constexpr std::string_view StratuxVerticalRange = "StratuxVerticalRange";
 }
