@@ -2,11 +2,13 @@
 // Copyright The XCSoar Project
 
 #include "StaticParser.hpp"
-#include "NMEA/InputLine.hpp"
 #include "FLARM/Error.hpp"
-#include "FLARM/Version.hpp"
-#include "FLARM/Status.hpp"
 #include "FLARM/List.hpp"
+#include "FLARM/Status.hpp"
+#include "FLARM/Version.hpp"
+#include "Language/Language.hpp"
+#include "Message.hpp"
+#include "NMEA/InputLine.hpp"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
 
@@ -22,6 +24,11 @@ ParsePFLAE(NMEAInputLine &line, FlarmError &error, TimeStamp clock) noexcept
   error.severity = (FlarmError::Severity)
     line.Read((int)FlarmError::Severity::NO_ERROR);
   error.code = (FlarmError::Code)line.ReadHex(0);
+  TCHAR buffer[100];
+  StringFormatUnsafe(buffer, _T("%s - %s"),
+                     FlarmError::ToString(error.severity),
+                     FlarmError::ToString(error.code));
+  Message::AddMessage(_T("FLARM: "), buffer);
 
   error.available.Update(clock);
 }
@@ -64,7 +71,7 @@ ParsePFLAU(NMEAInputLine &line, FlarmStatus &flarm, TimeStamp clock) noexcept
 }
 
 void
-ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock) noexcept
+ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock, RangeFilter &range) noexcept
 {
   flarm.modified.Update(clock);
 
@@ -91,6 +98,13 @@ ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock) noexcept
     // Relative Altitude is required !
     return;
   traffic.relative_altitude = value;
+
+  if (range.horizontal && range.vertical) {
+    // object outside cylinder; non filtered data only !
+    if ((hypot(traffic.relative_north, traffic.relative_east) > (RoughDistance)range.horizontal) ||
+    (abs((int)traffic.relative_altitude) > range.vertical))
+      return;
+  }
 
   line.Skip(); /* id type */
 

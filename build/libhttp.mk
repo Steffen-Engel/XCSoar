@@ -2,7 +2,7 @@
 
 HAVE_HTTP := y
 
-LIBHTTP_DEPENDS = LIBSODIUM
+LIBHTTP_DEPENDS = LIBSODIUM FMT
 
 LIBHTTP_SOURCES = \
 	$(SRC)/net/http/DownloadManager.cpp \
@@ -18,8 +18,8 @@ LIBHTTP_SOURCES = \
 	$(SRC)/net/http/Init.cpp
 
 ifeq ($(TARGET_IS_OSX)$(USE_HOMEBREW),yn)
-# We use the libcurl which is included in Mac OS X.
-# Mac OS X SDKs contain the required headers / library stubs,
+# We use the libcurl which is included in macOS.
+# macOS SDKs contain the required headers / library stubs,
 # but no pkg-config file.
 LIBHTTP_LDLIBS = -lcurl -lssl -lcrypto -lz
 else
@@ -31,7 +31,7 @@ CURL_CPPFLAGS += -DCURL_STATICLIB
 endif
 
 LIBHTTP_CPPFLAGS = $(CURL_CPPFLAGS)
-LIBHTTP_DEPENDS += CURL ZLIB
+LIBHTTP_DEPENDS += CURL ZLIB FMT
 endif
 
 $(eval $(call link-library,libhttp,LIBHTTP))

@@ -166,7 +166,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Speed ground"),
     N_("V GND"),
-    N_("Ground speed measured by the GPS. If this InfoBox is active in simulation mode, pressing the up and down arrows adjusts the speed, and left and right turn the glider."),
+    N_("Ground speed measured by the GPS. The small value shows the head or tail wind difference to TAS for the current vector. If this InfoBox is active in simulation mode, pressing the up and down arrows adjusts the speed, and left and right turn the glider."),
     IBFHelper<InfoBoxContentSpeedGround>::Create,
   },
 
@@ -1134,6 +1134,22 @@ static constexpr MetaData meta_data[] = {
     N_("V Task Est"),
     N_("Estimated average cross-country speed for current task as of task completion, assuming performance of ideal MacCready cruise/climb cycle."),
     UpdateInfoBoxTaskSpeedEst,
+  },
+
+  // e_Home_AltDiff
+  {
+    N_("Home altitude difference"),
+    N_("Home AltD"),
+    N_("Arrival altitude at the home waypoint relative to the safety arrival height."),
+    UpdateInfoBoxHomeAltitudeDiff,
+  },
+
+  // e_SpeedTaskLeg
+  {
+    N_("Speed task leg"),
+    N_("V Task Leg"),
+    N_("Average cross country speed while on current task leg, not compensated for altitude."),
+    UpdateInfoBoxTaskSpeedLeg,
   },
 
 };
