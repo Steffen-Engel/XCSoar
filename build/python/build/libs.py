@@ -100,19 +100,19 @@ musl = MuslProject(
 
 openssl = OpenSSLProject(
     (
-        "https://www.openssl.org/source/openssl-3.1.6.tar.gz",
-        "https://artfiles.org/openssl.org/source/openssl-3.1.6.tar.gz",
+        "https://www.openssl.org/source/openssl-3.1.7.tar.gz",
+        "https://artfiles.org/openssl.org/source/openssl-3.1.7.tar.gz",
     ),
-    "5d2be4036b478ef3cb0a854ca9b353072c3a0e26d8a56f8f0ab9fb6ed32d38d7",
+    "053a31fa80cf4aebe1068c987d2ef1e44ce418881427c4464751ae800c31d06c",
     "include/openssl/ossl_typ.h",
 )
 
 openssh = AutotoolsProject(
     (
-        "http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.2p2.tar.gz",
-        "http://ftp.nluug.nl/security/OpenSSH/openssh-7.2p2.tar.gz",
+        "http://ftp.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-7.9p1.tar.gz",
+        "http://ftp.nluug.nl/security/OpenSSH/openssh-7.9p1.tar.gz",
     ),
-    "13009a9156510d8f27e752659075cced",
+    "6b4b3ba2253d84ed3771c8050728d597c91cfce898713beb7b64a305b6f11aad",
     "opt/openssh/sbin/sshd",
     [
         "--disable-etc-default-login",
@@ -139,8 +139,8 @@ openssh = AutotoolsProject(
 )
 
 libfmt = CmakeProject(
-    "https://github.com/fmtlib/fmt/archive/10.2.1.tar.gz",
-    "1250e4cc58bf06ee631567523f48848dc4596133e163f02615c97f78bab6c811",
+    "https://github.com/fmtlib/fmt/archive/11.1.4.tar.gz",
+    "ac366b7b4c2e9f0dde63a59b3feb5ee59b67974b14ee5dc9ea8ad78aa2c1ee1e",
     "lib/libfmt.a",
     [
         "-DBUILD_SHARED_LIBS=OFF",
@@ -148,8 +148,8 @@ libfmt = CmakeProject(
         "-DFMT_TEST=OFF",
     ],
     name="fmt",
-    version="10.2.1",
-    base="fmt-10.2.1",
+    version="11.1.4",
+    base="fmt-11.1.4",
 )
 
 libsodium = AutotoolsProject(
@@ -266,10 +266,10 @@ sqlite3 = AutotoolsProject(
 
 proj = CmakeProject(
     (
-        "http://download.osgeo.org/proj/proj-9.3.1.tar.gz",
-        "https://fossies.org/linux/privat/proj-9.3.1.tar.gz",
+        "http://download.osgeo.org/proj/proj-9.4.0.tar.gz",
+        "https://fossies.org/linux/privat/proj-9.4.0.tar.gz",
     ),
-    "b0f919cb9e1f42f803a3e616c2b63a78e4d81ecfaed80978d570d3a5e29d10bc",
+    "3643b19b1622fe6b2e3113bdb623969f5117984b39f173b4e3fb19a8833bd216",
     "lib/libproj.a",
     [
         "-DBUILD_TESTING=OFF",
@@ -398,10 +398,10 @@ libtiff = CmakeProject(
 
 libgeotiff = CmakeProject(
     (
-        "http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.7.1.tar.gz",
-        "https://fossies.org/linux/privat/libgeotiff-1.7.1.tar.gz",
+        "http://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.7.4.tar.gz",
+        "https://fossies.org/linux/privat/libgeotiff-1.7.4.tar.gz",
     ),
-    "05ab1347aaa471fc97347d8d4269ff0c00f30fa666d956baba37948ec87e55d6",
+    "c598d04fdf2ba25c4352844dafa81dde3f7fd968daa7ad131228cd91e9d3dc47",
     "lib/libgeotiff.a",
     [
         "-DWITH_UTILITIES=OFF",

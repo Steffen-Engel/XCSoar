@@ -18,11 +18,16 @@ UISettings::SetDefaults() noexcept
 
   enable_airspace_warning_dialog = true;
 
-  popup_message_position = PopupMessagePosition::CENTER;
+  popup_message_position = PopupMessagePosition::TOP_LEFT;
 
   haptic_feedback = HapticFeedback::DEFAULT;
 
+#ifdef KOBO
   show_menu_button = true;
+#else
+  show_menu_button = false;
+#endif
+  show_zoom_button = false;
 
   dark_mode = DarkMode::AUTO;
 
