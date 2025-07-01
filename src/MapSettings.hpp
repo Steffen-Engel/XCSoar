@@ -189,6 +189,9 @@ struct MapSettings {
   TrailSettings trail;
   MapItemListSettings item_list;
 
+  /** Show 95% distance rule helpers on map and infoboxes */
+  bool show_95_percent_rule_helpers;
+
   void SetDefaults() noexcept;
 };
 
