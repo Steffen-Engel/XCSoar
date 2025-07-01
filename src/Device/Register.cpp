@@ -19,6 +19,7 @@
 #include "Device/Driver/Volkslogger.hpp"
 #include "Device/Driver/EWMicroRecorder.hpp"
 #include "Device/Driver/LX.hpp"
+#include "Device/Driver/LX_Eos.hpp"
 #include "Device/Driver/IMI.hpp"
 #include "Device/Driver/Zander.hpp"
 #include "Device/Driver/FlymasterF1.hpp"
@@ -40,6 +41,7 @@
 #include "Device/Driver/ATR833/Register.hpp"
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
+#include "Device/Driver/Stratux.hpp"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
 
@@ -85,6 +87,9 @@ static const struct DeviceRegister *const driver_list[] = {
   &xctracer_driver,
   &thermalexpress_driver,
   &acd_driver,
+  &condor3_driver,
+  &lx_eos_driver,
+  &stratux_driver,
   nullptr
 };
 
