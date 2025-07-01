@@ -2,11 +2,13 @@
 // Copyright The XCSoar Project
 
 #include "StaticParser.hpp"
-#include "NMEA/InputLine.hpp"
 #include "FLARM/Error.hpp"
-#include "FLARM/Version.hpp"
-#include "FLARM/Status.hpp"
 #include "FLARM/List.hpp"
+#include "FLARM/Status.hpp"
+#include "FLARM/Version.hpp"
+#include "Language/Language.hpp"
+#include "Message.hpp"
+#include "NMEA/InputLine.hpp"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
 
@@ -22,6 +24,11 @@ ParsePFLAE(NMEAInputLine &line, FlarmError &error, TimeStamp clock) noexcept
   error.severity = (FlarmError::Severity)
     line.Read((int)FlarmError::Severity::NO_ERROR);
   error.code = (FlarmError::Code)line.ReadHex(0);
+  TCHAR buffer[100];
+  StringFormatUnsafe(buffer, _T("%s - %s"),
+                     FlarmError::ToString(error.severity),
+                     FlarmError::ToString(error.code));
+  Message::AddMessage(_T("FLARM: "), buffer);
 
   error.available.Update(clock);
 }
@@ -63,25 +70,8 @@ ParsePFLAU(NMEAInputLine &line, FlarmStatus &flarm, TimeStamp clock) noexcept
     line.Read((int)FlarmTraffic::AlarmType::NONE);
 }
 
-/**
- * Parses non-negative floating-point angle value in degrees.
- */
-static bool
-ReadBearing(NMEAInputLine &line, Angle &value_r)
-{
-  double value;
-  if (!line.ReadChecked(value))
-    return false;
-
-  if (value < 0 || value > 360)
-    return false;
-
-  value_r = Angle::Degrees(value).AsBearing();
-  return true;
-}
-
 void
-ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock) noexcept
+ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock, RangeFilter &range) noexcept
 {
   flarm.modified.Update(clock);
 
@@ -109,6 +99,13 @@ ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock) noexcept
     return;
   traffic.relative_altitude = value;
 
+  if (range.horizontal && range.vertical) {
+    // object outside cylinder; non filtered data only !
+    if ((hypot(traffic.relative_north, traffic.relative_east) > (RoughDistance)range.horizontal) ||
+    (abs((int)traffic.relative_altitude) > range.vertical))
+      return;
+  }
+
   line.Skip(); /* id type */
 
   // 5 id, 6 digit hex
@@ -117,7 +114,7 @@ ParsePFLAA(NMEAInputLine &line, TrafficList &flarm, TimeStamp clock) noexcept
   traffic.id = FlarmId::Parse(id_string, nullptr);
 
   Angle track;
-  traffic.track_received = ReadBearing(line, track);
+  traffic.track_received = line.ReadBearing(track);
   if (!traffic.track_received) {
     // Field is empty in stealth mode
     stealth = true;

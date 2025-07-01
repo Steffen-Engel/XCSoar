@@ -11,6 +11,7 @@ IO_SOURCES = \
 	$(IO_SRC_DIR)/MemoryReader.cxx \
 	$(IO_SRC_DIR)/BufferedReader.cxx \
 	$(IO_SRC_DIR)/BufferedLineReader.cpp \
+	$(IO_SRC_DIR)/BufferedCsvReader.cpp \
 	$(IO_SRC_DIR)/FileDescriptor.cxx \
 	$(IO_SRC_DIR)/FileMapping.cpp \
 	$(IO_SRC_DIR)/FileReader.cxx \
@@ -26,7 +27,7 @@ IO_SOURCES = \
 	$(IO_SRC_DIR)/KeyValueFileWriter.cpp \
 	$(IO_SRC_DIR)/CSVLine.cpp
 
-IO_DEPENDS = OS ZLIB FMT UTIL
+IO_DEPENDS = OS ZLIB FMT UTIL FMT
 
 $(eval $(call link-library,io,IO))
 
