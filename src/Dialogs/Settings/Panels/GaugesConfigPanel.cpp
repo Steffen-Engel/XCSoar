@@ -14,6 +14,7 @@
 enum ControlIndex {
   EnableFLARMGauge,
   AutoCloseFlarmDialog,
+  AppFlarmLocation,
   TAPosition,
   EnableThermalProfile,
   FinalGlideBarDisplayModeControl,
@@ -28,6 +29,36 @@ static constexpr StaticEnumChoice final_glide_bar_display_mode_list[] = {
     N_("Always show final glide bar.") },
   { FinalGlideBarDisplayMode::AUTO, N_("Auto"),
     N_("Show final glide bar if approaching final glide range.") },
+  nullptr
+};
+
+static constexpr StaticEnumChoice flarm_display_location_list[] = {
+  { TrafficSettings::GaugeLocation::AUTO,
+    N_("Auto (follow infoboxes)") },
+  { TrafficSettings::GaugeLocation::TOP_LEFT,
+    N_("Top left") },
+  { TrafficSettings::GaugeLocation::TOP_RIGHT,
+    N_("Top right") },
+  { TrafficSettings::GaugeLocation::BOTTOM_LEFT,
+    N_("Bottom left") },
+  { TrafficSettings::GaugeLocation::BOTTOM_RIGHT,
+    N_("Bottom right") },
+  { TrafficSettings::GaugeLocation::CENTER_TOP,
+    N_("Center top") },
+  { TrafficSettings::GaugeLocation::CENTER_BOTTOM,
+    N_("Center bottom") },
+  { TrafficSettings::GaugeLocation::TOP_LEFT_AVOID_IB,
+    N_("Top left (avoid infoboxes)") },
+  { TrafficSettings::GaugeLocation::TOP_RIGHT_AVOID_IB,
+    N_("Top right (avoid infoboxes)") },
+  { TrafficSettings::GaugeLocation::BOTTOM_LEFT_AVOID_IB,
+    N_("Bottom left (avoid infoboxes)") },
+  { TrafficSettings::GaugeLocation::BOTTOM_RIGHT_AVOID_IB,
+    N_("Bottom right (avoid infoboxes)") },
+  { TrafficSettings::GaugeLocation::CENTER_TOP_AVOID_IB,
+    N_("Center top (avoid infoboxes)") },
+  { TrafficSettings::GaugeLocation::CENTER_BOTTOM_AVOID_IB,
+    N_("Center bottom (avoid infoboxes)") },
   nullptr
 };
 
@@ -47,9 +78,26 @@ static constexpr StaticEnumChoice thermal_assistant_position_list[] = {
   { UISettings::ThermalAssistantPosition::BOTTOM_RIGHT_AVOID_IB,
     N_("Bottom right (avoid infoboxes)"),
     N_("Show thermal assistant in bottom right above/to left of infoboxes (if there).") },
+  { UISettings::ThermalAssistantPosition::TOP_LEFT,
+    N_("Top left"),
+    N_("Show thermal assistant in top left") },
+  { UISettings::ThermalAssistantPosition::TOP_RIGHT,
+    N_("Top right"),
+    N_("Show thermal assistant in top right") },
+  { UISettings::ThermalAssistantPosition::CENTER_TOP,
+    N_("Center top"),
+    N_("Show thermal assistant in center top") },
+  { UISettings::ThermalAssistantPosition::TOP_LEFT_AVOID_IB,
+    N_("Top left (avoid infoboxes)"),
+    N_("Show thermal assistant in top left (avoid infoboxes)") },
+  { UISettings::ThermalAssistantPosition::TOP_RIGHT_AVOID_IB,
+    N_("Top right (avoid infoboxes)"),
+    N_("Show thermal assistant in top right (avoid infoboxes)") },
+  { UISettings::ThermalAssistantPosition::CENTER_TOP_AVOID_IB,
+    N_("Center top (avoid infoboxes)"),
+    N_("Show thermal assistant in center top (avoid infoboxes)") },
   nullptr
 };
-
 
 class GaugesConfigPanel final : public RowFormWidget, DataFieldListener {
 public:
@@ -91,6 +139,11 @@ GaugesConfigPanel::Prepare(ContainerWindow &parent,
              _("Setting this to \"On\" will automatically close the FLARM dialog if there is no traffic. \"Off\" will keep the dialog open even without current traffic."),
              ui_settings.traffic.auto_close_dialog);
   SetExpertRow(AutoCloseFlarmDialog);
+  
+  AddEnum(_("FLARM display"), _("Choose a location for the FLARM display."),
+          flarm_display_location_list,
+          (unsigned)ui_settings.traffic.gauge_location);
+  SetExpertRow(AppFlarmLocation);
 
   AddEnum(_("Thermal assistant"),
             _("Enable and select the position of the thermal assistant when overlayed on the main screen."),
@@ -141,7 +194,9 @@ GaugesConfigPanel::Save(bool &_changed) noexcept
                        ui_settings.traffic.auto_close_dialog);
 
   if (SaveValueEnum(TAPosition, ProfileKeys::TAPosition,
-                    ui_settings.thermal_assistant_position))
+                    ui_settings.thermal_assistant_position) || 
+      SaveValueEnum(AppFlarmLocation, ProfileKeys::FlarmLocation,
+                    ui_settings.traffic.gauge_location))
     CommonInterface::main_window->ReinitialiseLayout();
 
   changed |= SaveValue(EnableThermalProfile, ProfileKeys::EnableThermalProfile,
