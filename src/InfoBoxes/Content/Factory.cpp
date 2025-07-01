@@ -133,7 +133,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Thermal climb, last 30 s"),
     N_("TC 30s"),
-    N_("A 30 second rolling average climb rate based of the reported GPS altitude, or vario if available."),
+    N_("A 30 second rolling average climb rate based of the reported GPS altitude, or vario if available. The number in smaller font reflects the climb rate for the current thermal since circling started."),
     UpdateInfoBoxThermal30s,
   },
 
@@ -166,7 +166,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Speed ground"),
     N_("V GND"),
-    N_("Ground speed measured by the GPS. If this InfoBox is active in simulation mode, pressing the up and down arrows adjusts the speed, and left and right turn the glider."),
+    N_("Ground speed measured by the GPS. The small value shows the head or tail wind difference to TAS for the current vector. If this InfoBox is active in simulation mode, pressing the up and down arrows adjusts the speed, and left and right turn the glider."),
     IBFHelper<InfoBoxContentSpeedGround>::Create,
   },
 
@@ -182,7 +182,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Last thermal gain"),
     N_("TL Gain"),
-    N_("Total altitude gain/loss in the last thermal."),
+    N_("Total altitude gain/loss in the last thermal. The number in smaller font reflects the overall climb rate for the last thermal."),
     UpdateInfoBoxThermalLastGain,
   },
 
@@ -257,7 +257,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Speed task average"),
     N_("V Task Avg"),
-    N_("Average cross country speed while on current task, not compensated for altitude."),
+    N_("Average cross-country speed while on current task, not compensated for altitude."),
     UpdateInfoBoxTaskSpeed,
   },
 
@@ -599,7 +599,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Speed task instantaneous"),
     N_("V Task Inst"),
-    N_("Instantaneous cross country speed while on current task, compensated for altitude. Equivalent to instantaneous Pirker cross-country speed."),
+    N_("Instantaneous cross-country speed while on current task, compensated for altitude. Equivalent to instantaneous Pirker cross-country speed."),
     UpdateInfoBoxTaskSpeedInstant,
   },
 
@@ -615,7 +615,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Speed task achieved"),
     N_("V Task Ach"),
-    N_("Achieved cross country speed while on current task, compensated for altitude.  Equivalent to Pirker cross-country speed remaining."),
+    N_("Achieved cross-country speed while on current task, compensated for altitude.  Equivalent to Pirker cross-country speed remaining."),
     UpdateInfoBoxTaskSpeedAchieved,
   },
 
@@ -962,7 +962,7 @@ static constexpr MetaData meta_data[] = {
   {
     N_("Speed task last hour"),
     N_("V Task H"),
-    N_("Average cross country speed while on current task over the last hour, not compensated for altitude."),
+    N_("Average cross-country speed while on current task over the last hour, not compensated for altitude."),
     UpdateInfoBoxTaskSpeedHour,
   },
 
@@ -1133,6 +1133,30 @@ static constexpr MetaData meta_data[] = {
     N_("AATdeltaOrETA"),
     N_("Shows AAT delta time and estimated time of arrival in case of AAT task, and estimated time of arrival in case of racing task"),
     UpdateInfoTaskETAorAATdT,
+  },
+
+  // e_SpeedTaskEst
+  {
+    N_("Speed task estimated"),
+    N_("V Task Est"),
+    N_("Estimated average cross-country speed for current task as of task completion, assuming performance of ideal MacCready cruise/climb cycle."),
+    UpdateInfoBoxTaskSpeedEst,
+  },
+
+  // e_Home_AltDiff
+  {
+    N_("Home altitude difference"),
+    N_("Home AltD"),
+    N_("Arrival altitude at the home waypoint relative to the safety arrival height."),
+    UpdateInfoBoxHomeAltitudeDiff,
+  },
+
+  // e_SpeedTaskLeg
+  {
+    N_("Speed task leg"),
+    N_("V Task Leg"),
+    N_("Average cross country speed while on current task leg, not compensated for altitude."),
+    UpdateInfoBoxTaskSpeedLeg,
   },
 
 };

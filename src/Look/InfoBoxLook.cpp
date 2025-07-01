@@ -8,6 +8,7 @@
 #include "Screen/Layout.hpp"
 #include "AutoFont.hpp"
 #include "Asset.hpp"
+#include "ui/canvas/Color.hpp"
 
 #ifdef HAVE_TEXT_CACHE
 #include "ui/canvas/custom/Cache.hpp"
@@ -15,15 +16,10 @@
 
 #include <algorithm>
 
-#define COLOR_INVERSE_RED Color(0xff, 0x70, 0x70)
-#define COLOR_INVERSE_BLUE Color(0x90, 0x90, 0xff)
-#define COLOR_INVERSE_YELLOW COLOR_YELLOW
-#define COLOR_INVERSE_GREEN COLOR_GREEN
-#define COLOR_INVERSE_MAGENTA COLOR_MAGENTA
 
 void
 InfoBoxLook::Initialise(bool _inverse, bool use_colors,
-                        unsigned width)
+                        unsigned width, unsigned scale_title_font)
 {
   inverse = _inverse;
 
@@ -44,7 +40,7 @@ InfoBoxLook::Initialise(bool _inverse, bool use_colors,
   Color border_color = Color(128, 128, 128);
   border_pen.Create(BORDER_WIDTH, border_color);
 
-  ReinitialiseLayout(width);
+  ReinitialiseLayout(width, scale_title_font);
 
   unit_fraction_pen.Create(1, value.fg_color);
 
@@ -60,14 +56,11 @@ InfoBoxLook::Initialise(bool _inverse, bool use_colors,
 }
 
 void
-InfoBoxLook::ReinitialiseLayout(unsigned width)
+InfoBoxLook::ReinitialiseLayout(unsigned width, unsigned scale_title_font)
 {
-  const unsigned max_font_height = Layout::FontScale(12);
-
   FontDescription title_font_d(8);
-  AutoSizeFont(title_font_d, width, _T("0123456789"));
-  if (title_font_d.GetHeight() > max_font_height)
-    title_font_d.SetHeight(max_font_height);
+  AutoSizeFont(title_font_d, (width * scale_title_font) / 100U,
+               _T("1234567890A"));
 
   title_font.Load(title_font_d);
 
