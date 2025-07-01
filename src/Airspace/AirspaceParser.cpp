@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright The XCSoar Project
 
+
 #include "AirspaceParser.hpp"
 #include "Airspace/Airspaces.hpp"
 #include "Operation/ProgressListener.hpp"
+#include "TransponderCode.hpp"
 #include "Units/System.hpp"
 #include "Language/Language.hpp"
 #include "util/CharUtil.hxx"
@@ -21,6 +23,7 @@
 #include "util/ConvertString.hpp"
 #include "util/StaticString.hxx"
 #include "util/StringCompare.hxx"
+#include "util/StringSplit.hxx"
 
 #include <stdexcept>
 
@@ -45,7 +48,7 @@ struct AirspaceClassStringCouple
 };
 
 static constexpr AirspaceClassStringCouple airspace_class_strings[] = {
-  { "R", RESTRICT },
+  { "R", RESTRICTED },
   { "Q", DANGER },
   { "P", PROHIBITED },
   { "CTR", CTR },
@@ -61,7 +64,39 @@ static constexpr AirspaceClassStringCouple airspace_class_strings[] = {
   { "G", CLASSG },
   { "RMZ", RMZ },
   { "MATZ", MATZ },
-  { "GSEC", WAVE },
+  { "GSEC", GLIDING_SECTOR },
+  { "UNC", UNCLASSIFIED },
+  { "RESTRICTED", RESTRICTED },
+  { "TMA", TMA },
+  { "TRA", TRA },
+  { "TSA", TSA },
+  { "FIR", FIR },
+  { "UIR", UIR },
+  { "ADIZ", ADIZ },
+  { "ATZ", ATZ },
+  { "AWY", AWY },
+  { "MTR", MTR },
+  { "ALERT", ALERT },
+  { "WARNING", WARNING },
+  { "DANGER", DANGER },
+  { "PROHIBITED", PROHIBITED },
+  { "PROTECTED", PROTECTED },
+  { "HTZ", HTZ },
+  { "TRP", TRP },
+  { "TIZ", TIZ },
+  { "TIA", TIA },
+  { "MTA", MTA },
+  { "CTA", CTA },
+  { "ACCSEC", ACC_SECTOR },
+  { "AERIAL_SPORTING_RECREATIONAL", AERIAL_SPORTING_RECREATIONAL },
+  { "OFR", OVERFLIGHT_RESTRICTION },
+  { "MRT", MRT },
+  { "TFR", TFR },
+  { "VFRSEC", VFR_SECTOR },
+  { "FIS", FIS_SECTOR },
+  { "LTA", LTA },
+  { "UTA", UTA },
+  { "AIRSPACECLASSCOUNT", AIRSPACECLASSCOUNT }
 };
 
 static constexpr AirspaceClassCharCouple airspace_tnp_class_chars[] = {
@@ -80,8 +115,8 @@ static constexpr AirspaceClassStringCouple airspace_tnp_type_strings[] = {
   { "CTR", CTR },
   { "CTA/CTR", CTR },
   { "CTR/CTA", CTR },
-  { "R", RESTRICT },
-  { "RESTRICTED", RESTRICT },
+  { "R", RESTRICTED },
+  { "RESTRICTED", RESTRICTED },
   { "P", PROHIBITED },
   { "PROHIBITED", PROHIBITED },
   { "D", DANGER },
@@ -90,12 +125,16 @@ static constexpr AirspaceClassStringCouple airspace_tnp_type_strings[] = {
   { "GSEC", WAVE },
   { "T", TMZ },
   { "TMZ", TMZ },
-  { "CYR", RESTRICT },
+  { "CYR", RESTRICTED },
   { "CYD", DANGER },
   { "CYA", CLASSF },
   { "MATZ", MATZ },
   { "RMZ", RMZ },
 };
+
+static constexpr AirspaceClass airspace_ICAO_and_Unclassified[] = {
+  AirspaceClass::CLASSA, AirspaceClass::CLASSB, AirspaceClass::CLASSC, AirspaceClass::CLASSD,
+  AirspaceClass::CLASSE, AirspaceClass::CLASSF, AirspaceClass::CLASSG, AirspaceClass::UNCLASSIFIED};
 
 // this can now be called multiple times to load several airspaces.
 
@@ -121,9 +160,11 @@ struct TempAirspace
 
   // General
   tstring name;
+  tstring station_name;
   RadioFrequency radio_frequency;
+  TransponderCode transponder_code;
   AirspaceClass asclass;
-  tstring astype;
+  AirspaceClass astype;
   std::optional<AirspaceAltitude> base;
   std::optional<AirspaceAltitude> top;
   AirspaceActivity days_of_operation;
@@ -149,8 +190,10 @@ struct TempAirspace
     days_of_operation.SetAll();
     name.clear();
     radio_frequency = RadioFrequency::Null();
+    transponder_code = TransponderCode::Null();
+    station_name.clear();
     asclass = OTHER;
-    astype.clear();
+    astype = OTHER; // the default if no AY tag parsed (i.e. AC tag is not a ICAO or not UNCLASSIFIED)
     base.reset();
     top.reset();
     points.clear();
@@ -209,8 +252,11 @@ struct TempAirspace
       throw CommitError{"No top altitude"};
 
     auto as = std::make_shared<AirspacePolygon>(points);
-    as->SetProperties(std::move(name), asclass, std::move(astype), *base, *top);
+    as->SetProperties(std::move(name), std::move(station_name),
+                      std::move(transponder_code), asclass, astype, *base,
+                      *top);
     as->SetRadioFrequency(radio_frequency);
+    as->SetTransponderCode(transponder_code);
     as->SetDays(days_of_operation);
     airspace_database.Add(std::move(as));
   }
@@ -243,8 +289,11 @@ struct TempAirspace
 
     auto as = std::make_shared<AirspaceCircle>(RequireCenter(),
                                                RequireRadius());
-    as->SetProperties(std::move(name), asclass, std::move(astype), *base, *top);
+    as->SetProperties(std::move(name), std::move(station_name),
+                      std::move(transponder_code), asclass, std::move(astype),
+                      *base, *top);
     as->SetRadioFrequency(radio_frequency);
+    as->SetTransponderCode(transponder_code);
     as->SetDays(days_of_operation);
     airspace_database.Add(std::move(as));
   }
@@ -347,23 +396,23 @@ ReadAltitude(StringParser<> &input)
     if (IsDigitASCII(input.front())) {
       if (auto x = input.ReadDouble())
         value = *x;
-    } else if (input.SkipMatchIgnoreCase("GND", 3) ||
-               input.SkipMatchIgnoreCase("AGL", 3)) {
+    } else if (input.SkipMatchIgnoreCase("GND"sv) ||
+               input.SkipMatchIgnoreCase("AGL"sv)) {
       type = AGL;
-    } else if (input.SkipMatchIgnoreCase("SFC", 3)) {
+    } else if (input.SkipMatchIgnoreCase("SFC"sv)) {
       type = SFC;
-    } else if (input.SkipMatchIgnoreCase("FL", 2)) {
+    } else if (input.SkipMatchIgnoreCase("FL"sv)) {
       type = FL;
-    } else if (input.SkipMatchIgnoreCase("FT", 2)) {
+    } else if (input.SkipMatchIgnoreCase("FT"sv)) {
       unit = Unit::FEET;
-    } else if (input.SkipMatchIgnoreCase("MSL", 3)) {
+    } else if (input.SkipMatchIgnoreCase("MSL"sv)) {
       type = MSL;
     } else if (input.front() == 'M' || input.front() == 'm') {
       unit = Unit::METER;
       input.Skip();
-    } else if (input.SkipMatchIgnoreCase("STD", 3)) {
+    } else if (input.SkipMatchIgnoreCase("STD"sv)) {
       type = STD;
-    } else if (input.SkipMatchIgnoreCase("UNL", 3)) {
+    } else if (input.SkipMatchIgnoreCase("UNL"sv)) {
       type = UNLIMITED;
     } else if (input.IsEmpty())
       break;
@@ -561,13 +610,46 @@ ParseArcPoints(StringParser<> &input, TempAirspace &temp_area)
 
 [[gnu::pure]]
 static AirspaceClass
-ParseType(const char *buffer) noexcept
+ParseClass(const char *buffer) noexcept
 {
   for (unsigned i = 0; i < ARRAY_SIZE(airspace_class_strings); i++)
     if (StringIsEqualIgnoreCase(buffer, airspace_class_strings[i].string))
       return airspace_class_strings[i].asclass;
 
   return OTHER;
+}
+
+[[gnu::pure]]
+static AirspaceClass
+ParseType(const char *buffer) noexcept
+{
+  for (unsigned i = 0; i < ARRAY_SIZE(airspace_class_strings); i++)
+    if (StringIsEqualIgnoreCase(buffer, airspace_class_strings[i].string)) {
+      if (StringIsEqualIgnoreCase(buffer, "UNCLASSIFIED")) {
+        return OTHER;
+      } else {
+        return airspace_class_strings[i].asclass;
+      }
+    }
+
+  return OTHER;
+}
+
+[[gnu::pure]]
+static bool
+IsICAOClassOrUnclassified(AirspaceClass asclass) noexcept
+{
+  auto it = std::find(std::begin(airspace_ICAO_and_Unclassified),
+                      std::end(airspace_ICAO_and_Unclassified), asclass);
+  return  it != std::end(airspace_ICAO_and_Unclassified);
+}
+
+[[gnu::pure]]
+static std::string_view
+ReadRadioFrequency(const std::string_view line) noexcept
+{
+  const auto [frq, _] = Split(line, ' ');
+  return frq;
 }
 
 /**
@@ -614,11 +696,11 @@ ParseLine(Airspaces &airspace_database, unsigned line_number,
   case 'V':
   case 'v':
     input.Strip();
-    if (input.SkipMatchIgnoreCase("X=", 2)) {
+    if (input.SkipMatchIgnoreCase("X="sv)) {
       temp_area.center = ReadCoords(input);
-    } else if (input.SkipMatchIgnoreCase("D=-", 3)) {
+    } else if (input.SkipMatchIgnoreCase("D=-"sv)) {
       temp_area.rotation = -1;
-    } else if (input.SkipMatchIgnoreCase("D=+", 3)) {
+    } else if (input.SkipMatchIgnoreCase("D=+"sv)) {
       temp_area.rotation = +1;
     }
     break;
@@ -634,7 +716,7 @@ ParseLine(Airspaces &airspace_database, unsigned line_number,
       if (temp_area.Commit(airspace_database))
         temp_area.Reset(line_number);
 
-      temp_area.asclass = ParseType(input.c_str());
+      temp_area.asclass = ParseClass(input.c_str());
       break;
 
     case 'N':
@@ -658,7 +740,8 @@ ParseLine(Airspaces &airspace_database, unsigned line_number,
     case 'Y':
     case 'y':
       if (input.SkipWhitespace())
-        temp_area.astype = string_converter.Convert(input.c_str());
+        if (IsICAOClassOrUnclassified(temp_area.asclass))
+          temp_area.astype = ParseType(input.c_str());
       break;
 
     /** 'AR 999.999 or 'AF 999.999' in accordance with the Naviter change proposed in 2018 - (Find 'Additional OpenAir fields' here) http://www.winpilot.com/UsersGuide/UserAirspace.asp **/
@@ -667,7 +750,23 @@ ParseLine(Airspaces &airspace_database, unsigned line_number,
     case 'F':
     case 'f':
       if (input.SkipWhitespace())
-        temp_area.radio_frequency = RadioFrequency::Parse(input.c_str());
+        temp_area.radio_frequency = RadioFrequency::Parse(ReadRadioFrequency(input.c_str()));
+      break;
+
+    case 'G':
+    case 'g':
+      if (input.SkipWhitespace())
+        temp_area.station_name = string_converter.Convert(input.c_str());
+      break;
+
+    case 'X':
+    case 'x':
+      if (input.SkipWhitespace()) {
+        tstring tempString = tstring(
+            string_converter.Convert(input.c_str())); // Convert to tstring
+        temp_area.transponder_code =
+            TransponderCode::Parse(tempString.c_str());
+      }
       break;
     }
 
@@ -803,12 +902,12 @@ ParseArcTNP(StringParser<> &input, TempAirspace &temp_area)
   if (!input.SkipWord())
     throw std::runtime_error("Arc syntax error");
 
-  if (!input.SkipMatchIgnoreCase("CENTRE=", 7))
+  if (!input.SkipMatchIgnoreCase("CENTRE="sv))
     throw std::runtime_error("CENTRE=... expected");
 
   temp_area.center = ParseCoordsTNP(input);
 
-  if (!input.SkipMatchIgnoreCase(" TO=", 4))
+  if (!input.SkipMatchIgnoreCase(" TO="sv))
     throw std::runtime_error("TO=... expected");
 
   GeoPoint to = ParseCoordsTNP(input);
@@ -824,12 +923,12 @@ ParseCircleTNP(StringParser<> &input, TempAirspace &temp_area)
 {
   // CIRCLE RADIUS=17.00 CENTRE=N533813 E0095943
 
-  if (!input.SkipMatchIgnoreCase("RADIUS=", 7))
+  if (!input.SkipMatchIgnoreCase("RADIUS="sv))
     throw std::runtime_error("RADIUS=... expected");
 
   temp_area.radius = ParseRadiusNM(input);
 
-  if (!input.SkipMatchIgnoreCase(" CENTRE=", 8))
+  if (!input.SkipMatchIgnoreCase(" CENTRE="sv))
     throw std::runtime_error("CENTRE=... expected");
 
   temp_area.center = ParseCoordsTNP(input);
@@ -847,10 +946,10 @@ ParseLineTNP(Airspaces &airspace_database, unsigned line_number,
   if (input.Match('#'))
     return;
 
-  if (input.SkipMatchIgnoreCase("INCLUDE=", 8)) {
-    if (input.MatchIgnoreCase("YES", 3))
+  if (input.SkipMatchIgnoreCase("INCLUDE="sv)) {
+    if (input.MatchIgnoreCase("YES"sv))
       ignore = false;
-    else if (input.MatchIgnoreCase("NO", 2))
+    else if (input.MatchIgnoreCase("NO"sv))
       ignore = true;
 
     return;
@@ -859,38 +958,38 @@ ParseLineTNP(Airspaces &airspace_database, unsigned line_number,
   if (ignore)
     return;
 
-  if (input.SkipMatchIgnoreCase("POINT=", 6)) {
+  if (input.SkipMatchIgnoreCase("POINT="sv)) {
     temp_area.points.push_back(ParseCoordsTNP(input));
-  } else if (input.SkipMatchIgnoreCase("CIRCLE ", 7)) {
+  } else if (input.SkipMatchIgnoreCase("CIRCLE "sv)) {
     ParseCircleTNP(input, temp_area);
 
     temp_area.AddCircle(airspace_database);
     temp_area.ResetTNP(line_number);
-  } else if (input.SkipMatchIgnoreCase("CLOCKWISE ", 10)) {
+  } else if (input.SkipMatchIgnoreCase("CLOCKWISE "sv)) {
     temp_area.rotation = 1;
     ParseArcTNP(input, temp_area);
-  } else if (input.SkipMatchIgnoreCase("ANTI-CLOCKWISE ", 15)) {
+  } else if (input.SkipMatchIgnoreCase("ANTI-CLOCKWISE "sv)) {
     temp_area.rotation = -1;
     ParseArcTNP(input, temp_area);
-  } else if (input.SkipMatchIgnoreCase("TITLE=", 6)) {
+  } else if (input.SkipMatchIgnoreCase("TITLE="sv)) {
     if (temp_area.Commit(airspace_database))
       temp_area.ResetTNP(line_number);
 
     temp_area.name = string_converter.Convert(input.c_str());
-  } else if (input.SkipMatchIgnoreCase("TYPE=", 5)) {
+  } else if (input.SkipMatchIgnoreCase("TYPE="sv)) {
     if (temp_area.Commit(airspace_database))
       temp_area.ResetTNP(line_number);
 
     temp_area.asclass = ParseTypeTNP(input.c_str());
-  } else if (input.SkipMatchIgnoreCase("CLASS=", 6)) {
+  } else if (input.SkipMatchIgnoreCase("CLASS="sv)) {
     temp_area.asclass = ParseClassTNP(input.c_str());
-  } else if (input.SkipMatchIgnoreCase("TOPS=", 5)) {
+  } else if (input.SkipMatchIgnoreCase("TOPS="sv)) {
     temp_area.top = ReadAltitude(input);
-  } else if (input.SkipMatchIgnoreCase("BASE=", 5)) {
+  } else if (input.SkipMatchIgnoreCase("BASE="sv)) {
     temp_area.base = ReadAltitude(input);
-  } else if (input.SkipMatchIgnoreCase("RADIO=", 6)) {
-    temp_area.radio_frequency = RadioFrequency::Parse(input.c_str());
-  } else if (input.SkipMatchIgnoreCase("ACTIVE=", 7)) {
+  } else if (input.SkipMatchIgnoreCase("RADIO="sv)) {
+    temp_area.radio_frequency = RadioFrequency::Parse(ReadRadioFrequency(input.c_str()));
+  } else if (input.SkipMatchIgnoreCase("ACTIVE="sv)) {
     if (input.MatchAllIgnoreCase("WEEKEND"))
       temp_area.days_of_operation.SetWeekend();
     else if (input.MatchAllIgnoreCase("WEEKDAY"))
