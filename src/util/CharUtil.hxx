@@ -97,6 +97,12 @@ IsAlphaNumericASCII(char ch) noexcept
 }
 
 constexpr bool
+IsUpperAlphaNumericASCII(char ch) noexcept
+{
+	return IsUpperAlphaASCII(ch) || IsDigitASCII(ch);
+}
+
+constexpr bool
 IsLowerAlphaNumericASCII(char ch) noexcept
 {
 	return IsLowerAlphaASCII(ch) || IsDigitASCII(ch);
@@ -127,9 +133,15 @@ ToLowerASCII(char ch) noexcept
 }
 
 constexpr bool
-IsHexDigit(char ch) noexcept
+IsLowerHexDigit(char ch) noexcept
 {
 	return IsDigitASCII(ch) ||
-		(ch >= 'a' && ch <= 'f') ||
+		(ch >= 'a' && ch <= 'f');
+}
+
+constexpr bool
+IsHexDigit(char ch) noexcept
+{
+	return IsLowerHexDigit(ch) ||
 		(ch >= 'A' && ch <= 'F');
 }
