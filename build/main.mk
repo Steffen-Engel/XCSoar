@@ -25,6 +25,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Device/CAI302/WaypointUploader.cpp \
 	$(SRC)/Dialogs/Device/ManageFlarmDialog.cpp \
 	$(SRC)/Dialogs/Device/BlueFly/BlueFlyConfigurationDialog.cpp \
+	$(SRC)/Dialogs/Device/Stratux/ConfigurationDialog.cpp \
 	$(SRC)/Dialogs/Device/ManageI2CPitotDialog.cpp \
 	$(SRC)/Dialogs/Device/LX/ManageLXNAVVarioDialog.cpp \
 	$(SRC)/Dialogs/Device/LX/LXNAVVarioConfigWidget.cpp \
@@ -37,6 +38,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Device/Vega/SwitchesDialog.cpp \
 	$(SRC)/Dialogs/Device/ManageyAllDialog.cpp \
 	$(SRC)/Dialogs/Device/FLARM/ConfigWidget.cpp \
+	$(SRC)/Dialogs/Device/FLARM/RangeConfigWidget.cpp \
 	$(SRC)/Dialogs/MapItemListDialog.cpp \
 	$(SRC)/Dialogs/MapItemListSettingsDialog.cpp \
 	$(SRC)/Dialogs/MapItemListSettingsPanel.cpp \
@@ -150,7 +152,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Weather/WeatherDialog.cpp \
 	$(SRC)/Dialogs/Weather/RASPDialog.cpp \
 	$(SRC)/Dialogs/dlgCredits.cpp \
-	$(SRC)/Dialogs/dlgQuickMenu.cpp \
+	$(SRC)/Dialogs/dlgQuickMenu.cpp
 
 ifeq ($(HAVE_PCM_PLAYER),y)
 DIALOG_SOURCES += \
@@ -183,6 +185,7 @@ XCSOAR_SOURCES := \
 	\
 	$(SRC)/RadioFrequency.cpp \
 	$(SRC)/TransponderCode.cpp \
+	$(SRC)/TransponderMode.cpp \
 	\
 	$(SRC)/Engine/Navigation/TraceHistory.cpp \
 	$(SRC)/Engine/Navigation/Aircraft.cpp \
@@ -191,7 +194,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Engine/Trace/Vector.cpp \
 	$(SRC)/Engine/Util/Gradient.cpp \
 	$(SRC)/Engine/ThermalBand/ThermalBand.cpp \
-    $(SRC)/Engine/ThermalBand/ThermalSlice.cpp \
+	$(SRC)/Engine/ThermalBand/ThermalSlice.cpp \
 	$(SRC)/Engine/ThermalBand/ThermalEncounterBand.cpp \
 	$(SRC)/Engine/ThermalBand/ThermalEncounterCollection.cpp \
 	$(SRC)/HorizonWidget.cpp \
@@ -226,18 +229,6 @@ XCSOAR_SOURCES := \
 	$(SRC)/net/client/WeGlide/UploadIGCFile.cpp \
 	$(SRC)/Plane/PlaneGlue.cpp \
 	$(SRC)/Plane/PlaneFileGlue.cpp \
-	$(SRC)/FLARM/Id.cpp \
-	$(SRC)/FLARM/Error.cpp \
-	$(SRC)/FLARM/List.cpp \
-	$(SRC)/FLARM/FlarmNetRecord.cpp \
-	$(SRC)/FLARM/FlarmNetDatabase.cpp \
-	$(SRC)/FLARM/FlarmNetReader.cpp \
-	$(SRC)/FLARM/Traffic.cpp \
-	$(SRC)/FLARM/Calculations.cpp \
-	$(SRC)/FLARM/Friends.cpp \
-	$(SRC)/FLARM/Computer.cpp \
-	$(SRC)/FLARM/Global.cpp \
-	$(SRC)/FLARM/Glue.cpp \
 	$(SRC)/BallastDumpManager.cpp \
 	$(SRC)/Logger/Settings.cpp \
 	$(SRC)/Logger/Logger.cpp \
@@ -302,7 +293,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Menu/Glue.cpp \
 	$(SRC)/Menu/ButtonLabel.cpp \
 	$(SRC)/Menu/ExpandMacros.cpp \
-	$(SRC)/Menu/ShowMenuButton.cpp \
+	$(SRC)/Menu/ShowButton.cpp \
 	$(SRC)/Pan.cpp \
 	$(SRC)/Input/InputConfig.cpp \
 	$(SRC)/Input/InputDefaults.cpp \
@@ -413,7 +404,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Renderer/WindChartRenderer.cpp \
 	$(SRC)/Renderer/CuRenderer.cpp \
 	$(SRC)/Renderer/MacCreadyRenderer.cpp \
-    $(SRC)/Renderer/VarioHistogramRenderer.cpp \
+	$(SRC)/Renderer/VarioHistogramRenderer.cpp \
 	$(SRC)/Renderer/TaskLegRenderer.cpp \
 	$(SRC)/Renderer/TaskSpeedRenderer.cpp \
 	$(SRC)/Renderer/MapScaleRenderer.cpp \
@@ -651,6 +642,7 @@ XCSOAR_DEPENDS = \
 	DBUS \
 	LIBMAPWINDOW \
 	LIBINFOBOX \
+	FLARM \
 	GETTEXT PROFILE \
 	TERRAIN \
 	TOPO \
@@ -674,7 +666,7 @@ XCSOAR_DEPENDS = \
 	UTIL GEO MATH
 
 ifeq ($(TARGET_IS_DARWIN),y)
-XCSOAR_LDLIBS += -framework CoreLocation
+XCSOAR_LDLIBS += -framework CoreLocation -lSDL2main # include SDL2main for main() on MacOS and iOS (otherwise linking fails)
 endif
 
 XCSOAR_STRIP = y
