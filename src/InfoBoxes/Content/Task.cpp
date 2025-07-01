@@ -12,6 +12,7 @@
 #include "Engine/Waypoint/Waypoint.hpp"
 #include "Units/Units.hpp"
 #include "Formatter/TimeFormatter.hpp"
+#include "Formatter/UserUnits.hpp"
 #include "Language/Language.hpp"
 #include "Widget/CallbackWidget.hpp"
 #include "Renderer/NextArrowRenderer.hpp"
@@ -464,6 +465,19 @@ UpdateInfoBoxTaskSpeed(InfoBoxData &data) noexcept
 }
 
 void
+UpdateInfoBoxTaskSpeedLeg(InfoBoxData &data) noexcept
+{
+  const TaskStats &task_stats = CommonInterface::Calculated().task_stats;
+  if (!task_stats.task_valid || !task_stats.current_leg.travelled.IsDefined()) {
+    data.SetInvalid();
+    return;
+  }
+
+  // Set Value and unit
+  data.SetValueFromTaskSpeed(task_stats.current_leg.travelled.GetSpeed());
+}
+
+void
 UpdateInfoBoxTaskSpeedAchieved(InfoBoxData &data) noexcept
 {
   const TaskStats &task_stats = CommonInterface::Calculated().task_stats;
@@ -590,15 +604,32 @@ UpdateInfoBoxTaskAADistance(InfoBoxData &data) noexcept
 {
   const auto &calculated = CommonInterface::Calculated();
   const TaskStats &task_stats = calculated.ordered_task_stats;
+  const MapSettings &map_settings = CommonInterface::GetMapSettings();
 
   if (!task_stats.has_targets ||
       !task_stats.total.planned.IsDefined()) {
     data.SetInvalid();
+    data.SetCommentInvalid();
+    data.SetAllColors(0);
     return;
   }
 
   // Set Value
-  data.SetValueFromDistance(task_stats.total.planned.GetDistance());
+  double distance = task_stats.total.planned.GetDistance();
+  data.SetValueFromDistance(distance);
+
+  if (map_settings.show_95_percent_rule_helpers) {
+    double fractionTotal = distance / task_stats.distance_max_total;
+    data.SetCommentFromPercent(fractionTotal*100.0);
+
+    if (fractionTotal > 0.95) data.SetAllColors(3);       // green
+    else if (fractionTotal > 0.85) data.SetAllColors(4);  // yellow
+    else data.SetAllColors(0);                            // normal
+  }
+  else {
+    data.SetCommentInvalid();
+    data.SetAllColors(0);
+  }
 }
 
 void
@@ -606,14 +637,25 @@ UpdateInfoBoxTaskAADistanceMax(InfoBoxData &data) noexcept
 {
   const auto &calculated = CommonInterface::Calculated();
   const TaskStats &task_stats = calculated.ordered_task_stats;
+  const MapSettings &map_settings = CommonInterface::GetMapSettings();
 
   if (!task_stats.has_targets) {
     data.SetInvalid();
+    data.SetCommentInvalid();
     return;
   }
 
   // Set Value
   data.SetValueFromDistance(task_stats.distance_max);
+
+  if (map_settings.show_95_percent_rule_helpers) {
+    auto distance = FormatUserDistanceSmart(0.95*task_stats.distance_max_total);
+    auto comment = std::basic_string<TCHAR>( _T("95% ") ) + distance.data();
+    data.SetComment(comment.data());
+  }
+  else {
+    data.SetCommentInvalid();
+  }
 }
 
 void
@@ -793,7 +835,7 @@ UpdateInfoBoxCruiseEfficiency(InfoBoxData &data) noexcept
 }
 
 static constexpr unsigned
-SecondsUntil(TimeStamp now, RoughTime until) noexcept
+SecondsUntil(TimeStamp now, FineTime until) noexcept
 {
   auto d = TimeStamp{until} - now;
   if (d.count() < 0)
@@ -808,7 +850,7 @@ UpdateInfoBoxStartOpen(InfoBoxData &data) noexcept
   const auto &calculated = CommonInterface::Calculated();
   const TaskStats &task_stats = calculated.ordered_task_stats;
   const CommonStats &common_stats = CommonInterface::Calculated().common_stats;
-  const RoughTimeSpan &open = common_stats.start_open_time_span;
+  const TimeSpan &open = common_stats.start_open_time_span;
 
   /* reset color that may have been set by a previous call */
   data.SetValueColor(0);
@@ -821,7 +863,7 @@ UpdateInfoBoxStartOpen(InfoBoxData &data) noexcept
   }
 
   const auto now_s = basic.time;
-  const RoughTime now{now_s};
+  const FineTime now{now_s};
 
   if (open.HasEnded(now)) {
     data.SetValueInvalid();
@@ -852,7 +894,7 @@ UpdateInfoBoxStartOpenArrival(InfoBoxData &data) noexcept
   const GlideResult &current_remaining =
     task_stats.current_leg.solution_remaining;
   const CommonStats &common_stats = CommonInterface::Calculated().common_stats;
-  const RoughTimeSpan &open = common_stats.start_open_time_span;
+  const TimeSpan &open = common_stats.start_open_time_span;
 
   /* reset color that may have been set by a previous call */
   data.SetValueColor(0);
@@ -866,7 +908,7 @@ UpdateInfoBoxStartOpenArrival(InfoBoxData &data) noexcept
   }
 
   const auto arrival_s = basic.time + current_remaining.time_elapsed;
-  const RoughTime arrival{arrival_s};
+  const FineTime arrival{arrival_s};
 
   if (open.HasEnded(arrival)) {
     data.SetValueInvalid();
@@ -1123,7 +1165,7 @@ InfoBoxContentNextArrow::OnCustomPaint(Canvas &canvas,
 
   Angle bd = vector_remaining.bearing - basic.track;
 
-  NextArrowRenderer renderer(UIGlobals::GetLook().wind_arrow_info_box);
+  NextArrowRenderer renderer(UIGlobals::GetLook().next_arrow_info_box);
   renderer.DrawArrow(canvas, rc, bd);
 }
 

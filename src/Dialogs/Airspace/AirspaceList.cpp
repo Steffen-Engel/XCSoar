@@ -149,7 +149,7 @@ static Angle last_heading;
 
 static constexpr StaticEnumChoice type_filter_list[] = {
   { WILDCARD, _T("*") },
-  { OTHER, _T("Other") },
+  { OTHER, _T("Unknown") },
   { RESTRICTED, _T("Restricted areas") },
   { PROHIBITED, _T("Prohibited areas") },
   { DANGER, _T("Danger areas") },
@@ -192,10 +192,16 @@ static constexpr StaticEnumChoice type_filter_list[] = {
   { OVERFLIGHT_RESTRICTION, _T("Overflight Restriction") },
   { MRT, _T("MRT") },
   { TFR, _T("TFR") },
+  { VFR_ROUTE, _T("Designated Route for VFR") },
   { VFR_SECTOR, _T("VFR Sector") },
   { FIS_SECTOR, _T("FIS Sector") },
   { LTA, _T("Lower Traffic Area") },
   { UTA, _T("Upper Traffic Area") },
+  { ASRA, _T("Aerial Sporting Or Recreational Activity") },
+  { NOTAM, _T("NTOAM Affected Area") },
+  { NONE, _T("None") },
+  { TRAFR, _T("TRA/TSA Feeding Route") },
+  { TRZ, _T("Transponder Recommended Zone") },
    nullptr
 };
 

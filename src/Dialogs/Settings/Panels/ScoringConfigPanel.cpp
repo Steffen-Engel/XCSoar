@@ -18,6 +18,8 @@ enum ControlIndex {
   SPACER,
   SHOW_FAI_TRIANGLE_AREAS,
   FAI_TRIANGLE_THRESHOLD,
+  SPACER2,
+  SHOW_95_PERCENT_RULE_HELPERS
 };
 
 class ScoringConfigPanel final
@@ -93,8 +95,6 @@ ScoringConfigPanel::Prepare([[maybe_unused]] ContainerWindow &parent,
     { Contest::SIS_AT, ContestToString(Contest::SIS_AT),
       N_("Austrian online glider contest. Tracks around max. six waypoints are scored. The "
           "bounding box part with 1 km = 1.0 point and the additional zick-zack part with 1 km = 0.5 p.") },
-    { Contest::NET_COUPE, ContestToString(Contest::NET_COUPE),
-      N_("The FFVV NetCoupe \"libre\" competiton.") },
     { Contest::WEGLIDE_FREE, ContestToString(Contest::WEGLIDE_FREE),
       N_("WeGlide combines multiple scoring systems in the WeGlide Free contest. The free score is a combination "
           "of the free distance score and the area bonus. For the area bonus, the scoring program determines the "
@@ -129,6 +129,16 @@ ScoringConfigPanel::Prepare([[maybe_unused]] ContainerWindow &parent,
           (unsigned)map_settings.fai_triangle_settings.threshold);
   SetExpertRow(FAI_TRIANGLE_THRESHOLD);
 
+  AddSpacer();
+  SetExpertRow(SPACER2);
+
+  AddBoolean(_("95% dist. rule helpers"),
+             _("Show helpers for Argentinean Federation \"95% distance\" rule."
+               "The AAT Distance Around Target infobox will show projected "
+               "distance vs max. and change colors as you approach 95%."),
+             map_settings.show_95_percent_rule_helpers);
+  SetExpertRow(SHOW_95_PERCENT_RULE_HELPERS);
+
   ShowFAITriangleControls(map_settings.show_fai_triangle_areas);
 }
 
@@ -153,6 +163,10 @@ ScoringConfigPanel::Save(bool &_changed) noexcept
   changed |= SaveValueEnum(FAI_TRIANGLE_THRESHOLD,
                            ProfileKeys::FAITriangleThreshold,
                            map_settings.fai_triangle_settings.threshold);
+
+  changed |= SaveValue(SHOW_95_PERCENT_RULE_HELPERS,
+                       ProfileKeys::Show95PercentRuleHelpers,
+                       map_settings.show_95_percent_rule_helpers);
 
   _changed |= changed;
 
