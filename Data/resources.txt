@@ -87,9 +87,9 @@ bitmap_icon_scaled IDB_REACHABLE "winpilot_reachable"
 bitmap_icon_scaled IDB_MARGINAL "winpilot_marginal"
 bitmap_icon_scaled IDB_SMALL "map_small"
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_LOGO_UHD "logo_red_320"
-bitmap_graphic IDB_LOGO_HD "logo_red_160"
-bitmap_graphic IDB_LOGO "logo_red_80"
+bitmap_graphic IDB_LOGO_UHD "logo_yall_320"
+bitmap_graphic IDB_LOGO_HD "logo_yall_160"
+bitmap_graphic IDB_LOGO "logo_yall_80"
 #else
 bitmap_graphic IDB_LOGO_UHD "logo_320"
 bitmap_graphic IDB_LOGO_HD "logo_160"
@@ -119,9 +119,9 @@ bitmap_icon_scaled IDB_PGLANDING "map_pglanding"
 
 
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_TITLE "title_red_110"
-bitmap_graphic IDB_TITLE_HD "title_red_320"
-bitmap_graphic IDB_TITLE_UHD "title_red_640"
+bitmap_graphic IDB_TITLE "title_yall_110"
+bitmap_graphic IDB_TITLE_HD "title_yall_320"
+bitmap_graphic IDB_TITLE_UHD "title_yall_640"
 #else
 bitmap_graphic IDB_TITLE "title_110"
 bitmap_graphic IDB_TITLE_HD "title_320"
