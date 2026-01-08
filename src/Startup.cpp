@@ -108,6 +108,10 @@
 #include "Android/NativeView.hpp"
 #endif
 
+#ifdef __APPLE__
+#include "Apple/Services.hpp"
+#endif
+
 static TaskManager *task_manager;
 static GlideComputerEvents *glide_computer_events;
 static AllMonitors *all_monitors;
@@ -177,7 +181,7 @@ MainWindow::LoadTerrain() noexcept
 
   if (const auto path = Profile::GetPath(ProfileKeys::MapFile);
       path != nullptr) {
-    LogString("LoadTerrain");
+    LogFormat(_T("Loading terrain: %s"), path.c_str());
     terrain_loader = new AsyncTerrainOverviewLoader();
 
     terrain_loader_env = std::make_unique<PluggableOperationEnvironment>();
@@ -237,6 +241,10 @@ Startup(UI::Display &display)
 
 #ifdef HAVE_DOWNLOAD_MANAGER
   Net::DownloadManager::Initialise();
+#endif
+
+#ifdef __APPLE__
+  InitializeAppleServices();
 #endif
 
   // Creates the main window
@@ -424,14 +432,14 @@ Startup(UI::Display &display)
   // Read the topography file(s)
   data_components->topography = std::make_unique<TopographyStore>();
   {
-    LogString("Loading Topography File...");
+    LogFormat(_T("Loading topography"));
     operation.SetText(_("Loading Topography File..."));
     LoadConfiguredTopography(*data_components->topography);
     operation.SetProgressPosition(256);
   }
 
   // Read the waypoint files
-  LogString("ReadWaypoints");
+  LogFormat(_T("Loading waypoints"));
   {
     SubOperationEnvironment sub_env(operation, 256, 512);
     sub_env.SetText(_("Loading Waypoints..."));
@@ -605,6 +613,9 @@ Shutdown()
   MainWindow *const main_window = CommonInterface::main_window;
   auto &live_blackboard = CommonInterface::GetLiveBlackboard();
 
+  // Turn off all displays first to prevent UI operations from blocking
+  global_running = false;
+
   // Show progress dialog
   operation.SetText(_("Shutdown, please wait..."));
 
@@ -614,9 +625,6 @@ Shutdown()
   main_window->BeginShutdown();
 
   Lua::StopAllBackground();
-
-  // Turn off all displays
-  global_running = false;
 
   // Stop logger and save igc file
   if (backend_components != nullptr && backend_components->igc_logger != nullptr) {
@@ -672,12 +680,12 @@ Shutdown()
     // Wait for the calculations thread to finish
     LogString("Waiting for calculation thread");
 
-    if (backend_components->merge_thread) {
+    if (backend_components->merge_thread && backend_components->merge_thread->IsDefined()) {
       backend_components->merge_thread->Join();
       backend_components->merge_thread.reset();
     }
 
-    if (backend_components->calculation_thread) {
+    if (backend_components->calculation_thread && backend_components->calculation_thread->IsDefined()) {
       backend_components->calculation_thread->Join();
       backend_components->calculation_thread.reset();
     }
@@ -687,7 +695,7 @@ Shutdown()
 #ifndef ENABLE_OPENGL
   LogString("Waiting for draw thread");
 
-  if (draw_thread != nullptr) {
+  if (draw_thread != nullptr && draw_thread->IsDefined()) {
     draw_thread->Join();
     delete draw_thread;
     draw_thread = nullptr;
@@ -776,6 +784,10 @@ Shutdown()
   CloseLanguageFile();
 
   Display::RestoreOrientation();
+
+#ifdef __APPLE__
+  DeinitializeAppleServices();
+#endif
 
   LogString("Finished shutdown");
 }
