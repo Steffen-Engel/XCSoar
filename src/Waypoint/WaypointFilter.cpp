@@ -38,16 +38,19 @@ WaypointFilter::CompareType(const Waypoint &waypoint, TypeFilter type,
   case TypeFilter::USER:
     return waypoint.origin == WaypointOrigin::USER;
 
-  case TypeFilter::FILE_1:
+  case TypeFilter::FILE:
+    // FILE filter is now handled in Matches() with file_num check
     return waypoint.origin == WaypointOrigin::PRIMARY;
-
-  case TypeFilter::FILE_2:
-    return waypoint.origin == WaypointOrigin::ADDITIONAL;
 
   case TypeFilter::MAP:
     return waypoint.origin == WaypointOrigin::MAP;
 
   case TypeFilter::LAST_USED:
+    return false;
+
+  case TypeFilter::_DYNAMIC_FILE_ID_START:
+    // This is a sentinel value, not an actual filter type
+    gcc_unreachable();
     return false;
   }
 
@@ -98,6 +101,13 @@ bool
 WaypointFilter::Matches(const Waypoint &waypoint, GeoPoint location,
                         const FAITrianglePointValidator &triangle_validator) const
 {
+  // Check file_num filter for FILE type
+  if (type_index == TypeFilter::FILE && file_num >= 0) {
+    if (waypoint.origin != WaypointOrigin::PRIMARY ||
+        waypoint.file_num != static_cast<uint8_t>(file_num))
+      return false;
+  }
+
   return CompareType(waypoint, triangle_validator) &&
          (distance <= 0 || CompareName(waypoint)) &&
          CompareDirection(waypoint, location);
