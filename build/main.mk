@@ -1,7 +1,10 @@
+# Product name (default: XCSoar, can be overridden via PRODUCT_NAME variable)
+PRODUCT_NAME ?= XCSoar
+
 ifeq ($(HAVE_POSIX),y)
-PROGRAM_NAME = xcsoar
+PROGRAM_NAME = $(shell echo $(PRODUCT_NAME) | tr '[:upper:]' '[:lower:]')
 else
-PROGRAM_NAME = XCSoar
+PROGRAM_NAME = $(PRODUCT_NAME)
 endif
 
 DIALOG_SOURCES = \
@@ -67,6 +70,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/DataField.cpp \
 	$(SRC)/Dialogs/ComboPicker.cpp \
 	$(SRC)/Dialogs/FilePicker.cpp \
+	$(SRC)/Dialogs/MultiFilePicker.cpp \
 	$(SRC)/Dialogs/HelpDialog.cpp \
 	$(SRC)/Dialogs/dlgInfoBoxAccess.cpp \
 	$(SRC)/Dialogs/ReplayDialog.cpp \
@@ -547,8 +551,11 @@ endif
 
 ifeq ($(TARGET_IS_DARWIN),y)
 XCSOAR_SOURCES += \
-	$(SRC)/Device/AndroidSensors.cpp \
-	$(SRC)/Apple/InternalSensors.cpp
+	$(SRC)/Apple/Services.cpp \
+	$(SRC)/Apple/SoundUtil.cpp \
+	$(SRC)/Apple/InternalSensors.cpp \
+	$(SRC)/Apple/KeyboardDetection.cpp \
+	$(SRC)/Device/SmartDeviceSensors.cpp
 endif
 
 ifeq ($(TARGET),ANDROID)
@@ -562,6 +569,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/java/InputStream.cxx \
 	$(SRC)/java/URL.cxx \
 	$(SRC)/java/Closeable.cxx \
+	$(SRC)/Device/SmartDeviceSensors.cpp \
 	$(SRC)/Device/AndroidSensors.cpp \
 	$(SRC)/Device/Port/AndroidPort.cpp \
 	$(SRC)/Device/Port/AndroidBluetoothPort.cpp \
@@ -584,9 +592,9 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/NativeSensorListener.cpp \
 	$(SRC)/Android/Battery.cpp \
 	$(SRC)/Android/GliderLink.cpp \
-	$(SRC)/Android/DownloadManager.cpp \
 	$(SRC)/Android/Vibrator.cpp \
 	$(SRC)/Android/Context.cpp \
+	$(SRC)/Android/CertificateUtil.cpp \
 	$(SRC)/Android/BMP085Device.cpp \
 	$(SRC)/Android/I2CbaroDevice.cpp \
 	$(SRC)/Android/NunchuckDevice.cpp \
