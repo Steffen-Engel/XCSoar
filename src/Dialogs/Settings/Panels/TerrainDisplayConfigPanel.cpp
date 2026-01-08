@@ -14,9 +14,11 @@
 #include "Components.hpp"
 #include "DataComponents.hpp"
 #include "Interface.hpp"
+#include "ActionInterface.hpp"
 #include "MapWindow/GlueMapWindow.hpp"
 #include "Widget/RowFormWidget.hpp"
 #include "UIGlobals.hpp"
+#include "Message.hpp"
 
 #ifdef ENABLE_OPENGL
 #include "ui/canvas/opengl/Scissor.hpp"
@@ -125,8 +127,22 @@ TerrainDisplayConfigPanel::OnModified(DataField &df) noexcept
 {
   if (IsDataField(EnableTerrain, df)) {
     const DataFieldBoolean &dfb = (const DataFieldBoolean &)df;
-    terrain_settings.enable = dfb.GetValue();
+    const bool terrain_enabled = dfb.GetValue();
+    terrain_settings.enable = terrain_enabled;
+    CommonInterface::SetMapSettings().terrain.enable = terrain_enabled;
+    Message::AddMessage(terrain_enabled
+                        ? _("Terrain shown")
+                        : _("Terrain hidden"));
+    ActionInterface::SendMapSettings(true);
     ShowTerrainControls();
+  } else if (IsDataField(EnableTopography, df)) {
+    const DataFieldBoolean &dfb = (const DataFieldBoolean &)df;
+    const bool topography_enabled = dfb.GetValue();
+    CommonInterface::SetMapSettings().topography_enabled = topography_enabled;
+    Message::AddMessage(topography_enabled
+                        ? _("Topography shown")
+                        : _("Topography hidden"));
+    ActionInterface::SendMapSettings(true);
   } else {
     UpdateTerrainPreview();
   }
@@ -185,6 +201,7 @@ TerrainDisplayConfigPanel::Prepare(ContainerWindow &parent,
   AddBoolean(_("Topography display"),
              _("Draw topographical features (roads, rivers, lakes etc.) on the map."),
              settings_map.topography_enabled);
+  GetDataField(EnableTopography).SetListener(this);
 
   static constexpr StaticEnumChoice terrain_ramp_list[] = {
     { 0, N_("Low lands"), },
@@ -228,14 +245,14 @@ TerrainDisplayConfigPanel::Prepare(ContainerWindow &parent,
   SetExpertRow(TerrainSlopeShading);
 
   AddInteger(_("Terrain contrast"),
-             _("Defines the amount of Phong shading in the terrain rendering.  Use large values to emphasise terrain slope, smaller values if flying in steep mountains."),
+             _("Defines the amount of Phong shading in the terrain rendering. Use large values to emphasise terrain slope, smaller values if flying in steep mountains."),
              _T("%d %%"), _T("%d %%"), 0, 100, 5,
              ByteToPercent(terrain.contrast));
   GetDataField(TerrainContrast).SetListener(this);
   SetExpertRow(TerrainContrast);
 
   AddInteger(_("Terrain brightness"),
-             _("Defines the brightness (whiteness) of the terrain rendering.  This controls the average illumination of the terrain."),
+             _("Defines the brightness (whiteness) of the terrain rendering. This controls the average illumination of the terrain."),
              _T("%d %%"), _T("%d %%"), 0, 100, 5,
              ByteToPercent(terrain.brightness));
   GetDataField(TerrainBrightness).SetListener(this);
