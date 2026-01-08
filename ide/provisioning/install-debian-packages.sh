@@ -52,6 +52,7 @@ install_manual() {
 install_linux() {
   echo Installing dependencies for the Linux target...
   apt-get install ${APTOPTS[*]} make g++ \
+    binutils-gold \
     zlib1g-dev \
     libfmt-dev \
     libdbus-1-dev \
@@ -70,6 +71,8 @@ install_linux() {
     imagemagick gettext \
     mesa-common-dev libgl1-mesa-dev libegl1-mesa-dev \
     fonts-dejavu \
+    ttf-bitstream-vera \
+    fonts-roboto-unhinted \
     xz-utils
   echo
 }
