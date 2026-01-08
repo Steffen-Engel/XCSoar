@@ -115,12 +115,15 @@ bitmap_icon_scaled IDB_REPORTING_POINT "map_reporting_point"
 bitmap_icon_scaled IDB_PGTAKEOFF "map_pgtakeoff"
 bitmap_icon_scaled IDB_PGLANDING "map_pglanding"
 
+
 #ifdef XCSOAR_TESTING
-bitmap_graphic IDB_TITLE "title_yall_110"
-bitmap_graphic IDB_TITLE_HD "title_yall_320"
+bitmap_graphic IDB_TITLE "title_red_110"
+bitmap_graphic IDB_TITLE_HD "title_red_320"
+bitmap_graphic IDB_TITLE_UHD "title_red_640"
 #else
 bitmap_graphic IDB_TITLE "title_110"
 bitmap_graphic IDB_TITLE_HD "title_320"
+bitmap_graphic IDB_TITLE_UHD "title_640"
 #endif
 bitmap_icon_scaled IDB_WEATHER_STATION "map_weather_station"
 
