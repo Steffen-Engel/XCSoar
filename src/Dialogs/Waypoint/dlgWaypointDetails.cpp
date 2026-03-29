@@ -35,10 +35,16 @@
 #include "system/RunFile.hpp"
 #include "system/Path.hpp"
 #include "system/ConvertPathName.hpp"
+#include "io/CupxArchive.hpp"
+#include "io/FileOutputStream.hxx"
+#include "system/FileUtil.hpp"
 #include "LogFile.hpp"
 #include "util/StringPointer.hxx"
 #include "util/AllocatedString.hxx"
 #include "BackendComponents.hpp"
+#include "DataComponents.hpp"
+#include "Protection.hpp"
+#include "Engine/Waypoint/Waypoints.hpp"
 #include "Pan.hpp"
 
 #ifdef ANDROID
@@ -179,6 +185,10 @@ class WaypointDetailsWidget final
 
   int page = 0, last_page = 0;
 
+  StaticString<256> base_caption;
+
+  AllocatedPath source_path{nullptr};
+
   ManagedWidget info_widget{new WaypointInfoWidget(look, waypoint)};
   PanelControl details_panel;
   ManagedWidget commands_widget;
@@ -204,6 +214,15 @@ public:
      commands_widget(new WaypointCommandsWidget(look, &dialog, waypoints, waypoint,
                                                 task_manager, allow_edit)) {}
 
+  /**
+   * Resolve the source file path for this waypoint from its
+   * origin and file_num fields.
+   */
+  [[gnu::pure]]
+  AllocatedPath GetSourcePath() const noexcept;
+
+  void InitCaption() noexcept;
+  void UpdateCaption() noexcept;
   void UpdatePage() noexcept;
   void UpdateZoomControls();
 
@@ -412,13 +431,42 @@ void
 WaypointDetailsWidget::Prepare(ContainerWindow &parent,
                                const PixelRect &rc) noexcept
 {
+  const bool is_cupx = source_path != nullptr &&
+    source_path.EndsWithIgnoreCase(".cupx");
+
   for (const auto &i : waypoint->files_embed) {
     if (images.full())
       break;
 
     try {
-      if (!images.append().LoadFile(LocalPath(i.c_str())))
-        images.shrink(images.size() - 1);
+      if (is_cupx) {
+        auto data = CupxArchive::ExtractImage(source_path, i);
+        if (data.empty())
+          continue;
+
+#if !defined(USE_GDI) && !defined(ANDROID)
+        if (!images.append().Load(std::span<const std::byte>(data)))
+          images.shrink(images.size() - 1);
+#else
+        {
+          const auto tmp_dir = MakeCacheDirectory("cupx");
+          const auto tmp_file = AllocatedPath::Build(tmp_dir, i.c_str());
+
+          FileOutputStream fos(tmp_file,
+                               FileOutputStream::Mode::CREATE_VISIBLE);
+          fos.Write(std::as_bytes(std::span{data}));
+          fos.Commit();
+
+          if (!images.append().LoadFile(tmp_file))
+            images.shrink(images.size() - 1);
+
+          File::Delete(tmp_file);
+        }
+#endif
+      } else {
+        if (!images.append().LoadFile(LocalPath(i.c_str())))
+          images.shrink(images.size() - 1);
+      }
     } catch (const std::exception &e) {
       LogFormat("Failed to load %s: %s",
                 (const char *)NarrowPathName(Path(i.c_str())),
@@ -454,19 +502,19 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
 
   if (!images.empty()) {
     magnify_button.Create(parent, layout.magnify_button, button_style,
-                          std::make_unique<SymbolButtonRenderer>(look.button, _T("+")),
+                          std::make_unique<SymbolButtonRenderer>(look.button, "+"),
                           [this](){ OnMagnifyClicked(); });
     shrink_button.Create(parent, layout.shrink_button, button_style,
-                         std::make_unique<SymbolButtonRenderer>(look.button, _T("-")),
+                         std::make_unique<SymbolButtonRenderer>(look.button, "-"),
                          [this](){ OnShrinkClicked(); });
   }
 
   previous_button.Create(parent, layout.previous_button, button_style,
-                         std::make_unique<SymbolButtonRenderer>(look.button, _T("<")),
+                         std::make_unique<SymbolButtonRenderer>(look.button, "<"),
                          [this](){ NextPage(-1); });
 
   next_button.Create(parent, layout.next_button, button_style,
-                     std::make_unique<SymbolButtonRenderer>(look.button, _T(">")),
+                     std::make_unique<SymbolButtonRenderer>(look.button, ">"),
                      [this](){ NextPage(1); });
 
   close_button.Create(parent, look.button, _("Close"), layout.close_button,
@@ -477,7 +525,11 @@ WaypointDetailsWidget::Prepare(ContainerWindow &parent,
 
   details_panel.Create(parent, look, layout.main, dock_style);
   details_text.Create(details_panel, layout.details_text);
+#ifndef USE_WINUSER
   details_text.SetFont(look.text_font);
+#endif
+  details_text.SetColors(look.background_color, look.text_color,
+                         look.dark_mode ? COLOR_GRAY : COLOR_BLACK);
   details_text.SetText(waypoint->details.c_str());
 
 #ifdef HAVE_RUN_FILE
@@ -525,6 +577,8 @@ WaypointDetailsWidget::UpdatePage() noexcept
     magnify_button.SetVisible(image_page);
     shrink_button.SetVisible(image_page);
   }
+
+  UpdateCaption();
 }
 
 void
@@ -625,13 +679,14 @@ WaypointDetailsWidget::KeyPress(unsigned key_code) noexcept {
     return false;
 
     case KEY_ESCAPE:
-      if (!images.empty()) {
+      if (!images.empty() && zoom > 0) {
         zoom = 0;
         image_window.Invalidate();
         shrink_button.SetEnabled(false);
+        goto_button.SetFocus();
+        return true;
       }
-      goto_button.SetFocus();
-      return true;
+      return false;
 
     case KEY_UP:
       if (!images.empty() && image_window.IsVisible() && goto_button.HasFocus()) {
@@ -658,6 +713,15 @@ WaypointDetailsWidget::OnGotoClicked()
   if (task_manager == nullptr)
     return;
 
+  // Remove old temporary goto waypoint when selecting a regular waypoint
+  if (data_components != nullptr && data_components->waypoints != nullptr) {
+    auto &way_points = *data_components->waypoints;
+    {
+      ScopeSuspendAllThreads suspend;
+      way_points.EraseTempGoto();
+    }
+  }
+
   task_manager->DoGoto(waypoint);
   dialog.SetModalResult(mrOK);
 
@@ -668,7 +732,8 @@ void
 WaypointDetailsWidget::OnImagePaint(Canvas &canvas, [[maybe_unused]] const PixelRect &rc,
                   PixelPoint &offset, PixelPoint &img_pos)
 {
-  canvas.ClearWhite();
+  const auto &dlook = UIGlobals::GetDialogLook();
+  canvas.Clear(dlook.background_color);
 
   if (page < 3 || page >= 3 + static_cast<int>(images.size())) {
     return;
@@ -785,49 +850,79 @@ DrawPanFrame::OnKeyDown(unsigned key_code) noexcept
   return true;
 }
 
-static void
-UpdateCaption(WndForm *form, const Waypoint &waypoint)
+/**
+ * Map a WaypointOrigin to the profile key that stores its source
+ * file list, or return an empty view for origins without a key.
+ */
+static std::string_view
+OriginToProfileKey(WaypointOrigin origin) noexcept
 {
-  StaticString<256> buffer;
-  buffer.Format(_T("%s: %s"), _("Waypoint"), waypoint.name.c_str());
-
-  std::string_view key{};
-  const TCHAR *name = nullptr;
-
-  switch (waypoint.origin) {
-  case WaypointOrigin::NONE:
-    break;
-
-  case WaypointOrigin::USER:
-    name = _T("user.cup");
-    break;
-
+  switch (origin) {
   case WaypointOrigin::PRIMARY:
-    key = ProfileKeys::WaypointFileList;
-    break;
-
+    return ProfileKeys::WaypointFileList;
   case WaypointOrigin::WATCHED:
-    key = ProfileKeys::WatchedWaypointFileList;
-    break;
-
+    return ProfileKeys::WatchedWaypointFileList;
   case WaypointOrigin::MAP:
-    key = ProfileKeys::MapFile;
-    break;
+    return ProfileKeys::MapFile;
+  default:
+    return {};
+  }
+}
+
+AllocatedPath
+WaypointDetailsWidget::GetSourcePath() const noexcept
+{
+  const auto key = OriginToProfileKey(waypoint->origin);
+  if (key.empty())
+    return {};
+
+  auto paths = Profile::GetMultiplePaths(key, nullptr);
+  if (waypoint->file_num < paths.size())
+    return std::move(paths[waypoint->file_num]);
+
+  return {};
+}
+
+void
+WaypointDetailsWidget::InitCaption() noexcept
+{
+  source_path = GetSourcePath();
+
+  base_caption.Format("%s: %s", _("Waypoint"), waypoint->name.c_str());
+
+  if (source_path != nullptr) {
+    const auto filename = source_path.GetBase();
+    if (filename != nullptr)
+      base_caption.AppendFormat(" (%s)", filename.c_str());
+  } else if (waypoint->origin == WaypointOrigin::USER) {
+    base_caption.AppendFormat(" (%s)", "user.cup");
+  }
+}
+
+void
+WaypointDetailsWidget::UpdateCaption() noexcept
+{
+  if (last_page == 0) {
+    dialog.SetCaption(base_caption);
+    return;
   }
 
-  if (!key.empty()) {
-    // Get the list of files for this origin and extract the correct one
-    const auto paths = Profile::GetMultiplePaths(key, nullptr);
-    if (waypoint.file_num < paths.size()) {
-      const auto &path = paths[waypoint.file_num];
-      const auto filename = path.GetBase();
-      if (filename != nullptr)
-        buffer.AppendFormat(_T(" (%s)"), filename.c_str());
-    }
-  } else if (name != nullptr)
-    buffer.AppendFormat(_T(" (%s)"), name);
+  const bool details_skipped =
+#ifdef HAVE_RUN_FILE
+    waypoint->files_external.empty() &&
+#endif
+    waypoint->details.empty();
 
-  form->SetCaption(buffer);
+  const int total_pages = last_page + 1 - (details_skipped ? 1 : 0);
+
+  int logical_page = page + 1;
+  if (details_skipped && page > 1)
+    --logical_page;
+
+  StaticString<256> caption;
+  caption.Format("%s (%d/%d)", base_caption.c_str(),
+                 logical_page, total_pages);
+  dialog.SetCaption(caption);
 }
 
 void
@@ -844,7 +939,8 @@ dlgWaypointDetailsShowModal(Waypoints *waypoints, WaypointPtr _waypoint,
                    allow_navigation ? backend_components->protected_task_manager.get() : nullptr,
                    allow_edit);
 
-  UpdateCaption(&dialog, *_waypoint);
+  dialog.GetWidget().InitCaption();
+  dialog.GetWidget().UpdateCaption();
 
   dialog.ShowModal();
 }
