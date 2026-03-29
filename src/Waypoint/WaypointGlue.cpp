@@ -121,11 +121,13 @@ LoadWaypoints(Waypoints &way_points, const RasterTerrain *terrain,
     }
   }
   //Load user.cup
-  LoadWaypointFile(way_points, LocalPath(_T("user.cup")),
+  LoadWaypointFile(way_points, LocalPath("user.cup"),
                    WaypointFileType::SEEYOU,
                    WaypointOrigin::USER, 0, terrain, progress);
   // Optimise the waypoint list after attaching new waypoints
   way_points.Optimise();
+
+  LogFmt("LoadWaypoints: loaded {} waypoints", way_points.size());
 
   // Return whether waypoints have been loaded into the waypoint list
   return found;

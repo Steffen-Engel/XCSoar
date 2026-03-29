@@ -64,6 +64,7 @@ class DeviceListWidget final
     bool alive:1, location:1, gps:1, baro:1, pitot:1, airspeed:1, vario:1, traffic:1;
     bool temperature:1;
     bool humidity:1;
+    bool imu:1;
     bool radio:1, transponder:1;
     bool engine:1;
     bool debug:1;
@@ -107,11 +108,13 @@ class DeviceListWidget final
         basic.pressure_altitude_available ||
         basic.static_pressure_available;
       pitot = basic.pitot_pressure_available;
-      airspeed = basic.airspeed_available;
+      airspeed = basic.airspeed_available ||
+        basic.dyn_pressure_available;
       vario = basic.total_energy_vario_available;
       traffic = basic.flarm.IsDetected();
       temperature = basic.temperature_available;
       humidity = basic.humidity_available;
+      imu = basic.gyroscope.available;
       debug = device != nullptr && device->IsDumpEnabled();
       radio = basic.settings.has_active_frequency ||
         basic.settings.has_standby_frequency;
@@ -168,7 +171,7 @@ class DeviceListWidget final
   static_assert(sizeof(Item) == 4, "wrong size");
 
   Item items[NUMDEV];
-  tstring error_messages[NUMDEV];
+  std::string error_messages[NUMDEV];
 
   Button *disable_button;
   Button *reconnect_button, *flight_button;
@@ -347,7 +350,8 @@ DeviceListWidget::UpdateButtons()
   } else {
     const DeviceDescriptor &device = (*devices)[current];
 
-    reconnect_button->SetEnabled(!device.GetConfig().IsDisabled());
+    reconnect_button->SetEnabled(!device.GetConfig().IsDisabled() && 
+                                 !device.IsWaitingToCallOpen());
     flight_button->SetEnabled(device.IsLogger());
     manage_button->SetEnabled(device.IsManageable());
     monitor_button->SetEnabled(device.GetConfig().UsesPort());
@@ -370,15 +374,15 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
 
   const unsigned margin = Layout::GetTextPadding();
 
-  TCHAR port_name_buffer[128];
-  const TCHAR *port_name =
+  char port_name_buffer[128];
+  const char *port_name =
     config.GetPortName(port_name_buffer, ARRAY_SIZE(port_name_buffer));
 
-  StaticString<256> text(_T("A: "));
+  StaticString<256> text("A: ");
   text[0u] += idx;
 
   if (config.UsesDriver()) {
-    const TCHAR *driver_name = FindDriverDisplayName(config.driver_name);
+    const char *driver_name = FindDriverDisplayName(config.driver_name);
 
     text.AppendFormat(_("%s on %s"), driver_name, port_name);
   } else {
@@ -391,7 +395,7 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
   /* show a list of features that are available in the second row */
 
   StaticString<256> buffer;
-  const TCHAR *status;
+  const char *status;
   if (flags.alive) {
     if (flags.location) {
       buffer = _("GPS fix");
@@ -403,54 +407,59 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
     }
 
     if (flags.baro) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Baro"));
     }
 
     if (flags.pitot) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Pitot"));
     }
 
     if (flags.airspeed) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Airspeed"));
     }
 
     if (flags.vario) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Vario"));
     }
 
     if (flags.traffic)
-      buffer.append(_T("; FLARM"));
+      buffer.append("; FLARM");
 
     if (flags.temperature || flags.humidity) {
-      buffer.append(_T("; "));
-      buffer.append(_T("Environment"));
+      buffer.append("; ");
+      buffer.append("Environment");
+    }
+
+    if (flags.imu) {
+      buffer.append("; ");
+      buffer.append(_("IMU"));
     }
 
     if (flags.radio) {
-      buffer.append(_T("; "));
-      buffer.append(_T("Radio"));
+      buffer.append("; ");
+      buffer.append("Radio");
     }
 
     if (flags.transponder) {
-      buffer.append(_T("; XPDR"));
+      buffer.append("; XPDR");
     }
 
     if (flags.engine)
-      buffer.append(_T("; Engine"));
+      buffer.append("; Engine");
 
     if (flags.debug) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Debug"));
     }
 
     if (flags.battery_percent >= 0) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Battery"));
-      buffer.AppendFormat(_T("=%d%%"), flags.battery_percent);
+      buffer.AppendFormat("=%d%%", flags.battery_percent);
     }
 
     status = buffer;
@@ -462,7 +471,7 @@ DeviceListWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
     buffer = _("No data");
 
     if (flags.debug) {
-      buffer.append(_T("; "));
+      buffer.append("; ");
       buffer.append(_("Debug"));
     }
 
@@ -556,11 +565,8 @@ DeviceListWidget::ReconnectCurrent()
     return;
   }
 
-  /* this OperationEnvironment instance must be persistent, because
-     DeviceDescriptor::Open() is asynchronous */
-  static MessageOperationEnvironment env;
   device.ResetFailureCounter();
-  device.Reopen(env);
+  device.SlowReopen();
 }
 
 inline void
@@ -677,22 +683,24 @@ DeviceListWidget::ManageCurrent()
     return;
   }
 
-  if (descriptor.IsDriver(_T("CAI 302")))
+  if (descriptor.IsDriver("CAI 302"))
     ManageCAI302Dialog(UIGlobals::GetMainWindow(), look, *device);
-  else if (descriptor.IsDriver(_T("Stratux")))
+  else if (descriptor.IsDriver("Stratux"))
     ManageStratuxDialog(*device);
-  else if (descriptor.IsDriver(_T("FLARM"))) {
+  else if (descriptor.IsDriver("FLARM")) {
     FlarmVersion version;
     FlarmHardware hardware;
+    FlarmState state;
 
     {
       const std::lock_guard lock{device_blackboard.mutex};
       const NMEAInfo &basic = device_blackboard.RealState(current);
       version = basic.flarm.version;
+      state = basic.flarm.state;
     }
 
-    ManageFlarmDialog(*device, version, hardware);
-  } else if (descriptor.IsDriver(_T("LX"))) {
+    ManageFlarmDialog(*device, version, hardware, state);
+  } else if (descriptor.IsDriver("LX")) {
     DeviceInfo info, secondary_info;
 
     {
@@ -709,9 +717,9 @@ DeviceListWidget::ManageCurrent()
       ManageNanoDialog(lx_device, info);
     else if (lx_device.IsLX16xx())
       ManageLX16xxDialog(lx_device, info);
-  } else if (descriptor.IsDriver(_T("Vega")))
+  } else if (descriptor.IsDriver("Vega"))
     dlgConfigurationVarioShowModal(*device);
-  else if (descriptor.IsDriver(_T("BlueFly")))
+  else if (descriptor.IsDriver("BlueFly"))
     dlgConfigurationBlueFlyVarioShowModal(*device);
 }
 
