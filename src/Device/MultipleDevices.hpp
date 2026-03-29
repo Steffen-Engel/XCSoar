@@ -13,10 +13,10 @@
 #include "thread/Mutex.hxx"
 #include "Blackboard/DeviceBlackboard.hpp"
 
+#include <optional>
+
 #include <array>
 #include <list>
-#include <tchar.h>
-
 class DeviceBlackboard;
 class NMEALogger;
 class DeviceFactory;
@@ -24,6 +24,8 @@ class DeviceDescriptor;
 class DeviceDispatcher;
 struct MoreData;
 struct DerivedInfo;
+class GlidePolar;
+struct GeoPoint;
 class AtmosphericPressure;
 class RadioFrequency;
 class TransponderCode;
@@ -73,21 +75,29 @@ public:
   [[gnu::pure]]
   bool HasVega() const noexcept;
 
-  void VegaWriteNMEA(const TCHAR *text, OperationEnvironment &env) noexcept;
+  void VegaWriteNMEA(const char *text, OperationEnvironment &env) noexcept;
 
   void PutMacCready(double mac_cready, OperationEnvironment &env) noexcept;
   void PutBugs(double bugs, OperationEnvironment &env) noexcept;
   void PutBallast(double fraction, double overload,
                   OperationEnvironment &env) noexcept;
+  void PutCrewMass(double crew_mass, OperationEnvironment &env) noexcept;
+  void PutEmptyMass(double empty_mass, OperationEnvironment &env) noexcept;
+  void PutPolar(const GlidePolar &polar, OperationEnvironment &env) noexcept;
+  void PutTarget(const GeoPoint &location, const char *name,
+                 std::optional<double> elevation,
+                 OperationEnvironment &env) noexcept;
   void PutVolume(unsigned volume, OperationEnvironment &env) noexcept;
   void PutPilotEvent(OperationEnvironment &env) noexcept;
-  void PutActiveFrequency(RadioFrequency frequency, const TCHAR *name,
+  void PutActiveFrequency(RadioFrequency frequency, const char *name,
                           OperationEnvironment &env) noexcept;
-  void PutStandbyFrequency(RadioFrequency frequency, const TCHAR *name,
+  void PutStandbyFrequency(RadioFrequency frequency, const char *name,
                            OperationEnvironment &env) noexcept;
   void ExchangeRadioFrequencies(OperationEnvironment &env) noexcept;
   void PutTransponderCode(TransponderCode code, OperationEnvironment &env) noexcept;
   void PutQNH(AtmosphericPressure pres, OperationEnvironment &env) noexcept;
+  void PutElevation(int elevation, OperationEnvironment &env) noexcept;
+  void RequestElevation(OperationEnvironment &env) noexcept;
   void NotifySensorUpdate(const MoreData &basic) noexcept;
   void NotifyCalculatedUpdate(const MoreData &basic,
                               const DerivedInfo &calculated) noexcept;

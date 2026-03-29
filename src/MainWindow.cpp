@@ -38,10 +38,13 @@
 
 #ifdef ANDROID
 #include "Android/ReceiveTask.hpp"
+#include "Android/Main.hpp"
+#include "Android/NativeView.hpp"
 #include "Engine/Task/Ordered/OrderedTask.hpp"
 #include "Dialogs/Task/TaskDialogs.hpp"
 #include "ui/event/Globals.hpp"
 #include "ui/event/Queue.hpp"
+#include "java/Global.hxx"
 #endif
 
 static constexpr unsigned separator_height = 2;
@@ -103,6 +106,22 @@ MainWindow::GetShowZoomInButtonRect(const PixelRect rc) noexcept
 
   return PixelRect(left, top, right, bottom);
 }
+
+#ifdef ANDROID
+[[gnu::pure]]
+PixelRect
+MainWindow::GetShowRotateButtonRect(const PixelRect rc) noexcept
+{
+  const unsigned padding = Layout::GetTextPadding();
+  const unsigned size = Layout::GetMaximumControlHeight();
+  const int left = rc.left + padding;
+  const int right = left + size;
+  const int top = rc.top + padding;
+  const int bottom = top + size;
+
+  return PixelRect(left, top, right, bottom);
+}
+#endif
 
 [[gnu::pure]]
 static PixelRect
@@ -254,6 +273,20 @@ MainWindow::InitialiseConfigured()
     show_zoom_in_button->Create(*this, GetShowZoomInButtonRect(map_rect));
   }
 
+#ifdef ANDROID
+  /* create a rotate button (initially hidden) when orientation is
+     DEFAULT (not forced) and the system auto-rotate setting is
+     enabled; the button appears temporarily when the Java
+     OrientationEventListener detects a physical orientation change */
+  if (settings.display.orientation == DisplayOrientation::DEFAULT &&
+      native_view != nullptr &&
+      native_view->IsAutoRotateEnabled(Java::GetEnv())) {
+    show_rotate_button = new ShowRotateButton();
+    show_rotate_button->Create(*this, GetShowRotateButtonRect(map_rect));
+    show_rotate_button->Hide();
+  }
+#endif
+
   map = new GlueMapWindow(*look);
   map->SetComputerSettings(CommonInterface::GetComputerSettings());
   map->SetMapSettings(CommonInterface::GetMapSettings());
@@ -286,6 +319,12 @@ MainWindow::Deinitialise() noexcept
   show_menu_button = nullptr;
   delete show_zoom_out_button;
   show_zoom_out_button = nullptr;
+
+#ifdef ANDROID
+  rotate_button_timer.Cancel();
+  delete show_rotate_button;
+  show_rotate_button = nullptr;
+#endif
 
   vario.Clear();
   traffic_gauge.Clear();
@@ -408,7 +447,8 @@ MainWindow::ReinitialiseLayout() noexcept
   InfoBoxManager::ProcessTimer();
   map_rect = ib_layout.remaining;
 
-  popup->UpdateLayout(map_rect);
+  if (popup != nullptr)
+    popup->UpdateLayout(GetMainRect());
 
   ReinitialiseLayout_vario(ib_layout);
 
@@ -436,7 +476,8 @@ MainWindow::ReinitialiseLayout() noexcept
     if (HaveBottomWidget())
       bottom_widget->Move(bottom_rect);
 
-    map->Move(GetMapRectAbove(main_rect, bottom_rect));
+    PixelRect map_rect_final = GetMapRectAbove(main_rect, bottom_rect);
+    map->Move(map_rect_final);
     map->FullRedraw();
   }
 
@@ -449,6 +490,11 @@ MainWindow::ReinitialiseLayout() noexcept
     show_zoom_out_button->Move(GetShowZoomOutButtonRect(GetMainRect()));
   if (show_zoom_in_button != nullptr)
     show_zoom_in_button->Move(GetShowZoomInButtonRect(GetMainRect()));
+
+#ifdef ANDROID
+  if (show_rotate_button != nullptr)
+    show_rotate_button->Move(GetShowRotateButtonRect(GetMainRect()));
+#endif
 
   if (map != nullptr)
     map->BringToBottom();
@@ -752,7 +798,7 @@ MainWindow::OnMouseUp(PixelPoint p) noexcept
   if (dragging) {
     StopDragging();
 
-    const TCHAR *gesture = gestures.Finish();
+    const char *gesture = gestures.Finish();
     if (gesture && InputEvents::processGesture(gesture))
       return true;
   }
@@ -838,7 +884,7 @@ MainWindow::RunTimer() noexcept
   if (CommonInterface::GetUISettings().thermal_assistant_position == UISettings::ThermalAssistantPosition::OFF) {
     thermal_assistant.Clear();
   } else if (!CommonInterface::Calculated().circling ||
-             InputEvents::IsFlavour(_T("TA"))) {
+             InputEvents::IsFlavour("TA")) {
     thermal_assistant.Hide();
   } else if (!HasDialog()) {
     if (!thermal_assistant.IsDefined())
@@ -877,6 +923,25 @@ MainWindow::OnRestorePageNotify() noexcept
     PageActions::Restore();
 }
 
+#ifdef ANDROID
+void
+MainWindow::OnRotationSuggestion() noexcept
+{
+  if (show_rotate_button == nullptr)
+    return;
+
+  show_rotate_button->Show();
+  rotate_button_timer.Schedule(std::chrono::seconds{5});
+}
+
+void
+MainWindow::OnRotateButtonTimeout() noexcept
+{
+  if (show_rotate_button != nullptr)
+    show_rotate_button->Hide();
+}
+#endif
+
 void
 MainWindow::OnDestroy() noexcept
 {
@@ -906,6 +971,14 @@ MainWindow::OnClose() noexcept
 void
 MainWindow::OnPaint(Canvas &canvas) noexcept
 {
+  if (HaveTopWidget() && map != nullptr) {
+    /* draw a separator between top widget and map */
+    PixelRect rc = map->GetPosition();
+    rc.bottom = rc.top;
+    rc.top -= separator_height;
+    canvas.DrawFilledRectangle(rc, COLOR_BLACK);
+  }
+
   if (HaveBottomWidget() && map != nullptr) {
     /* draw a separator between main area and bottom area */
     PixelRect rc = map->GetPosition();
@@ -935,6 +1008,9 @@ MainWindow::SetFullScreen(bool _full_screen) noexcept
 
   if (map != nullptr)
     map->FastMove(GetMainRect());
+
+  if (popup != nullptr)
+    popup->UpdateLayout(GetMainRect());
 
   // the repaint will be triggered by the DrawThread
 
@@ -1177,7 +1253,7 @@ MainWindow::SetWidget(Widget *_widget) noexcept
 }
 
 Widget *
-MainWindow::GetFlavourWidget(const TCHAR *flavour) noexcept
+MainWindow::GetFlavourWidget(const char *flavour) noexcept
 {
   return InputEvents::IsFlavour(flavour)
     ? widget
@@ -1228,7 +1304,7 @@ MainWindow::UpdateTrafficGaugeVisibility() noexcept
     !CommonInterface::GetUIState().screen_blanked &&
     /* hide the traffic gauge while the traffic widget is visible, to
        avoid showing the same information twice */
-    !InputEvents::IsFlavour(_T("Traffic"));
+    !InputEvents::IsFlavour("Traffic");
 
   if (traffic_visible && suppress_traffic_gauge) {
     if (flarm.status.available &&
