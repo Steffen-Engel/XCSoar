@@ -46,7 +46,7 @@ TopWindow::~TopWindow() noexcept
 }
 
 void
-TopWindow::Create([[maybe_unused]] const TCHAR *text, PixelSize size,
+TopWindow::Create([[maybe_unused]] const char *text, PixelSize size,
                   TopWindowStyle style)
 {
   invalidated = true;
@@ -74,6 +74,18 @@ TopWindow::Create([[maybe_unused]] const TCHAR *text, PixelSize size,
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
   size = screen->SetDisplayOrientation(style.GetInitialOrientation());
+#ifdef USE_POLL_EVENT
+  if (event_queue != nullptr) {
+    event_queue->SetDisplayOrientation(style.GetInitialOrientation());
+    PixelSize native_size = size;
+#if defined(ENABLE_OPENGL) && defined(USE_LIBINPUT)
+    if (!event_queue->UsesSystemRotatedInput() &&
+        AreAxesSwapped(style.GetInitialOrientation()))
+      native_size = {size.height, size.width};
+#endif
+    event_queue->SetScreenSize(native_size);
+  }
+#endif
 #elif defined(USE_MEMORY_CANVAS)
   size = screen->GetSize();
 #elif defined(ENABLE_OPENGL)
@@ -95,7 +107,25 @@ TopWindow::SetDisplayOrientation(DisplayOrientation orientation) noexcept
 {
   assert(screen != nullptr);
 
-  Resize(screen->SetDisplayOrientation(orientation));
+  const PixelSize new_size = screen->SetDisplayOrientation(orientation);
+  const bool resize_needed = new_size != GetSize();
+
+#ifdef ENABLE_OPENGL
+  /* Re-read the current drawable size after orientation changes.
+     On some UNIX backends, output/orientation changes don't always
+     deliver a fresh configure event immediately. */
+  const PixelSize native_size = screen->GetNativeSize();
+  if (native_size.width > 0 && native_size.height > 0 &&
+      screen->CheckResize(native_size)) {
+    Resize(screen->GetSize());
+    return;
+  }
+#endif
+
+  if (!resize_needed)
+    BumpRenderStateToken();
+
+  Resize(new_size);
 }
 
 #endif
@@ -144,6 +174,11 @@ TopWindow::Expose() noexcept
 {
 #ifdef HAVE_CPU_FREQUENCY
   const ScopeLockCPU cpu;
+#endif
+
+#if defined(ENABLE_SDL) && defined(USE_MEMORY_CANVAS)
+  // Process any pending resize BEFORE locking the canvas
+  screen->ProcessPendingResize();
 #endif
 
   if (auto canvas = screen->Lock(); canvas.IsDefined()) {

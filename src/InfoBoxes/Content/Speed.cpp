@@ -29,7 +29,7 @@ InfoBoxContentSpeedGround::Update(InfoBoxData &data) noexcept
     return;
   }
 
-  TCHAR buffer[16];
+  char buffer[16];
   FormatUserWindSpeed(-info.head_wind, buffer, true, false);
   data.SetComment(buffer);
 }
@@ -38,6 +38,9 @@ bool
 InfoBoxContentSpeedGround::HandleKey(const InfoBoxKeyCodes keycode) noexcept
 {
   if (!CommonInterface::Basic().gps.simulator)
+    return false;
+
+  if (!backend_components || !backend_components->device_blackboard)
     return false;
 
   auto &device_blackboard = *backend_components->device_blackboard;

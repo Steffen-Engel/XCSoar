@@ -6,6 +6,7 @@
 #include "Language/Language.hpp"
 #include "UIGlobals.hpp"
 #include "Widget/ListWidget.hpp"
+#include "Widget/StaticHelpTextWidget.hpp"
 #include "Widget/TextWidget.hpp"
 #include "Widget/TwoWidgets.hpp"
 #include "WidgetDialog.hpp"
@@ -15,13 +16,13 @@
 #include <cassert>
 
 int
-ListPicker(const TCHAR *caption,
+ListPicker(const char *caption,
            unsigned num_items, unsigned initial_value,
            unsigned item_height,
            ListItemRenderer &item_renderer, bool update,
-           const TCHAR *help_text,
+           const char *help_text,
            ItemHelpCallback_t _itemhelp_callback,
-           const TCHAR *extra_caption)
+           const char *extra_caption)
 {
   assert(num_items <= 0x7fffffff);
   assert((num_items == 0 && initial_value == 0) || initial_value < num_items);
@@ -43,6 +44,11 @@ ListPicker(const TCHAR *caption,
     list_widget->EnableItemHelp(_itemhelp_callback,
                                 (TextWidget &)two_widgets.GetSecond(),
                                 two_widgets);
+  } else if (help_text != nullptr) {
+    /* show static help text at the bottom instead of behind a
+       Help button */
+    widget = std::make_unique<StaticHelpTextWidget>(std::move(widget),
+                                                    help_text);
   }
 
   if (num_items > 0)
@@ -51,7 +57,10 @@ ListPicker(const TCHAR *caption,
   if (extra_caption != nullptr)
     dialog.AddButton(extra_caption, -2);
 
-  if (help_text != nullptr)
+  /* only show a Help button when item help is active (the general
+     help text complements the per-item help); for pickers without
+     item help, the help text is already shown at the bottom */
+  if (help_text != nullptr && _itemhelp_callback != nullptr)
     dialog.AddButton(_("Help"), [list_widget](){
       list_widget->ShowHelp();
     });

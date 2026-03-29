@@ -77,6 +77,7 @@ constexpr std::string_view WaypointFileList = "WPFileList";           // pL
 constexpr std::string_view WatchedWaypointFileList = "WatchedWPFileList"; // pL
 constexpr std::string_view LanguageFile = "LanguageFile"; // pL
 constexpr std::string_view InputFile = "InputFile"; // pL
+constexpr std::string_view ChecklistFile = "ChecklistFile"; // pL
 constexpr std::string_view PilotName = "PilotName";
 constexpr std::string_view WeGlideEnabled = "WeGlideEnabled";
 constexpr std::string_view WeGlidePilotID = "WeGlidePilotID";
@@ -121,6 +122,7 @@ constexpr std::string_view HapticFeedback = "HapticFeedback";
 constexpr std::string_view AppDialogTabStyle = "AppDialogTabStyle";
 constexpr std::string_view AppDialogStyle = "AppDialogStyle";
 constexpr std::string_view AppInfoBoxColors = "AppInfoBoxColors";
+constexpr std::string_view AppInfoBoxTheme = "AppInfoBoxTheme";
 constexpr std::string_view TeamcodeRefWaypoint = "TeamcodeRefWaypoint";
 constexpr std::string_view AppInfoBoxBorder = "AppInfoBoxBorder";
 constexpr std::string_view ShowMenuButton = "ShowMenuButton";
@@ -291,4 +293,11 @@ constexpr std::string_view RaspFile = "RaspFile";
 
 constexpr std::string_view StratuxHorizontalRange = "StratuxHorizontalRange";
 constexpr std::string_view StratuxVerticalRange = "StratuxVerticalRange";
+
+constexpr std::string_view HideQuickGuideDialogOnStartup =
+  "HideQuickGuideDialogOnStartup";
+constexpr std::string_view DisclaimerAcknowledgedVersion =
+  "DisclaimerAcknowledgedVersion";
+constexpr std::string_view LastSeenNewsVersion =
+  "LastSeenNewsVersion";
 }

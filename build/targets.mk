@@ -11,7 +11,11 @@ TARGETS = PC WIN64 \
 ifeq ($(TARGET),)
   ifeq ($(HOST_IS_UNIX),y)
     ifeq ($(HOST_IS_DARWIN),y)
-      TARGET = OSX64
+      ifeq ($(HOST_IS_AARCH64),y)
+        TARGET = MACOS
+      else
+        TARGET = OSX64
+      endif
     else
       TARGET = UNIX
     endif
@@ -54,6 +58,7 @@ TARGET_IS_CUBIE := n
 HAVE_POSIX := n
 HAVE_WIN32 := y
 HAVE_MSVCRT := y
+HAVE_HTTP := y
 
 TARGET_ARCH :=
 
@@ -355,7 +360,7 @@ ifeq ($(TARGET),ANDROID)
     ANDROID_NDK ?= $(HOME)/opt/android-ndk-r26d
   endif
 
-  ANDROID_SDK_PLATFORM = android-33
+  ANDROID_SDK_PLATFORM = android-35
   ANDROID_NDK_API = 21
 
   # The naming of CPU ABIs, architectures, and various NDK directory names is an unholy mess.
@@ -461,9 +466,12 @@ ifeq ($(HAVE_POSIX),y)
   TARGET_CPPFLAGS += -DHAVE_VASPRINTF
 endif
 
+ifeq ($(HAVE_HTTP),y)
+  TARGET_CPPFLAGS += -DHAVE_HTTP
+endif
+
 ifeq ($(HAVE_MSVCRT),y)
   TARGET_CPPFLAGS += -DHAVE_MSVCRT
-  TARGET_CPPFLAGS += -DUNICODE -D_UNICODE
   TARGET_CPPFLAGS += -DSTRICT
 endif
 
@@ -585,6 +593,8 @@ endif
 
 ifeq ($(TARGET),ANDROID)
   TARGET_LDFLAGS += -Wl,--no-undefined
+  # Support 16KB memory pages (required for Android 15+ devices)
+  TARGET_LDFLAGS += -Wl,-z,max-page-size=16384
 
   ifeq ($(ARMV7),y)
     TARGET_LDFLAGS += -Wl,--fix-cortex-a8
@@ -602,7 +612,7 @@ ifeq ($(TARGET),UNIX)
 endif
 
 ifeq ($(TARGET),ANDROID)
-  TARGET_LDLIBS += -llog -landroid
+  TARGET_LDLIBS += -llog -landroid -ljnigraphics
 endif
 
 ######## output files
