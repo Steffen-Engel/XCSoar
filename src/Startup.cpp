@@ -17,12 +17,15 @@
 #include "InfoBoxes/InfoBoxManager.hpp"
 #include "Terrain/RasterTerrain.hpp"
 #include "Terrain/AsyncLoader.hpp"
+#include "io/ZipArchive.hpp"
+#include "Message.hpp"
 #include "Weather/Rasp/RaspStore.hpp"
 #include "Weather/Rasp/Configured.hpp"
 #include "Input/InputEvents.hpp"
 #include "Input/InputQueue.hpp"
 #include "Dialogs/StartupDialog.hpp"
 #include "Dialogs/dlgSimulatorPrompt.hpp"
+#include "Dialogs/dlgQuickGuide.hpp"
 #include "Language/LanguageGlue.hpp"
 #include "Language/Language.hpp"
 #include "Protection.hpp"
@@ -138,8 +141,8 @@ static void
 AfterStartup()
 {
   try {
-    const auto lua_path = LocalPath(_T("lua"));
-    Lua::StartFile(AllocatedPath::Build(lua_path, _T("init.lua")));
+    const auto lua_path = LocalPath("lua");
+    Lua::StartFile(AllocatedPath::Build(lua_path, "init.lua"));
   } catch (...) {
       LogError(std::current_exception());
   }
@@ -164,7 +167,10 @@ AfterStartup()
     backend_components->protected_task_manager->TaskCommit(*defaultTask);
   }
 
-  task_manager->Resume();
+  const bool resumed = task_manager->Resume();
+  // Return value intentionally unused; task will resume if available.
+  (void)resumed;
+
 
   InfoBoxManager::SetDirty();
 
@@ -181,7 +187,19 @@ MainWindow::LoadTerrain() noexcept
 
   if (const auto path = Profile::GetPath(ProfileKeys::MapFile);
       path != nullptr) {
-    LogFormat(_T("Loading terrain: %s"), path.c_str());
+    LogFormat("Loading terrain: %s", path.c_str());
+
+    /* Quick synchronous validation: try opening the ZIP archive
+       before launching the async loader to fail fast on missing or
+       unreadable files. */
+    try {
+      ZipArchive test_archive{path};
+    } catch (...) {
+      LogFormat("Failed to open map file: %s", path.c_str());
+      Message::AddMessage(_("Failed to open configured map file"));
+      return;
+    }
+
     terrain_loader = new AsyncTerrainOverviewLoader();
 
     terrain_loader_env = std::make_unique<PluggableOperationEnvironment>();
@@ -225,6 +243,8 @@ try {
   SetAirspaceGroundLevels(*data_components->airspaces,
                           *data_components->terrain);
 } catch (...) {
+  SetTopWidget(nullptr);
+  terrain_loader_env.reset();
   LogError(std::current_exception(), "LoadTerrain failed");
 }
 
@@ -313,6 +333,16 @@ Startup(UI::Display &display)
   }
 #endif
 
+#ifdef ANDROID
+  /* Start the foreground service only in fly mode; the service keeps
+     XCSoar alive for IGC logging and safety warnings, neither of
+     which applies in simulator mode. */
+  if (!is_simulator()) {
+    const auto env = Java::GetEnv();
+    native_view->StartMyService(env);
+  }
+#endif
+
   CommonInterface::SetSystemSettings().SetDefaults();
   CommonInterface::SetComputerSettings().SetDefaults();
   CommonInterface::SetUIState().Clear();
@@ -339,6 +369,26 @@ Startup(UI::Display &display)
 
   Display::LoadOrientation(operation);
   main_window->CheckResize();
+
+  /* Log device capabilities and features after initialization */
+  LogFormat("Device capabilities: HasIOIOLib()=%s",
+            HasIOIOLib() ? "yes" : "no");
+#if !defined(NON_INTERACTIVE) && !defined(USE_X11)
+  LogFormat("Device capabilities: HasPointer()=%s",
+            HasPointer() ? "yes" : "no");
+  LogFormat("Device capabilities: HasKeyboard()=%s",
+            HasKeyboard() ? "yes" : "no");
+  LogFormat("Device capabilities: HasTouchScreen()=%s",
+            HasTouchScreen() ? "yes" : "no");
+  LogFormat("Device capabilities: HasCursorKeys()=%s",
+            HasCursorKeys() ? "yes" : "no");
+#endif
+  LogFormat("Device capabilities: HasColors()=%s",
+            HasColors() ? "yes" : "no");
+  LogFormat("Device capabilities: HasEPaper()=%s",
+            HasEPaper() ? "yes" : "no");
+  LogFormat("Device capabilities: IsDithered()=%s",
+            IsDithered() ? "yes" : "no");
 
   main_window->InitialiseConfigured();
 
@@ -410,6 +460,9 @@ Startup(UI::Display &display)
   }
 #endif
 
+  // Show unified Quick Guide dialog (warranty + guide pages)
+  if (!dlgQuickGuideShowModal())
+    return false;
 
   GlidePolar &gp = CommonInterface::SetComputerSettings().polar.glide_polar_task;
   gp = GlidePolar(0);
@@ -425,14 +478,14 @@ Startup(UI::Display &display)
   // Read the topography file(s)
   data_components->topography = std::make_unique<TopographyStore>();
   {
-    LogFormat(_T("Loading topography"));
+    LogFormat("Loading topography");
     operation.SetText(_("Loading Topography File..."));
     LoadConfiguredTopography(*data_components->topography);
     operation.SetProgressPosition(256);
   }
 
   // Read the waypoint files
-  LogFormat(_T("Loading waypoints"));
+  LogFormat("Loading waypoints");
   {
     SubOperationEnvironment sub_env(operation, 256, 512);
     sub_env.SetText(_("Loading Waypoints..."));
@@ -557,7 +610,7 @@ Startup(UI::Display &display)
 
   if (!is_simulator() && computer_settings.logger.enable_flight_logger) {
     backend_components->flight_logger = std::make_unique<GlueFlightLogger>(live_blackboard);
-    backend_components->flight_logger->SetPath(LocalPath(_T("flights.log")));
+    backend_components->flight_logger->SetPath(LocalPath("flights.log"));
   }
 
   if (computer_settings.logger.enable_nmea_logger)
@@ -574,11 +627,15 @@ Startup(UI::Display &display)
 
   PageActions::Update();
 
+#ifdef HAVE_HTTP
   net_components = new NetComponents(*asio_thread, *Net::curl,
                                      computer_settings.tracking);
+#endif
+#ifdef HAVE_HTTP
 #ifdef HAVE_SKYLINES_TRACKING
   if (map_window != nullptr)
     map_window->SetSkyLinesData(&net_components->tracking->GetSkyLinesData());
+#endif
 #endif
 
 #ifdef HAVE_HTTP
@@ -640,6 +697,7 @@ Shutdown()
   }
 
   SaveFlarmColors();
+  SaveFlarmMessaging();
 
   // Save settings to profile
   operation.SetText(_("Shutdown, saving profile..."));
@@ -743,8 +801,10 @@ Shutdown()
   noaa_store = nullptr;
 #endif
 
+#ifdef HAVE_HTTP
   delete net_components;
   net_components = nullptr;
+#endif
 
 #ifdef HAVE_DOWNLOAD_MANAGER
   Net::DownloadManager::Deinitialise();

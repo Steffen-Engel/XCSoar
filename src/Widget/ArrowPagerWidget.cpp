@@ -111,13 +111,20 @@ ArrowPagerWidget::Prepare(ContainerWindow &parent,
   style.TabStop();
 
   previous_button.Create(parent, layout.previous_button, style,
-                         std::make_unique<SymbolButtonRenderer>(look, _T("<")),
+                         std::make_unique<SymbolButtonRenderer>(look, "<"),
                          [this](){ Previous(false); });
   next_button.Create(parent, layout.next_button, style,
-                     std::make_unique<SymbolButtonRenderer>(look, _T(">")),
-                     [this](){ Next(false); });
-  close_button.Create(parent, look, _("Close"), layout.close_button,
+                     std::make_unique<SymbolButtonRenderer>(look, ">"),
+                     [this](){
+                       if (CanAdvance())
+                         Next(false);
+                     });
+  close_button.Create(parent, look,
+                      pending_close_caption ? pending_close_caption
+                                            : _("Close"),
+                      layout.close_button,
                       style, close_callback);
+  pending_close_caption = nullptr;
 }
 
 void
@@ -198,7 +205,7 @@ ArrowPagerWidget::KeyPress(unsigned key_code) noexcept
     return true;
 
   case KEY_RIGHT:
-    if (Next(true))
+    if (CanAdvance() && Next(true))
       SetFocus();
     return true;
 
@@ -208,9 +215,23 @@ ArrowPagerWidget::KeyPress(unsigned key_code) noexcept
 }
 
 void
+ArrowPagerWidget::OnPageFlipped() noexcept
+{
+  PagerWidget::OnPageFlipped();
+  UpdateButtons();
+}
+
+void
+ArrowPagerWidget::UpdateNextButtonState() noexcept
+{
+  if (next_button.IsDefined())
+    next_button.SetEnabled(GetSize() >= 2 && CanAdvance());
+}
+
+void
 ArrowPagerWidget::UpdateButtons() noexcept
 {
   const bool enable = GetSize() >= 2;
   previous_button.SetEnabled(enable);
-  next_button.SetEnabled(enable);
+  next_button.SetEnabled(enable && CanAdvance());
 }

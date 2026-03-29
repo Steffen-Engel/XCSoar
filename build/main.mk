@@ -9,6 +9,7 @@ endif
 
 DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Inflate.cpp \
+	$(SRC)/Dialogs/InternalLink.cpp \
 	$(SRC)/Dialogs/Message.cpp \
 	$(SRC)/Dialogs/LockScreen.cpp \
 	$(SRC)/Dialogs/Error.cpp \
@@ -65,6 +66,7 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/ProfileListDialog.cpp \
 	$(SRC)/Dialogs/Plane/PlaneListDialog.cpp \
 	$(SRC)/Dialogs/Plane/PlaneDetailsDialog.cpp \
+	$(SRC)/Dialogs/Plane/WeGlideTypePicker.cpp \
 	$(SRC)/Dialogs/Plane/PlanePolarDialog.cpp \
 	$(SRC)/Dialogs/Plane/PolarShapeEditWidget.cpp \
 	$(SRC)/Dialogs/DataField.cpp \
@@ -117,8 +119,6 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Settings/Panels/UnitsConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/TimeConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/WaypointDisplayConfigPanel.cpp \
-	$(SRC)/Dialogs/Settings/Panels/TrackingConfigPanel.cpp \
-	$(SRC)/Dialogs/Settings/Panels/CloudConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/WeatherConfigPanel.cpp \
 	$(SRC)/Dialogs/Settings/Panels/WeGlideConfigPanel.cpp \
 	\
@@ -143,8 +143,6 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Task/TargetDialog.cpp \
 	$(SRC)/Dialogs/Task/AlternatesListDialog.cpp \
 	\
-	$(SRC)/Dialogs/Tracking/CloudEnableDialog.cpp \
-	\
 	$(SRC)/Dialogs/NumberEntry.cpp \
 	$(SRC)/Dialogs/TextEntry.cpp \
 	$(SRC)/Dialogs/KnobTextEntry.cpp \
@@ -155,6 +153,8 @@ DIALOG_SOURCES = \
 	$(SRC)/Dialogs/Weather/WeatherDialog.cpp \
 	$(SRC)/Dialogs/Weather/RASPDialog.cpp \
 	$(SRC)/Dialogs/dlgCredits.cpp \
+	$(SRC)/Dialogs/dlgQuickGuide.cpp \
+	$(SRC)/Dialogs/dlgGestureHelp.cpp \
 	$(SRC)/Dialogs/dlgQuickMenu.cpp
 
 ifeq ($(HAVE_PCM_PLAYER),y)
@@ -244,6 +244,8 @@ XCSOAR_SOURCES := \
 	$(SRC)/IGC/IGCString.cpp \
 	$(SRC)/IGC/Generator.cpp \
 	$(SRC)/util/MD5.cpp \
+	$(SRC)/system/OpenLink.cpp \
+	$(SRC)/util/MarkdownParser.cpp \
 	$(SRC)/Logger/NMEALogger.cpp \
 	$(SRC)/Logger/ExternalLogger.cpp \
 	$(SRC)/Logger/FlightLogger.cpp \
@@ -383,6 +385,7 @@ XCSOAR_SOURCES := \
 	$(SRC)/Blackboard/DeviceBlackboard.cpp \
 	$(SRC)/Dialogs/DialogSettings.cpp \
 	$(SRC)/UIReceiveBlackboard.cpp \
+	$(SRC)/FlarmProgressOverlay.cpp \
 	$(SRC)/UIGlobals.cpp \
 	$(SRC)/UIState.cpp \
 	$(SRC)/UISettings.cpp \
@@ -452,6 +455,8 @@ XCSOAR_SOURCES := \
 	$(SRC)/FLARM/NameDatabase.cpp \
 	$(SRC)/FLARM/NameFile.cpp \
 	$(SRC)/FLARM/TrafficDatabases.cpp \
+	$(SRC)/FLARM/MessagingDatabase.cpp \
+	$(SRC)/FLARM/MessagingFile.cpp \
 	$(SRC)/UtilsSettings.cpp \
 	$(SRC)/UtilsSystem.cpp \
 	$(SRC)/Version.cpp \
@@ -514,7 +519,6 @@ XCSOAR_SOURCES := \
 	$(SRC)/BackendComponents.cpp \
 	$(SRC)/DataComponents.cpp \
 	$(SRC)/DataGlobals.cpp \
-	$(SRC)/NetComponents.cpp \
 	\
 	$(SRC)/Device/Factory.cpp \
 	$(SRC)/Device/Declaration.cpp \
@@ -545,14 +549,17 @@ XCSOAR_SOURCES := \
 $(call SRC_TO_OBJ,$(SRC)/Dialogs/Inflate.cpp): CPPFLAGS += $(ZLIB_CPPFLAGS)
 
 ifeq ($(OPENGL),y)
+ifeq ($(HAVE_HTTP),y)
 XCSOAR_SOURCES += \
 	$(SRC)/Dialogs/Weather/MapOverlayWidget.cpp
+endif
 endif
 
 ifeq ($(TARGET_IS_DARWIN),y)
 XCSOAR_SOURCES += \
 	$(SRC)/Apple/Services.cpp \
 	$(SRC)/Apple/SoundUtil.cpp \
+	$(SRC)/Apple/PathProvider.cpp \
 	$(SRC)/Apple/InternalSensors.cpp \
 	$(SRC)/Apple/KeyboardDetection.cpp \
 	$(SRC)/Device/SmartDeviceSensors.cpp
@@ -580,6 +587,7 @@ XCSOAR_SOURCES += \
 	$(SRC)/Android/Bitmap.cpp \
 	$(SRC)/Android/Product.cpp \
 	$(SRC)/Android/InternalSensors.cpp \
+	$(SRC)/Android/Permissions.cpp \
 	$(SRC)/Android/SoundUtil.cpp \
 	$(SRC)/Android/TextUtil.cpp \
 	$(SRC)/Android/EventBridge.cpp \
@@ -627,10 +635,13 @@ XCSOAR_SOURCES += \
 	$(SRC)/Weather/NOAAUpdater.cpp
 
 XCSOAR_SOURCES += \
+	$(SRC)/Dialogs/Settings/Panels/TrackingConfigPanel.cpp \
+	$(SRC)/Dialogs/Settings/Panels/CloudConfigPanel.cpp
+
+XCSOAR_SOURCES += \
 	$(SRC)/Tracking/LiveTrack24/SessionID.cpp \
 	$(SRC)/Tracking/LiveTrack24/Glue.cpp \
 	$(SRC)/Tracking/LiveTrack24/Client.cpp
-endif
 
 XCSOAR_SOURCES += \
 	$(SRC)/net/client/tim/Glue.cpp \
@@ -638,7 +649,12 @@ XCSOAR_SOURCES += \
 	$(SRC)/Tracking/SkyLines/Assemble.cpp \
 	$(SRC)/Tracking/SkyLines/Key.cpp \
 	$(SRC)/Tracking/SkyLines/Glue.cpp \
-	$(SRC)/Tracking/TrackingGlue.cpp
+	$(SRC)/Tracking/TrackingGlue.cpp \
+	$(SRC)/NetComponents.cpp
+else
+XCSOAR_SOURCES += \
+	$(SRC)/NetComponentsStub.cpp
+endif
 
 ifeq ($(HAVE_PCM_PLAYER),y)
 XCSOAR_SOURCES += $(SRC)/Audio/VarioGlue.cpp
@@ -660,17 +676,22 @@ XCSOAR_DEPENDS = \
 	DRIVER PORT \
 	LIBCOMPUTER \
 	LIBNMEA \
-	LIBHTTP CO IO ASYNC \
+	CO IO ASYNC \
 	WAYPOINTFILE \
 	TASKFILE CONTEST ROUTE GLIDE \
 	WAYPOINT AIRSPACE \
 	LUA \
 	ZZIP \
 	OPERATION \
-	LIBCLIENT \
 	JSON \
 	LIBNET TIME OS THREAD \
 	UTIL GEO MATH
+
+ifeq ($(HAVE_HTTP),y)
+XCSOAR_DEPENDS += \
+	LIBHTTP \
+	LIBCLIENT
+endif
 
 ifeq ($(TARGET_IS_DARWIN),y)
 XCSOAR_LDLIBS += -framework CoreLocation -lSDL2main # include SDL2main for main() on MacOS and iOS (otherwise linking fails)

@@ -13,20 +13,17 @@
 #include <fnmatch.h>
 #endif
 
-#ifdef _UNICODE
-#include "util/AllocatedString.hxx"
-#endif
-
 #include "Language/Language.hpp"
 #include "util/IterableSplitString.hxx"
-#include "util/tstring.hpp"
+
+#include <string>
 
 #include <windef.h> /* for MAX_PATH */
 
 AllocatedPath
 ProfileMap::GetPath(std::string_view key) const noexcept
 {
-  TCHAR buffer[MAX_PATH];
+  char buffer[MAX_PATH];
   if (!Get(key, std::span{buffer}))
       return nullptr;
 
@@ -37,11 +34,11 @@ ProfileMap::GetPath(std::string_view key) const noexcept
 }
 
 std::vector<AllocatedPath>
-ProfileMap::GetMultiplePaths(std::string_view key, const TCHAR *patterns) const
+ProfileMap::GetMultiplePaths(std::string_view key, const char *patterns) const
 {
 
   std::vector<AllocatedPath> paths;
-  BasicStringBuffer<TCHAR, MAX_PATH> buffer;
+  BasicStringBuffer<char, MAX_PATH> buffer;
 
   if (!Get(key, buffer)) return paths;
 
@@ -51,17 +48,17 @@ ProfileMap::GetMultiplePaths(std::string_view key, const TCHAR *patterns) const
 
     if (i.empty()) continue;
 
-    tstring file_string(i);
+    std::string file_string(i);
 
     Path path(file_string.c_str());
 
     size_t length;
-    const TCHAR *patterns_iterator = patterns;
+    const char *patterns_iterator = patterns;
     if (patterns == nullptr) {
       paths.push_back(ExpandLocalPath(AllocatedPath(path)));
       continue;
     }
-    while ((length = _tcslen(patterns_iterator)) > 0) {
+    while ((length = strlen(patterns_iterator)) > 0) {
 #ifdef HAVE_POSIX
       if (!fnmatch(patterns_iterator, path.c_str(), 0))
 #else
@@ -90,10 +87,10 @@ ProfileMap::GetPathIsEqual(std::string_view key, Path value) const noexcept
 
 [[gnu::pure]]
 static Path
-BackslashBaseName(const TCHAR *p) noexcept
+BackslashBaseName(const char *p) noexcept
 {
   if (DIR_SEPARATOR != '\\') {
-    const auto *backslash = StringFindLast(p, _T('\\'));
+    const auto *backslash = StringFindLast(p, '\\');
     if (backslash != NULL)
       p = backslash + 1;
   }
@@ -101,25 +98,7 @@ BackslashBaseName(const TCHAR *p) noexcept
   return Path(p).GetBase();
 }
 
-#ifdef _UNICODE
-
-BasicAllocatedString<TCHAR>
-ProfileMap::GetPathBase(std::string_view key) const noexcept
-{
-  TCHAR buffer[MAX_PATH];
-  if (!Get(key, std::span{buffer}))
-      return nullptr;
-
-  const TCHAR *base = BackslashBaseName(buffer).c_str();
-  if (base == nullptr)
-    return nullptr;
-
-  return BasicAllocatedString<TCHAR>(base);
-}
-
-#else
-
-StringPointer<TCHAR>
+StringPointer<char>
 ProfileMap::GetPathBase(std::string_view key) const noexcept
 {
   const auto *path = Get(key);
@@ -129,13 +108,11 @@ ProfileMap::GetPathBase(std::string_view key) const noexcept
   return path;
 }
 
-#endif
-
 void
 ProfileMap::SetPath(std::string_view key, Path value) noexcept
 {
   if (value == nullptr || StringIsEmpty(value.c_str()))
-    Set(key, _T(""));
+    Set(key, "");
   else {
     const auto contracted = ContractLocalPath(value);
     if (contracted != nullptr)
