@@ -15,18 +15,18 @@
 #include "Engine/GlideSolvers/GlidePolar.hpp"
 
 void
-TaskSpeedCaption(TCHAR *sTmp,
+TaskSpeedCaption(char *sTmp,
                  const FlightStatistics &fs,
                  const GlidePolar &glide_polar)
 {
   if (!glide_polar.IsValid() || fs.task_speed.IsEmpty()) {
-    *sTmp = _T('\0');
+    *sTmp = '\0';
     return;
   }
 
-  _stprintf(sTmp,
-            _T("%s: %d %s\r\n%s: %d %s"),
-            _("Vave"),
+  sprintf(sTmp,
+            "%s: %d %s\r\n%s: %d %s",
+            C_("Average velocity abbreviation", "Vave"),
             (int)Units::ToUserTaskSpeed(fs.task_speed.GetAverageY()),
             Units::GetTaskSpeedName(),
             _("Vest"),
@@ -44,8 +44,8 @@ RenderSpeed(Canvas &canvas, const PixelRect rc,
             const GlidePolar &glide_polar)
 {
   ChartRenderer chart(chart_look, canvas, rc);
-  chart.SetXLabel(_T("t"), _T("hr"));
-  chart.SetYLabel(_T("V"), Units::GetTaskSpeedName());
+  chart.SetXLabel("t", "hr");
+  chart.SetYLabel("V", Units::GetTaskSpeedName());
   chart.Begin();
 
   if (!fs.task_speed.HasResult() || !task.CheckOrderedTask()) {
@@ -70,14 +70,16 @@ RenderSpeed(Canvas &canvas, const PixelRect rc,
     rc_upper.bottom = chart.ScreenY(vref);
 
     DrawVerticalGradient(canvas, rc_upper,
-                         chart_look.color_positive, COLOR_WHITE, COLOR_WHITE);
+                         chart_look.color_positive, chart_look.background_color,
+                         chart_look.background_color);
   }
   {
     PixelRect rc_lower = chart.GetChartRect();
     rc_lower.top = chart.ScreenY(vref);
 
     DrawVerticalGradient(canvas, rc_lower,
-                         COLOR_WHITE, chart_look.color_negative, COLOR_WHITE);
+                         chart_look.background_color, chart_look.color_negative,
+                         chart_look.background_color);
   }
 
   RenderTaskLegs(chart, task, nmea_info, derived_info, 0.33);
@@ -93,10 +95,10 @@ RenderSpeed(Canvas &canvas, const PixelRect rc,
   chart.DrawTrend(fs.task_speed, ChartLook::STYLE_BLUETHINDASH);
 
   chart.DrawLabel({chart.GetXMin()*0.9+chart.GetXMax()*0.1, vref},
-                  _T("Vest"));
+                  "Vest");
 
   const double tref = chart.GetXMin()*0.5+chart.GetXMax()*0.5;
-  chart.DrawLabel({tref, fs.task_speed.GetYAt(tref)}, _T("Vave"));
+  chart.DrawLabel({tref, fs.task_speed.GetYAt(tref)}, "Vave");
 
   chart.Finish();
 }

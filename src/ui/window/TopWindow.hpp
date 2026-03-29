@@ -11,6 +11,7 @@
 
 #ifdef ENABLE_OPENGL
 #include "ui/opengl/Features.hpp"
+#include <cstdint>
 #endif
 
 #include "ui/canvas/Features.hpp" // for DRAW_MOUSE_CURSOR
@@ -27,8 +28,6 @@ namespace UI { struct Event; }
 union SDL_Event;
 struct SDL_Window;
 #endif
-
-#include <tchar.h>
 
 #ifdef SOFTWARE_ROTATE_DISPLAY
 #include "DisplayOrientation.hpp"
@@ -159,6 +158,8 @@ public:
   void MarkFirstConfigureReceived() noexcept {
     received_first_configure = true;
   }
+
+  void OnNativeConfigure(PixelSize new_native_size) noexcept;
 #elif defined(ENABLE_SDL)
   SDL_Window *window;
 #endif
@@ -172,6 +173,10 @@ public:
   TopCanvas *screen = nullptr;
 
   bool invalidated;
+
+#ifdef ENABLE_OPENGL
+  uint32_t render_state_token = 0;
+#endif
 
 #ifdef ANDROID
   Mutex paused_mutex;
@@ -239,6 +244,13 @@ public:
 #endif
 
 public:
+#ifdef ENABLE_OPENGL
+  [[gnu::pure]]
+  uint32_t GetRenderStateToken() const noexcept {
+    return render_state_token;
+  }
+#endif
+
 #ifdef ANDROID
   explicit TopWindow(UI::Display &_display) noexcept;
 #else
@@ -258,10 +270,10 @@ public:
    * Throws on error.
    */
 #ifdef USE_WINUSER
-  void Create(const TCHAR *cls, const TCHAR *text, PixelSize size,
+  void Create(const char *cls, const char *text, PixelSize size,
               TopWindowStyle style=TopWindowStyle());
 #else
-  void Create(const TCHAR *text, PixelSize size,
+  void Create(const char *text, PixelSize size,
               TopWindowStyle style=TopWindowStyle());
 #endif
 
@@ -270,7 +282,7 @@ private:
   /**
    * Throws on error.
    */
-  void CreateNative(const TCHAR *text, PixelSize size,
+  void CreateNative(const char *text, PixelSize size,
                     TopWindowStyle style);
 
 public:
@@ -287,9 +299,9 @@ public:
 
 #if !defined(USE_WINUSER) && !defined(ENABLE_SDL)
 #if defined(ANDROID) || defined(USE_FB) || defined(USE_EGL) || defined(USE_GLX) || defined(USE_VFB)
-  void SetCaption(const TCHAR *) noexcept {}
+  void SetCaption(const char *) noexcept {}
 #else
-  void SetCaption(const TCHAR *caption) noexcept;
+  void SetCaption(const char *caption) noexcept;
 #endif
 #endif
 
@@ -457,6 +469,12 @@ private:
 #endif
 
 protected:
+#ifdef ENABLE_OPENGL
+  void BumpRenderStateToken() noexcept {
+    ++render_state_token;
+  }
+#endif
+
   PixelPoint PointToReal(PixelPoint p) const noexcept {
 #ifdef HAVE_HIGHDPI_SUPPORT
     p.x = int(static_cast<float>(p.x) * point_to_real_x);

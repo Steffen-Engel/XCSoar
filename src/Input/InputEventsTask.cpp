@@ -42,28 +42,14 @@ trigger_redraw()
 //   toggle: Toggles between armed and disarmed.
 //   show: Shows current armed state
 void
-InputEvents::eventArmAdvance(const TCHAR *misc)
+InputEvents::eventArmAdvance(const char *misc)
 {
   if (!backend_components->protected_task_manager)
     return;
 
   ProtectedTaskManager::ExclusiveLease task_manager{*backend_components->protected_task_manager};
   TaskAdvance &advance = task_manager->SetTaskAdvance();
-
-  if (StringIsEqual(misc, _T("on"))) {
-    advance.SetArmed(true);
-    Message::AddMessage(_("Armed start activated"));
-  } else if (StringIsEqual(misc, _T("off"))) {
-    advance.SetArmed(false);
-  } else if (StringIsEqual(misc, _T("toggle"))) {
-    const bool was_armed = advance.GetState() == TaskAdvance::START_ARMED ||
-                           advance.GetState() == TaskAdvance::TURN_ARMED;
-    advance.ToggleArmed();
-    const bool is_armed = advance.GetState() == TaskAdvance::START_ARMED ||
-                          advance.GetState() == TaskAdvance::TURN_ARMED;
-    if (is_armed && !was_armed)
-      Message::AddMessage(_("Armed start activated"));
-  } else if (StringIsEqual(misc, _T("show"))) {
+  const auto show_state = [&advance]() {
     switch (advance.GetState()) {
     case TaskAdvance::MANUAL:
       Message::AddMessage(_("Advance manually"));
@@ -84,6 +70,18 @@ InputEvents::eventArmAdvance(const TCHAR *misc)
       Message::AddMessage(_("Hold turn"));
       break;
     }
+  };
+
+  if (StringIsEqual(misc, "on")) {
+    advance.SetArmed(true);
+    Message::AddMessage(_("Armed start activated"));
+  } else if (StringIsEqual(misc, "off")) {
+    advance.SetArmed(false);
+  } else if (StringIsEqual(misc, "toggle")) {
+    advance.ToggleArmed();
+    show_state();
+  } else if (StringIsEqual(misc, "show")) {
+    show_state();
   }
 
   /* quickly propagate the updated values from the TaskManager to the
@@ -93,7 +91,7 @@ InputEvents::eventArmAdvance(const TCHAR *misc)
 }
 
 void
-InputEvents::eventCalculator([[maybe_unused]] const TCHAR *misc)
+InputEvents::eventCalculator([[maybe_unused]] const char *misc)
 {
   dlgTaskManagerShowModal();
 
@@ -101,7 +99,7 @@ InputEvents::eventCalculator([[maybe_unused]] const TCHAR *misc)
 }
 
 void
-InputEvents::eventGotoLookup([[maybe_unused]] const TCHAR *misc)
+InputEvents::eventGotoLookup([[maybe_unused]] const char *misc)
 {
   const NMEAInfo &basic = CommonInterface::Basic();
 
@@ -110,6 +108,13 @@ InputEvents::eventGotoLookup([[maybe_unused]] const TCHAR *misc)
 
   auto wp = ShowWaypointListDialog(*data_components->waypoints, basic.location);
   if (wp != NULL) {
+    // Remove old temporary goto waypoint when selecting a regular waypoint
+    auto &way_points = *data_components->waypoints;
+    {
+      ScopeSuspendAllThreads suspend;
+      way_points.EraseTempGoto();
+    }
+
     backend_components->protected_task_manager->DoGoto(std::move(wp));
     trigger_redraw();
   }
@@ -119,7 +124,7 @@ InputEvents::eventGotoLookup([[maybe_unused]] const TCHAR *misc)
 // Adjusts MacCready settings
 // up, down, auto on, auto off, auto toggle, auto show
 void
-InputEvents::eventMacCready(const TCHAR *misc)
+InputEvents::eventMacCready(const char *misc)
 {
   if (!backend_components->protected_task_manager)
     return;
@@ -130,28 +135,28 @@ InputEvents::eventMacCready(const TCHAR *misc)
 
   TaskBehaviour &task_behaviour = CommonInterface::SetComputerSettings().task;
 
-  if (StringIsEqual(misc, _T("up"))) {
+  if (StringIsEqual(misc, "up")) {
     const auto step = Units::ToSysVSpeed(GetUserVerticalSpeedStep());
     ActionInterface::OffsetManualMacCready(step);
-  } else if (StringIsEqual(misc, _T("down"))) {
+  } else if (StringIsEqual(misc, "down")) {
     const auto step = Units::ToSysVSpeed(GetUserVerticalSpeedStep());
     ActionInterface::OffsetManualMacCready(-step);
-  } else if (StringIsEqual(misc, _T("auto toggle"))) {
+  } else if (StringIsEqual(misc, "auto toggle")) {
     task_behaviour.auto_mc = !task_behaviour.auto_mc;
     Profile::Set(ProfileKeys::AutoMc, task_behaviour.auto_mc);
-  } else if (StringIsEqual(misc, _T("auto on"))) {
+  } else if (StringIsEqual(misc, "auto on")) {
     task_behaviour.auto_mc = true;
     Profile::Set(ProfileKeys::AutoMc, true);
-  } else if (StringIsEqual(misc, _T("auto off"))) {
+  } else if (StringIsEqual(misc, "auto off")) {
     task_behaviour.auto_mc = false;
     Profile::Set(ProfileKeys::AutoMc, false);
-  } else if (StringIsEqual(misc, _T("auto show"))) {
+  } else if (StringIsEqual(misc, "auto show")) {
     if (task_behaviour.auto_mc) {
       Message::AddMessage(_("Auto. MacCready on"));
     } else {
       Message::AddMessage(_("Auto. MacCready off"));
     }
-  } else if (StringIsEqual(misc, _T("show"))) {
+  } else if (StringIsEqual(misc, "show")) {
     Message::AddMessage(_("MacCready "), FormatUserVerticalSpeed(mc, false));
   }
 }
@@ -163,23 +168,23 @@ InputEvents::eventMacCready(const TCHAR *misc)
 //  nextwrap: selects the next waypoint, wrapping back to start after final
 //  previouswrap: selects the previous waypoint, wrapping to final after start
 void
-InputEvents::eventAdjustWaypoint(const TCHAR *misc)
+InputEvents::eventAdjustWaypoint(const char *misc)
 {
   auto *protected_task_manager = backend_components->protected_task_manager.get();
   if (protected_task_manager == NULL)
     return;
 
-  if (StringIsEqual(misc, _T("next")))
+  if (StringIsEqual(misc, "next"))
     protected_task_manager->IncrementActiveTaskPoint(1); // next
-  else if (StringIsEqual(misc, _T("nextwrap")))
+  else if (StringIsEqual(misc, "nextwrap"))
     protected_task_manager->IncrementActiveTaskPoint(1); // next - with wrap
-  else if (StringIsEqual(misc, _T("previous")))
+  else if (StringIsEqual(misc, "previous"))
     protected_task_manager->IncrementActiveTaskPoint(-1); // previous
-  else if (StringIsEqual(misc, _T("previouswrap")))
+  else if (StringIsEqual(misc, "previouswrap"))
     protected_task_manager->IncrementActiveTaskPoint(-1); // previous with wrap
-  else if (StringIsEqual(misc, _T("nextarm")))
+  else if (StringIsEqual(misc, "nextarm"))
     protected_task_manager->IncrementActiveTaskPointArm(1); // arm sensitive next
-  else if (StringIsEqual(misc, _T("previousarm")))
+  else if (StringIsEqual(misc, "previousarm"))
     protected_task_manager->IncrementActiveTaskPointArm(-1); // arm sensitive previous
 
   {
@@ -200,20 +205,36 @@ InputEvents::eventAdjustWaypoint(const TCHAR *misc)
 // toggle: toggles between abort and resume
 // show: displays a status message showing the task abort status
 void
-InputEvents::eventAbortTask(const TCHAR *misc)
+InputEvents::eventAbortTask(const char *misc)
 {
   if (!backend_components->protected_task_manager)
     return;
 
   ProtectedTaskManager::ExclusiveLease task_manager{*backend_components->protected_task_manager};
+  const auto report_resume = [&task_manager](bool resumed) {
+    if (resumed) {
+      if (task_manager->GetMode() == TaskType::GOTO)
+        Message::AddMessage(_("Go to target"));
+      else
+        Message::AddMessage(_("Task resumed"));
+      return;
+    }
 
-  if (StringIsEqual(misc, _T("abort"))) {
+    const auto &ordered_task = task_manager->GetOrderedTask();
+    if (ordered_task.TaskSize() == 0)
+      Message::AddMessage(_("No task to resume"));
+    else if (!task_manager->CheckOrderedTask())
+      Message::AddMessage(_("Ordered task invalid"));
+    else
+      Message::AddMessage(_("Task resume failed"));
+  };
+
+  if (StringIsEqual(misc, "abort")) {
     task_manager->Abort();
     Message::AddMessage(_("Task aborted"));
-  } else if (StringIsEqual(misc, _T("resume"))) {
-    task_manager->Resume();
-    Message::AddMessage(_("Task resumed"));
-  } else if (StringIsEqual(misc, _T("show"))) {
+  } else if (StringIsEqual(misc, "resume")) {
+    report_resume(task_manager->Resume());
+  } else if (StringIsEqual(misc, "show")) {
     switch (task_manager->GetMode()) {
     case TaskType::ABORT:
       Message::AddMessage(_("Task aborted"));
@@ -237,16 +258,14 @@ InputEvents::eventAbortTask(const TCHAR *misc)
       break;
     case TaskType::GOTO:
       if (task_manager->CheckOrderedTask()) {
-        task_manager->Resume();
-        Message::AddMessage(_("Task resumed"));
+        report_resume(task_manager->Resume());
       } else {
         task_manager->Abort();
         Message::AddMessage(_("Task aborted"));
       }
       break;
     case TaskType::ABORT:
-      task_manager->Resume();
-      Message::AddMessage(_("Task resumed"));
+      report_resume(task_manager->Resume());
       break;
     }
   }
@@ -262,7 +281,7 @@ InputEvents::eventAbortTask(const TCHAR *misc)
 // TaskLoad
 // Loads the task of the specified filename
 void
-InputEvents::eventTaskLoad(const TCHAR *misc)
+InputEvents::eventTaskLoad(const char *misc)
 {
   if (!backend_components->protected_task_manager)
     return;
@@ -290,7 +309,7 @@ InputEvents::eventTaskLoad(const TCHAR *misc)
 // TaskSave
 // Saves the task to the specified filename
 void
-InputEvents::eventTaskSave(const TCHAR *misc)
+InputEvents::eventTaskSave(const char *misc)
 {
   if (!backend_components->protected_task_manager)
     return;
@@ -301,35 +320,35 @@ InputEvents::eventTaskSave(const TCHAR *misc)
 }
 
 void
-InputEvents::eventTaskTransition(const TCHAR *misc)
+InputEvents::eventTaskTransition(const char *misc)
 {
   if (!backend_components->protected_task_manager)
     return;
 
-  if (StringIsEqual(misc, _T("start"))) {
+  if (StringIsEqual(misc, "start")) {
     const StartStats &start_stats =
       CommonInterface::Calculated().ordered_task_stats.start;
     if (!start_stats.HasStarted())
       return;
 
-    TCHAR TempAll[120];
+    char TempAll[120];
     StringFormatUnsafe(
-        TempAll, _T("\r\n%s: %s\r\n%s:%s\r\n%s: %s"), _("Altitude"),
+        TempAll, "\r\n%s: %s\r\n%s:%s\r\n%s: %s", _("Altitude"),
         FormatUserAltitude(start_stats.altitude).c_str(), _("Speed"),
         FormatUserSpeed(start_stats.ground_speed, true).c_str(), _("Time"),
         FormatLocalTimeHHMM(start_stats.time,
                             CommonInterface::GetComputerSettings().utc_offset)
             .c_str());
     Message::AddMessage(_("Task start"), TempAll);
-  } else if (StringIsEqual(misc, _T("next"))) {
+  } else if (StringIsEqual(misc, "next")) {
     Message::AddMessage(_("Next turnpoint"));
-  } else if (StringIsEqual(misc, _T("finish"))) {
+  } else if (StringIsEqual(misc, "finish")) {
     Message::AddMessage(_("Task finished"));
   }
 }
 
 void
-InputEvents::eventResetTask([[maybe_unused]] const TCHAR *misc)
+InputEvents::eventResetTask([[maybe_unused]] const char *misc)
 {
   if (backend_components->protected_task_manager)
     backend_components->protected_task_manager->ResetTask();
