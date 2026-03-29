@@ -8,6 +8,7 @@
 #include "Screen/Layout.hpp"
 #include "ui/event/KeyCode.hpp"
 #include "ui/canvas/Canvas.hpp"
+#include "ui/canvas/Features.hpp"
 #include "Look/DialogLook.hpp"
 #include "Language/Language.hpp"
 #include "util/StringFormat.hpp"
@@ -51,13 +52,13 @@ TabMenuDisplay::InitMenu(const TabMenuGroup groups[],
   }
 }
 
-const TCHAR *
-TabMenuDisplay::GetCaption(TCHAR buffer[], size_t size) const noexcept
+const char *
+TabMenuDisplay::GetCaption(char buffer[], size_t size) const noexcept
 {
   const unsigned page = pager.GetCurrentIndex();
   if (page >= PAGE_OFFSET) {
     const unsigned i = page - PAGE_OFFSET;
-    StringFormat(buffer, size, _T("%s > %s"),
+    StringFormat(buffer, size, "%s > %s",
                  gettext(GetPageParentCaption(i)),
                  buttons[i].caption);
     return buffer;
@@ -330,7 +331,9 @@ TabMenuDisplay::PaintMainMenuBorder(Canvas &canvas) const noexcept
   rc.bottom = GetMainMenuButtonSize(GetNumMainMenuItems() - 1).bottom;
   rc.Grow(GetTabLineHeight());
 
-  canvas.DrawFilledRectangle(rc, COLOR_BLACK);
+  canvas.DrawFilledRectangle(rc, look.dark_mode
+                             ? DarkColor(look.background_color)
+                             : COLOR_BLACK);
 }
 
 inline void
@@ -363,7 +366,9 @@ TabMenuDisplay::PaintSubMenuBorder(Canvas &canvas,
   rc.bottom = GetSubMenuButtonSize(main_button.last_page_index).bottom;
   rc.Grow(GetTabLineHeight());
 
-  canvas.DrawFilledRectangle(rc, COLOR_BLACK);
+  canvas.DrawFilledRectangle(rc, look.dark_mode
+                             ? DarkColor(look.background_color)
+                             : COLOR_BLACK);
 }
 
 inline void
@@ -399,7 +404,8 @@ TabMenuDisplay::PaintSubMenuItems(Canvas &canvas) const noexcept
 void
 TabMenuDisplay::OnPaint(Canvas &canvas) noexcept
 {
-  canvas.Clear(look.background_color);
+  if (HaveClipping())
+    canvas.Clear(look.background_color);
 
   PaintMainMenuItems(canvas);
   PaintSubMenuItems(canvas);

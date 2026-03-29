@@ -4,17 +4,18 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <span>
-#include <tchar.h>
-
 struct NMEAInfo;
 struct MoreData;
 struct DerivedInfo;
 struct DeviceConfig;
 struct Declaration;
 struct Waypoint;
+struct GeoPoint;
 class Path;
 class Port;
+class GlidePolar;
 class AtmosphericPressure;
 class RadioFrequency;
 class TransponderCode;
@@ -83,6 +84,52 @@ public:
                           OperationEnvironment &env) = 0;
 
   /**
+   * Send the new crew mass (pilot weight) to the device.
+   *
+   * @param crew_mass the new crew mass value [kg]
+   * @return true on success
+   */
+  virtual bool PutCrewMass(double crew_mass, OperationEnvironment &env) = 0;
+
+  /**
+   * Send the new empty mass (empty weight) to the device.
+   *
+   * @param empty_mass the new empty mass value [kg]
+   * @return true on success
+   */
+  virtual bool PutEmptyMass(double empty_mass, OperationEnvironment &env) = 0;
+
+  /**
+   * Send the glide polar to the device.
+   *
+   * The driver receives XCSoar's canonical GlidePolar and extracts
+   * whatever its protocol requires.  Vendor-specific metadata
+   * (e.g. LXNAV polar_load, glider name, stall speed) is handled
+   * internally by the driver.
+   *
+   * @param polar the current glide polar (SI units)
+   * @return true on success
+   */
+  virtual bool PutPolar(const GlidePolar &polar,
+                        OperationEnvironment &env) = 0;
+
+  /**
+   * Send a navigation target (waypoint) to the device.
+   *
+   * The caller decides when and which target to send.  The driver
+   * only handles the protocol formatting.
+   *
+   * @param location the target coordinates
+   * @param name the waypoint name (may be truncated by the driver)
+   * @param elevation the target elevation [m], or std::nullopt if unknown
+   * @return true on success
+   */
+  virtual bool PutTarget(const GeoPoint &location,
+                         const char *name,
+                         std::optional<double> elevation,
+                         OperationEnvironment &env) = 0;
+
+  /**
    * Send the new QNH value to the device.
    *
    * @param pressure the new QNH
@@ -91,6 +138,22 @@ public:
    */
   virtual bool PutQNH(const AtmosphericPressure &pressure,
                       OperationEnvironment &env) = 0;
+
+  /**
+   * Send the elevation value to the device.
+   *
+   * @param elevation elevation in meters
+   * @return true on success
+   */
+  virtual bool PutElevation(int elevation, OperationEnvironment &env) = 0;
+
+  /**
+   * Request the elevation value from the device.
+   * The device should respond by providing the elevation via ExternalSettings.
+   *
+   * @return true on success
+   */
+  virtual bool RequestElevation(OperationEnvironment &env) = 0;
 
   /**
    * Set the radio volume.
@@ -115,7 +178,7 @@ public:
    * @return true on success
    */
   virtual bool PutActiveFrequency(RadioFrequency frequency,
-                                  const TCHAR *name,
+                                  const char *name,
                                   OperationEnvironment &env) = 0;
 
   /**
@@ -126,7 +189,7 @@ public:
    * @return true on success
    */
   virtual bool PutStandbyFrequency(RadioFrequency frequency,
-                                   const TCHAR *name,
+                                   const char *name,
                                    OperationEnvironment &env) = 0;
 
   /**
@@ -252,15 +315,23 @@ public:
   bool PutBugs(double bugs, OperationEnvironment &env) override;
   bool PutBallast(double fraction, double overload,
                   OperationEnvironment &env) override;
+  bool PutCrewMass(double crew_mass, OperationEnvironment &env) override;
+  bool PutEmptyMass(double empty_mass, OperationEnvironment &env) override;
+  bool PutPolar(const GlidePolar &polar, OperationEnvironment &env) override;
+  bool PutTarget(const GeoPoint &location, const char *name,
+                 std::optional<double> elevation,
+                 OperationEnvironment &env) override;
   bool PutQNH(const AtmosphericPressure &pres,
               OperationEnvironment &env) override;
+  bool PutElevation(int elevation, OperationEnvironment &env) override;
+  bool RequestElevation(OperationEnvironment &env) override;
   bool PutVolume(unsigned volume, OperationEnvironment &env) override;
   bool PutPilotEvent(OperationEnvironment &env) override;
   bool PutActiveFrequency(RadioFrequency frequency,
-                          const TCHAR *name,
+                          const char *name,
                           OperationEnvironment &env) override;
   bool PutStandbyFrequency(RadioFrequency frequency,
-                           const TCHAR *name,
+                           const char *name,
                            OperationEnvironment &env) override;
   bool ExchangeRadioFrequencies(OperationEnvironment &env,
                                 NMEAInfo &info) override;
@@ -361,12 +432,12 @@ struct DeviceRegister {
    * The internal name of the driver, i.e. the one that is stored in
    * the profile.
    */
-  const TCHAR *name;
+  const char *name;
 
   /**
    * The human-readable name of this driver.
    */
-  const TCHAR *display_name;
+  const char *display_name;
 
   /**
    * A bit set describing the features of this driver.

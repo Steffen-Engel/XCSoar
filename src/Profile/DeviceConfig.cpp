@@ -99,8 +99,8 @@ LoadPortIndex(const ProfileMap &map, DeviceConfig &config, unsigned n)
   else if (index == 10)
     index = 0;
 
-  TCHAR path[64];
-  _stprintf(path, _T("COM%u:"), index);
+  char path[64];
+  sprintf(path, "COM%u:", index);
   config.path = path;
   return true;
 }
@@ -202,6 +202,11 @@ Profile::GetDeviceConfig(const ProfileMap &map, unsigned n,
   if (!map.GetEnum(buffer, config.engine_type) ||
       unsigned(config.engine_type) >= unsigned(DeviceConfig::EngineType::MAX))
     config.engine_type = DeviceConfig::EngineType::NONE;
+
+  MakeDeviceSettingName(buffer, "Port", n, "PolarSync");
+  if (!map.GetEnum(buffer, config.polar_sync) ||
+      unsigned(config.polar_sync) >= unsigned(DeviceConfig::PolarSync::COUNT))
+    config.polar_sync = DeviceConfig::PolarSync::OFF;
 }
 
 static const char *
@@ -301,4 +306,7 @@ Profile::SetDeviceConfig(ProfileMap &map,
 
   MakeDeviceSettingName(buffer, "Port", n, "EngineType");
   map.Set(buffer, static_cast<unsigned>(config.engine_type));
+
+  MakeDeviceSettingName(buffer, "Port", n, "PolarSync");
+  map.Set(buffer, static_cast<unsigned>(config.polar_sync));
 }

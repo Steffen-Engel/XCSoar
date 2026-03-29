@@ -6,8 +6,6 @@
 #include "util/StaticString.hxx"
 
 #include <cstdint>
-#include <tchar.h>
-
 /**
  * Configuration structure for serial devices
  */
@@ -206,6 +204,26 @@ struct DeviceConfig {
   static_assert(std::size(ignitions_to_revolutions_factors) == (std::size_t)EngineType::MAX);
 
   /**
+   * Whether to synchronize the glide polar between XCSoar and the
+   * device.
+   */
+  enum class PolarSync : uint8_t {
+    /** No polar synchronization. */
+    OFF = 0,
+
+    /** Adopt the polar from the device. */
+    RECEIVE,
+
+    /** Push XCSoar's polar to the device. */
+    SEND,
+
+    /**
+     * A dummy entry that is used for validating profile values.
+     */
+    COUNT
+  };
+
+  /**
    * Name of the driver.
    */
   StaticString<32> driver_name;
@@ -258,6 +276,11 @@ struct DeviceConfig {
    * Should XCSoar use the MC value, bug, ballast, etc. received from the device
    */
   bool sync_from_device;
+
+  /**
+   * Polar synchronization direction (off, receive, or send).
+   */
+  PolarSync polar_sync;
 
   /**
    * Does this port type use a baud rate?
@@ -322,7 +345,7 @@ struct DeviceConfig {
   }
 
   [[gnu::pure]]
-  static bool MaybeBluetooth(PortType port_type, const TCHAR *path) noexcept;
+  static bool MaybeBluetooth(PortType port_type, const char *path) noexcept;
 
   [[gnu::pure]]
   bool MaybeBluetooth() const noexcept;
@@ -405,12 +428,12 @@ struct DeviceConfig {
     return UsesTCPPort(port_type);
   }
 
-  constexpr bool IsDriver(const TCHAR *name) const noexcept {
+  constexpr bool IsDriver(const char *name) const noexcept {
     return UsesDriver() && driver_name.equals(name);
   }
 
   bool IsVega() const noexcept {
-    return IsDriver(_T("Vega"));
+    return IsDriver("Vega");
   }
 
   constexpr bool IsAndroidInternalGPS() const noexcept {
@@ -461,5 +484,5 @@ struct DeviceConfig {
    * Generates a human-readable (localised) port name.
    */
   [[gnu::pure]]
-  const TCHAR *GetPortName(TCHAR *buffer, size_t max_size) const noexcept;
+  const char *GetPortName(char *buffer, size_t max_size) const noexcept;
 };
