@@ -333,7 +333,7 @@ try {
   FileLineReaderA reader(path);
   ParseFileRepository(repository, reader);
 
-  const auto path2 = LocalPath(_T("repository2"));
+  const auto path2 = LocalPath("repository2");
   FileLineReaderA reader2(path2);
   ParseFileRepository(repository, reader2);
 } catch (const std::runtime_error &e) {
