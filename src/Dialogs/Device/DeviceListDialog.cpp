@@ -721,6 +721,8 @@ DeviceListWidget::ManageCurrent()
       ManageLX16xxDialog(lx_device, info);
   } else if (descriptor.IsDriver("Vega"))
     dlgConfigurationVarioShowModal(*device);
+  else if (descriptor.IsDriver("yAll"))
+    ManageyAllDialog(*device);
   else if (descriptor.IsDriver("BlueFly"))
     dlgConfigurationBlueFlyVarioShowModal(*device);
 }
