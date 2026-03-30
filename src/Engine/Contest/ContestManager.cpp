@@ -14,11 +14,14 @@ ContestManager::ContestManager(const Contest _contest,
    olc_classic(trace_full),
    olc_league(trace_sprint),
    dmst_quad(trace_full),
+   dmst_triangle(trace_triangle, predict_triangle),
+   dmst_or(trace_full),
    xcontest_free(trace_full, false),
    xcontest_triangle(trace_triangle, predict_triangle, false),
    dhv_xc_free(trace_full, true),
    dhv_xc_triangle(trace_triangle, predict_triangle, true),
    sis_at(trace_full),
+   net_coupe(trace_full),
    weglide_distance(trace_full),
    weglide_fai(trace_triangle, predict_triangle),
    weglide_or(trace_full),
@@ -35,11 +38,14 @@ ContestManager::SetIncremental(bool incremental) noexcept
   olc_fai.SetIncremental(incremental);
   olc_classic.SetIncremental(incremental);
   dmst_quad.SetIncremental(incremental);
+  dmst_triangle.SetIncremental(incremental);
+  dmst_or.SetIncremental(incremental);
   xcontest_free.SetIncremental(incremental);
   xcontest_triangle.SetIncremental(incremental);
   dhv_xc_free.SetIncremental(incremental);
   dhv_xc_triangle.SetIncremental(incremental);
   sis_at.SetIncremental(incremental);
+  net_coupe.SetIncremental(incremental);
   weglide_distance.SetIncremental(incremental);
   weglide_fai.SetIncremental(incremental);
   weglide_or.SetIncremental(incremental);
@@ -59,10 +65,24 @@ ContestManager::SetPredicted(const TracePoint &predicted) noexcept
       stats.Reset();
   }
 
-  if (dmst_quad.SetPredicted(predicted) &&
-      contest == Contest::DMST)
+  if (dmst_quad.SetPredicted(predicted)) {
+    dmst_triangle.Reset();
+    dmst_or.Reset();
+    dmst_free.Reset();
+
+    if (contest == Contest::DMST)
+      stats.Reset();
+  } else {
+    if (dmst_triangle.SetPredicted(predicted) &&
+        contest == Contest::DMST)
+      stats.Reset();
+    if (dmst_or.SetPredicted(predicted) &&
+        contest == Contest::DMST)
+      stats.Reset();
+  }
+
+  if (net_coupe.SetPredicted(predicted) && contest == Contest::NET_COUPE)
     stats.Reset();
-  
   if (weglide_distance.SetPredicted(predicted)) {
     weglide_fai.Reset();
     weglide_or.Reset();
@@ -98,11 +118,15 @@ ContestManager::SetHandicap(unsigned handicap) noexcept
   olc_league.SetHandicap(handicap);
   olc_plus.SetHandicap(handicap);
   dmst_quad.SetHandicap(handicap);
+  dmst_triangle.SetHandicap(handicap);
+  dmst_or.SetHandicap(handicap);
+  dmst_free.SetHandicap(handicap);
   xcontest_free.SetHandicap(handicap);
   xcontest_triangle.SetHandicap(handicap);
   dhv_xc_free.SetHandicap(handicap);
   dhv_xc_triangle.SetHandicap(handicap);
   sis_at.SetHandicap(handicap);
+  net_coupe.SetHandicap(handicap);
   weglide_free.SetHandicap(handicap);
   weglide_distance.SetHandicap(handicap);
   weglide_fai.SetHandicap(handicap);
@@ -188,6 +212,21 @@ ContestManager::UpdateIdle(bool exhaustive) noexcept
   case Contest::DMST:
     retval = RunContest(dmst_quad, stats.result[0],
                         stats.solution[0], exhaustive);
+
+    retval |= RunContest(dmst_triangle, stats.result[1],
+                         stats.solution[1], exhaustive);
+
+    retval |= RunContest(dmst_or, stats.result[2],
+                         stats.solution[2], exhaustive);
+
+    if (retval) {
+      dmst_free.Feed(stats.result[0], stats.solution[0],
+                     stats.result[1], stats.solution[1],
+                     stats.result[2], stats.solution[2]);
+
+      RunContest(dmst_free, stats.result[3],
+                 stats.solution[3], exhaustive);
+    }
     break;
 
   case Contest::XCONTEST:
@@ -206,6 +245,11 @@ ContestManager::UpdateIdle(bool exhaustive) noexcept
 
   case Contest::SIS_AT:
     retval = RunContest(sis_at, stats.result[0],
+                        stats.solution[0], exhaustive);
+    break;
+
+  case Contest::NET_COUPE:
+    retval = RunContest(net_coupe, stats.result[0],
                         stats.solution[0], exhaustive);
     break;
 
@@ -269,11 +313,15 @@ ContestManager::Reset() noexcept
   olc_league.Reset();
   olc_plus.Reset();
   dmst_quad.Reset();
+  dmst_triangle.Reset();
+  dmst_or.Reset();
+  dmst_free.Reset();
   xcontest_free.Reset();
   xcontest_triangle.Reset();
   dhv_xc_free.Reset();
   dhv_xc_triangle.Reset();
   sis_at.Reset();
+  net_coupe.Reset();
   weglide_free.Reset();
   weglide_distance.Reset();
   weglide_fai.Reset();

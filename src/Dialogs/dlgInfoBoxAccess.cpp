@@ -17,6 +17,7 @@
 #include "Widget/TwoWidgets.hpp"
 #include "Interface.hpp"
 #include "Language/Language.hpp"
+#include "MapWindow/GlueMapWindow.hpp"
 
 #include <cassert>
 #include <stdio.h>
@@ -64,9 +65,6 @@ dlgInfoBoxAccessShowModeless(const int id, const InfoBoxPanel *panels)
   /* Track the current dialog and its owner */
   current_dialog = &dialog;
   current_dialog_id = id;
-
-  bool found_setup = false;
-
   if (panels != nullptr) {
     for (; panels->load != nullptr; ++panels) {
       assert(panels->name != nullptr);
@@ -75,8 +73,8 @@ dlgInfoBoxAccessShowModeless(const int id, const InfoBoxPanel *panels)
 
       if (widget == NULL)
         continue;
-
-      if (!found_setup && StringIsEqual(panels->name, _T("Setup"))) {
+#if 0  // removed "Switch InfoBox" botton
+      if (!found_setup && StringIsEqual(panels->name, "Setup")) {
         /* add a "Switch InfoBox" button to the "Setup" tab -
            kludge! */
         found_setup = true;
@@ -96,16 +94,10 @@ dlgInfoBoxAccessShowModeless(const int id, const InfoBoxPanel *panels)
                                               std::move(button),
                                               false);
       }
+#endif
 
       tab_widget.AddTab(std::move(widget), gettext(panels->name));
     }
-  }
-
-  if (!found_setup) {
-    /* the InfoBox did not provide a "Setup" tab - create a default
-       one that allows switching the contents */
-    tab_widget.AddTab(std::make_unique<ActionWidget>(dialog.MakeModalResultCallback(SWITCH_INFO_BOX)),
-                      _("Switch InfoBox"));
   }
 
   tab_widget.AddTab(std::make_unique<ActionWidget>(dialog.MakeModalResultCallback(mrOK)),
@@ -119,8 +111,21 @@ dlgInfoBoxAccessShowModeless(const int id, const InfoBoxPanel *panels)
   }
 
   dialog.SetModeless();
+
+  /* When InfoBox panel opens, adjust bottom margin to make room */
+  GlueMapWindow *map = UIGlobals::GetMap();
+  if (map != nullptr) {
+    unsigned dialog_height = form_rc.GetHeight();
+
+    if (dialog_height > 0)
+      map->SetBottomMargin(dialog_height);
+  }
+
   int result = dialog.ShowModal();
-  
+
+  if (map != nullptr)
+    map->SetBottomMargin(0);
+
   current_dialog = nullptr;
   current_dialog_id = -1;
 
@@ -139,6 +144,11 @@ dlgInfoBoxAccessClose() noexcept
     current_dialog->SetModalResult(mrCancel);
     current_dialog = nullptr;
     current_dialog_id = -1;
+
+    /* Restore map scale position when panel closes */
+    GlueMapWindow *map = UIGlobals::GetMap();
+    if (map != nullptr)
+      map->SetBottomMargin(0);
   }
 }
 
