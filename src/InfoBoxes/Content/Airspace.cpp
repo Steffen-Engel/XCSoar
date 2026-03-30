@@ -132,7 +132,7 @@ static Color WarnColor(float dist, float ok, float warn, float alert)
 
 }
 
-static void paintAirspace(Canvas &canvas, const PixelRect &rc, float dist1, const TCHAR *text1, float dist2, const TCHAR *text2, float dist3, const TCHAR *text3)
+static void paintAirspace(Canvas &canvas, const PixelRect &rc, float dist1, const char *text1, float dist2, const char *text2, float dist3, const char *text3)
 {
 // warning levels in meters
 // actually hard coded, shall be user parameters in the future
@@ -205,7 +205,7 @@ InfoBoxContentAirspaces_Distance::OnCustomPaint(Canvas &canvas, const PixelRect 
   float dist1, dist2, dist3;
   StaticString<32> name1, name2, name3;
 
-  name1 = name2 = name3 = _T("---");
+  name1 = name2 = name3 = "---";
   dist1 = dist2 = dist3 = 9e99;
 
   NearestAirspace nearest = NearestAirspace::FindHorizontal(CommonInterface::Basic(),
@@ -251,7 +251,7 @@ InfoBoxContentAirspaces_Name::OnCustomPaint(Canvas &canvas, const PixelRect &rc)
   float dist1, dist2, dist3;
   StaticString<32> name1, name2, name3;
 
-  name1 = name2 = name3 = _T("---");
+  name1 = name2 = name3 = "---";
   dist1 = dist2 = dist3 = 9e99;
 
   NearestAirspace nearest = NearestAirspace::FindHorizontal(CommonInterface::Basic(),
@@ -305,24 +305,24 @@ GetAltitudeStr(AirspaceAltitude alt)
   StaticString<32> alt_str;
 
   if (alt.IsTerrain()){
-    alt_str = _T("GND");
+    alt_str = "GND";
   }
   else {
     switch (alt.reference)
     {
     case AltitudeReference::AGL:
-      alt_str.Format(_T("%.0fm"), alt.altitude);
+      alt_str.Format("%.0fm", alt.altitude);
       FormatUserAltitude(alt.altitude, alt_str.buffer(), true);
       break;
     case AltitudeReference::MSL:
-      alt_str.Format(_T("%.0fm"), alt.altitude);
+      alt_str.Format("%.0fm", alt.altitude);
       FormatUserAltitude(alt.altitude, alt_str.buffer(), true);
       break;
     case AltitudeReference::STD:
-      alt_str.Format(_T("FL%.0f"), alt.flight_level);
+      alt_str.Format("FL%.0f", alt.flight_level);
       break;
     default:
-      alt_str = _T("---");
+      alt_str = "---";
     }
   }
   return alt_str;
@@ -334,7 +334,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
   float dist1, dist2, dist3;
   StaticString<32> name1, name2, name3;
 
-  name1 = name2 = name3 = _T("---");
+  name1 = name2 = name3 = "---";
   dist1 = dist2 = dist3 = 9e99;
 
   NearestAirspace nearest = NearestAirspace::FindHorizontal(CommonInterface::Basic(),
@@ -342,7 +342,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
                                                             *data_components->airspaces);
   if (nearest.IsDefined()) {
     dist2 = nearest.distance;
-    name2.Format(_T("%s-%s"),
+    name2.Format("%s-%s",
                  GetAltitudeStr(nearest.airspace->GetBase()).c_str(),
                  GetAltitudeStr(nearest.airspace->GetTop()).c_str());
   }
@@ -353,7 +353,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
                                                           *data_components->airspaces);
   if (nearest.IsDefined()) {
     dist1 = abs(nearest.distance);
-    name1.Format(_T("%s-%s"),
+    name1.Format("%s-%s",
                  GetAltitudeStr(nearest.airspace->GetBase()).c_str(),
                  GetAltitudeStr(nearest.airspace->GetTop()).c_str());
   }
@@ -364,7 +364,7 @@ InfoBoxContentAirspaces_Altitude::OnCustomPaint(Canvas &canvas, const PixelRect 
                                                           *data_components->airspaces);
   if (nearest.IsDefined()) {
     dist3 = abs(nearest.distance);
-    name3.Format(_T("%s-%s"),
+    name3.Format("%s-%s",
                  GetAltitudeStr(nearest.airspace->GetBase()).c_str(),
                  GetAltitudeStr(nearest.airspace->GetTop()).c_str());
   }
