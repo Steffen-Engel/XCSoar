@@ -10,7 +10,7 @@
 #include "Formatter/UserUnits.hpp"
 #include "Language/Language.hpp"
 
-#include <tchar.h>
+
 
 #include "Device/Driver/CIVAHMD.hpp"
 
@@ -36,6 +36,6 @@ InfoBoxContentCIVAHMD::Update(InfoBoxData &data) noexcept
   data.SetValueColor((CIVAIsBeeping==0) ? (0) : (1));
 
   // Set Comment
-  data.FmtComment(_T("Device {:02}"), CIVATargetId);
+  data.FmtComment("Device {:02}", CIVATargetId);
 }
 
