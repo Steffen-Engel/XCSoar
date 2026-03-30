@@ -12,10 +12,6 @@
 #include "Look/DialogLook.hpp"
 #include "ui/event/Globals.hpp"
 
-#ifdef __APPLE__
-#include <TargetConditionals.h>
-#endif
-
 #ifndef USE_WINUSER
 #include "ui/window/custom/Reference.hpp"
 #endif
@@ -50,7 +46,7 @@ WndForm::WndForm(const DialogLook &_look)
 
 WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
                  const PixelRect &rc,
-                 const TCHAR *Caption,
+                 const char *Caption,
                  const WindowStyle style)
   :look(_look)
 {
@@ -58,7 +54,7 @@ WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
 }
 
 WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
-                 const TCHAR *caption,
+                 const char *caption,
                  const WindowStyle style) noexcept
   :WndForm(main_window, _look, main_window.GetClientRect(), caption, style)
 {
@@ -66,7 +62,7 @@ WndForm::WndForm(SingleWindow &main_window, const DialogLook &_look,
 
 void
 WndForm::Create(SingleWindow &main_window, const PixelRect &rc,
-                const TCHAR *_caption, const WindowStyle style)
+                const char *_caption, const WindowStyle style)
 {
   if (_caption != nullptr)
     caption = _caption;
@@ -82,7 +78,7 @@ WndForm::Create(SingleWindow &main_window, const PixelRect &rc,
 
 void
 WndForm::Create(SingleWindow &main_window,
-                const TCHAR *_caption, const WindowStyle style)
+                const char *_caption, const WindowStyle style)
 {
   Create(main_window, main_window.GetClientRect(), _caption, style);
 }
@@ -128,6 +124,7 @@ WndForm::OnCreate()
   WindowStyle client_style;
   client_style.ControlParent();
   client_area.Create(*this, client_rect, look.background_color, client_style);
+  client_area.SetGradientTopColor(look.background_gradient_top_color);
 }
 
 void
@@ -202,8 +199,7 @@ WndForm::OnMouseDown(PixelPoint p) noexcept
   if (ContainerWindow::OnMouseDown(p))
     return true;
 
-#if !(defined(__APPLE__) && TARGET_OS_IPHONE)
-  if (!dragging && !IsMaximised()) {
+  if (!IsIOS() && !dragging && !IsMaximised()) {
     dragging = true;
     Invalidate();
 
@@ -213,7 +209,6 @@ WndForm::OnMouseDown(PixelPoint p) noexcept
     SetCapture();
     return true;
   }
-#endif
 
   return false;
 }
@@ -531,10 +526,10 @@ WndForm::OnPaint(Canvas &canvas) noexcept
 }
 
 void
-WndForm::SetCaption(const TCHAR *_caption)
+WndForm::SetCaption(const char *_caption)
 {
   if (_caption == nullptr)
-    _caption = _T("");
+    _caption = "";
 
   if (caption != _caption) {
     caption = _caption;
