@@ -115,6 +115,7 @@ Profile::Load(const ProfileMap &map, InfoBoxSettings &settings)
     settings.scale_title_font = 100;
 
   map.Get(ProfileKeys::AppInfoBoxColors, settings.use_colors);
+  map.GetEnum(ProfileKeys::AppInfoBoxTheme, settings.theme);
 
   map.GetEnum(ProfileKeys::AppInfoBoxBorder, settings.border_style);
 
@@ -127,7 +128,7 @@ Profile::Load(const ProfileMap &map, InfoBoxSettings &settings)
       sprintf(profileKey, "InfoBoxPanel%uName", i);
       map.Get(profileKey, panel.name);
       if (panel.name.empty())
-        _stprintf(panel.name.buffer(), _T("AUX-%u"), i-2);
+        sprintf(panel.name.buffer(), "AUX-%u", i-2);
     }
 
     for (unsigned j = 0; j < panel.MAX_CONTENTS; ++j) {

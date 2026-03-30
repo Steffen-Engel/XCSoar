@@ -9,8 +9,8 @@
 #include "util/RadixTree.hpp"
 #include "util/QuadTree.hxx"
 #include "util/Serial.hpp"
-#include "util/tstring_view.hxx"
 
+#include <string_view>
 #include <functional>
 
 using WaypointVisitor = std::function<void(const WaypointPtr &)>;
@@ -44,11 +44,11 @@ class Waypoints {
   class WaypointNameTree : public RadixTree<WaypointPtr> {
   public:
     [[gnu::pure]]
-    WaypointPtr Get(tstring_view name) const noexcept;
+    WaypointPtr Get(std::string_view name) const noexcept;
 
-    void VisitNormalisedPrefix(tstring_view prefix, const WaypointVisitor &visitor) const;
-    TCHAR *SuggestNormalisedPrefix(tstring_view prefix,
-                                   TCHAR *dest, size_t max_length) const noexcept;
+    void VisitNormalisedPrefix(std::string_view prefix, const WaypointVisitor &visitor) const;
+    char *SuggestNormalisedPrefix(std::string_view prefix,
+                                   char *dest, size_t max_length) const noexcept;
     void Add(WaypointPtr wp) noexcept;
     void Remove(const WaypointPtr &wp) noexcept;
   };
@@ -186,19 +186,26 @@ public:
   }
 
   /**
-   * Generate takeoff waypoint
+   * Generate a temporary waypoint with a given name.
    *
    * @return waypoint copy
    */
-  Waypoint GenerateTakeoffPoint(const GeoPoint &location,
-                                double terrain_alt) const noexcept;
+  Waypoint GenerateTempPoint(const GeoPoint &location, double terrain_alt,
+                             const char *name) const noexcept;
 
   /**
-   * Create a takeoff point or replaces previous.
+   * Create a temporary point with a given name and replaces the previous one.
    * This modifies the waypoint database.
    */
-  void AddTakeoffPoint(const GeoPoint& location,
-                       double terrain_alt) noexcept;
+  void AddTempPoint(const GeoPoint& location, double terrain_alt,
+                    const char *name) noexcept;
+
+  /**
+   * Remove the temporary goto waypoint if it exists.
+   * This is called when starting a goto to a regular waypoint to clean up
+   * any previous temporary goto point.
+   */
+  void EraseTempGoto() noexcept;
 
   /**
    * Return the current home waypoint.  May be nullptr if none is
@@ -254,7 +261,7 @@ public:
    * @return Pointer to waypoint if found (or nullptr if not)
    */
   [[gnu::pure]]
-  WaypointPtr LookupName(tstring_view name) const noexcept;
+  WaypointPtr LookupName(std::string_view name) const noexcept;
 
   /**
    * Check if a waypoint with same name and approximate location
@@ -282,15 +289,15 @@ public:
    * Call visitor function on waypoints with the specified name
    * prefix.
    */
-  void VisitNamePrefix(tstring_view prefix, WaypointVisitor visitor) const;
+  void VisitNamePrefix(std::string_view prefix, WaypointVisitor visitor) const;
 
   /**
    * Returns a set of possible characters following the specified
    * prefix.
    */
   [[gnu::pure]]
-  TCHAR *SuggestNamePrefix(tstring_view prefix,
-                           TCHAR *dest, size_t max_length) const noexcept {
+  char *SuggestNamePrefix(std::string_view prefix,
+                           char *dest, size_t max_length) const noexcept {
     return name_tree.SuggestNormalisedPrefix(prefix, dest, max_length);
   }
 

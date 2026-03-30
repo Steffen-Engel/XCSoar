@@ -13,7 +13,12 @@ XCSoar
    input_events
    lua
    mapfile
+   checklist
    debugging
+   test_debug_utilities
+   git_tips
+
+Build system reference: :ref:`build-system-reference`
 
 
 Indices and tables

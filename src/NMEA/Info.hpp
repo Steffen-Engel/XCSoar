@@ -7,6 +7,7 @@
 #include "NMEA/Validity.hpp"
 #include "NMEA/ExternalSettings.hpp"
 #include "NMEA/Acceleration.hpp"
+#include "NMEA/Gyroscope.hpp"
 #include "NMEA/Attitude.hpp"
 #include "SwitchState.hpp"
 #include "time/BrokenDateTime.hpp"
@@ -51,6 +52,7 @@ struct NMEAInfo {
   GPSState gps;
 
   AccelerationState acceleration;
+  GyroscopeState gyroscope;
 
   AttitudeState attitude;
 
@@ -167,6 +169,15 @@ struct NMEAInfo {
   Validity pressure_altitude_available;
 
   /**
+   * IGC pressure altitude - the pressure altitude value that the device
+   * uses for IGC recording (if available). This may differ from the live
+   * pressure altitude. Used for IGC file generation to match device records.
+   * @see IGCPressureAltitudeAvailable
+   */
+  double igc_pressure_altitude;
+  Validity igc_pressure_altitude_available;
+
+  /**
    * Is the barometric altitude given by a "weak" source?  This is
    * used to clear the PGRMZ barometric altitude when a FLARM is
    * detected, to switch from barometric altitude to pressure
@@ -274,7 +285,7 @@ struct NMEAInfo {
    * Is temperature information available?
    * @see OutsideAirTemperature
    */
-  bool temperature_available;
+  Validity temperature_available;
   /**
    * Temperature of outside air (if available)
    * @see TemperatureAvailable
@@ -295,7 +306,7 @@ struct NMEAInfo {
    * Is humidity information available?
    * @see RelativeHumidity
    */
-  bool humidity_available;
+  Validity humidity_available;
   /**
    * Humidity of outside air (if available)
    * @see HumidityAvailable
