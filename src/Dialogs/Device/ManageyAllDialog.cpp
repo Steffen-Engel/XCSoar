@@ -52,16 +52,16 @@ ManageyAllWidget::Prepare([[maybe_unused]] ContainerWindow &parent, [[maybe_unus
 
   StaticString<64> buffer;
 
-  buffer.UnsafeFormat(_T("%d"), Ident.version);
+  buffer.UnsafeFormat("%d", Ident.version);
   AddReadOnly(_("firmware version"), NULL, buffer.c_str());
 
-  buffer.UnsafeFormat(_T("%d"), Ident.MSPVersion);
+  buffer.UnsafeFormat("%d", Ident.MSPVersion);
   AddReadOnly(_("MSP version"), NULL, buffer.c_str());
 
-  buffer.UnsafeFormat(_T("%d"), Ident.multiType);
+  buffer.UnsafeFormat("%d", Ident.multiType);
   AddReadOnly(_("quad type"), NULL, buffer.c_str());
 
-  buffer.UnsafeFormat(_T("%d"), Ident.capabilities);
+  buffer.UnsafeFormat("%d", Ident.capabilities);
   AddReadOnly(_("capabilities"), NULL, buffer.c_str());
 
   // deactivated for compile
@@ -81,7 +81,7 @@ ManageyAllDialog(Device &device)
   WidgetDialog dialog(WidgetDialog::Auto{},
                       UIGlobals::GetMainWindow(),
                       UIGlobals::GetDialogLook(),
-                      _T("AcroWii"),
+                      "AcroWii",
                       new ManageyAllWidget(UIGlobals::GetDialogLook(),
                       (yAllDevice &)device));
 

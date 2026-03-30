@@ -16,7 +16,6 @@
 
 #include <windef.h> // for MAX_PATH
 
-#include <tchar.h>
 
 #include "yAll.h"
 
@@ -124,12 +123,12 @@ void cyAll::Open(Port &_port)
 
   /*
   TCHAR szFile[50];
-  LocalPath(szFile, _T("Deviation.par"));
+  LocalPath(szFile, "Deviation.par");
   FileLineReaderA reader(szFile);
   if (reader.error())
      return;
 
-   LogFormat(_T("Loading Deviation from %s"), szFile);
+   LogFormat("Loading Deviation from %s", szFile);
 */
 }
 
@@ -222,13 +221,13 @@ void cyAll::StartLog(void)
   assert(dt.IsPlausible());
 
   StaticString<64> name;
-  name.Format(_T("%04u-%02u-%02u_%02u-%02u.dat"), dt.year, dt.month, dt.day, dt.hour, dt.minute);
+  name.Format("%04u-%02u-%02u_%02u-%02u.dat", dt.year, dt.month, dt.day, dt.hour, dt.minute);
 
-  const auto logs_path = MakeLocalPath(_T("logs"));
+  const auto logs_path = MakeLocalPath("logs");
 
   const auto path = AllocatedPath::Build(logs_path, name);
 
-  LogFormat(_T("Logging flight to %s"), path.c_str());
+  LogFormat("Logging flight to %s", path.c_str());
 
   file = new FileOutputStream(path, FileOutputStream::Mode::APPEND_OR_CREATE);
   writer = new BufferedOutputStream(*file);
@@ -240,7 +239,7 @@ void cyAll::StartLog(void)
 
 void cyAll::EndLog()
 {
-  LogDebug(_T("Flightlogging stopped"));
+  LogDebug("Flightlogging stopped");
   writer->Flush();
 
   delete writer;
@@ -323,7 +322,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
       if ((LoggerData.millis > lastlog+1000) || (lastlog > LoggerData.millis))
       {
         lastlog = LoggerData.millis;
-        LogFormat(_T("msecs %6ld angle %4d %4d %4d alt %3d %3d %3d accel %4d %4d %4d"),
+        LogFormat("msecs %6ld angle %4d %4d %4d alt %3d %3d %3d accel %4d %4d %4d",
                (long int)LoggerData.millis,
                LoggerData.angle[0], LoggerData.angle[1], LoggerData.angle[2],
                LoggerData.pressure[0], LoggerData.pressure[1], LoggerData.pressure[2],
@@ -331,7 +330,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
       }
 #endif
 #if 0
-      LogDebug(_T("msecs %6ld angle %4d %4d %4d alt %3d %3d %3d accel %4d %4d %4d"),
+      LogDebug("msecs %6ld angle %4d %4d %4d alt %3d %3d %3d accel %4d %4d %4d",
                (long int)LoggerData.millis,
                LoggerData.angle[0], LoggerData.angle[1], LoggerData.angle[2],
                LoggerData.pressure[0], LoggerData.pressure[1], LoggerData.pressure[2],
@@ -339,7 +338,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
 #endif
 #if 0
 
-      LogDebug(_T("GPS fix %d numsat %d lat %d long %d, alt %d, speed %d, week %d, time %d"),
+      LogDebug("GPS fix %d numsat %d lat %d long %d, alt %d, speed %d, week %d, time %d",
                LoggerData.GPS_FIX,
                LoggerData.GPS_numSat,
                LoggerData.GPS_latitude,
@@ -497,7 +496,7 @@ void cyAll::evaluateCommand(uint8_t cmd, [[maybe_unused]] int dataSize, struct N
       if (flying)
       {
         StaticString<256> temp;
-        temp.Format(_T("%02d.%02d.%04d,%02d:%02d:%02d.%d,%8d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%6d,%6d,%5d,%4d,%4d,%4d,%4d,%1d,%2d,%5d,%6d,%9d,%9d,%4d\n"),
+        temp.Format("%02d.%02d.%04d,%02d:%02d:%02d.%d,%8d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%4d,%6d,%6d,%5d,%4d,%4d,%4d,%4d,%1d,%2d,%5d,%6d,%9d,%9d,%4d\n",
                             info.date_time_utc.day,
                             info.date_time_utc.month,
                             info.date_time_utc.year,

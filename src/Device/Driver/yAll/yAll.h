@@ -3,7 +3,6 @@
 #include "stdint.h"
 #include "CmdBuffer.h"
 #include "Device/Port/Port.hpp"
-#include "util/tstring.hpp"
 #include "io/FileOutputStream.hxx"
 #include "io/BufferedOutputStream.hxx"
 #include "time/Stamp.hpp"

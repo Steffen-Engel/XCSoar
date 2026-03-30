@@ -40,7 +40,7 @@ Copyright_License {
 #include "Formatter/ByteSizeFormatter.hpp"
 #endif
 
-#include <tchar.h>
+
 
 
 void
@@ -92,35 +92,35 @@ void
 UpdateInfoBoxETAhr(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), LoggerData.eta[ETA_HR]);
+  data.FmtValue("{}", LoggerData.eta[ETA_HR]);
 }
 
 void
 UpdateInfoBoxETAsr(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), LoggerData.eta[ETA_SR]);
+  data.FmtValue("{}", LoggerData.eta[ETA_SR]);
 }
 
 void
 UpdateInfoBoxETAqr(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), LoggerData.eta[ETA_QR]);
+  data.FmtValue("{}", LoggerData.eta[ETA_QR]);
 }
 
 void
 UpdateInfoBoxMaxg(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{:2.1f}"), 0.01*MaxValues.max_g);
+  data.FmtValue("{:2.1f}", 0.01*MaxValues.max_g);
 }
 
 void
 UpdateInfoBoxMing(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{:2.1f}"), 0.01*MaxValues.min_g);
+  data.FmtValue("{:2.1f}", 0.01*MaxValues.min_g);
 }
 
 void
@@ -130,33 +130,33 @@ UpdateInfoBoxMaxVIAS(InfoBoxData &data) noexcept
   float speed;
   speed = sqrt(2.0*MaxValues.max_q/1.225)*3.6;
 
-  data.FmtValue(_T("{}"), iround(speed));
+  data.FmtValue("{}", iround(speed));
 }
 
 void
 UpdateInfoBoxBankAngle(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), LoggerData.angle[0]/10);
+  data.FmtValue("{}", LoggerData.angle[0]/10);
 }
 
 void
 UpdateInfoBoxPitchAngle(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), LoggerData.angle[1]/10);
+  data.FmtValue("{}", LoggerData.angle[1]/10);
 }
 
 void
 UpdateInfoBoxHeading(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), LoggerData.angle[2]/10);
+  data.FmtValue("{}", LoggerData.angle[2]/10);
 }
 
 void
 UpdateInfoBoxControls(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.FmtValue(_T("{}"), (LoggerData.angle[2]+360)%360);
+  data.FmtValue("{}", (LoggerData.angle[2]+360)%360);
 }

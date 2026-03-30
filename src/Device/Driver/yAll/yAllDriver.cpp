@@ -36,7 +36,6 @@ Copyright_License {
 #include "yAllProtocol.h"
 #include "yAll.h"
 
-#include <tchar.h>
 
 #include <stdint.h>
 
@@ -50,7 +49,7 @@ Copyright_License {
 bool
 yAllDevice::DataReceived([[maybe_unused]] std::span<const std::byte> s,
                          [[maybe_unused]] struct NMEAInfo &info) noexcept {
-//  LogDebug(_T("yAll data %d"), (int)length);
+//  LogDebug("yAll data %d", (int)length);
 
   [[maybe_unused]] const char *data = (const char *)s.data();
   for (int count = 0; count < (int)s.size(); count++)
@@ -65,7 +64,7 @@ yAllDevice::DataReceived([[maybe_unused]] std::span<const std::byte> s,
 bool
 yAllDevice::EnableNMEA([[maybe_unused]]OperationEnvironment &env)
 {
-  LogDebug(_T("yAll EnableNMEA"));
+  LogDebug("yAll EnableNMEA");
 
   //env.Sleep(5000);
   //yAll.sendRequest(MSP_RESET);
@@ -79,14 +78,14 @@ yAllDevice::EnableNMEA([[maybe_unused]]OperationEnvironment &env)
 
 void
 yAllDevice::OnSysTicker(){
-  //LogDebug(_T("yAll SysTicker"));
+  //LogDebug("yAll SysTicker");
   yAll.sendRequest(MSP_LOGGER_SET, (uint32_t)DATA_TIME);
 }
 
 
 void
 yAllDevice::LinkTimeout(){
-  LogDebug(_T("yAll LinkTimeout"));
+  LogDebug("yAll LinkTimeout");
   yAll.sendRequest(MSP_LOGGER_SET, (uint32_t)DATA_TIME);
 }
 
@@ -143,8 +142,8 @@ yAllCreateOnPort([[maybe_unused]]const DeviceConfig &config, Port &com_port)
 }
 
 const struct DeviceRegister yall_driver = {
-  _T("yAll"),
-  _T("yAll"),
+  "yAll",
+  "yAll",
   DeviceRegister::RAW_GPS_DATA | DeviceRegister::MANAGE,
   yAllCreateOnPort,
 };
