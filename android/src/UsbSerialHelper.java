@@ -29,7 +29,7 @@ import com.felhr.usbserial.UsbSerialDevice;
 public final class UsbSerialHelper extends BroadcastReceiver {
 
   private static final String TAG = "UsbSerialHelper";
-  private static final String ACTION_USB_PERMISSION = "org.xcsoar.otg.action.USB_PERMISSION";
+  private final String ACTION_USB_PERMISSION;
 
   private final Context context;
   private final UsbManager usbmanager;
@@ -338,6 +338,7 @@ public final class UsbSerialHelper extends BroadcastReceiver {
 
   private UsbSerialHelper(Context context) throws IOException {
     this.context = context;
+    ACTION_USB_PERMISSION = context.getPackageName() + ".otg.action.USB_PERMISSION";
 
     usbmanager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
     if (usbmanager == null)
@@ -359,7 +360,7 @@ public final class UsbSerialHelper extends BroadcastReceiver {
     IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
     filter.addAction(UsbManager.ACTION_USB_DEVICE_DETACHED);
     filter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
-    context.registerReceiver(this, filter);
+    BroadcastUtil.registerReceiver(context, this, filter);
   }
 
   private void unregisterReceiver() {
@@ -367,10 +368,13 @@ public final class UsbSerialHelper extends BroadcastReceiver {
   }
 
   private void requestPermission(UsbDevice device) {
+    int flags = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+      ? PendingIntent.FLAG_IMMUTABLE
+      : 0;
     PendingIntent pi =
       PendingIntent.getBroadcast(context, 0,
-                                 new Intent(UsbSerialHelper.ACTION_USB_PERMISSION),
-                                 PendingIntent.FLAG_IMMUTABLE);
+                                 new Intent(ACTION_USB_PERMISSION),
+                                 flags);
 
     usbmanager.requestPermission(device, pi);
   }

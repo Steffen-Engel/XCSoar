@@ -4,7 +4,6 @@
 #include "MultiFile.hpp"
 #include "ComboList.hpp"
 #include "Language/Language.hpp"
-#include "system/FileUtil.hpp"
 
 #include <algorithm>
 
@@ -61,7 +60,7 @@ MultiFileDataField::GetPathFiles() const
 }
 
 void
-MultiFileDataField::ScanMultiplePatterns(const TCHAR *patterns)
+MultiFileDataField::ScanMultiplePatterns(const char *patterns)
 {
   file_datafield.ScanMultiplePatterns(patterns);
 }
@@ -98,14 +97,14 @@ MultiFileDataField::GetItem(unsigned index) const
 }
 
 ComboList
-MultiFileDataField::CreateComboList(const TCHAR *reference) const noexcept
+MultiFileDataField::CreateComboList(const char *reference) const noexcept
 {
   return file_datafield.CreateComboList(reference);
 }
 
 void
 MultiFileDataField::SetFromCombo(
-    int datafield_index, [[maybe_unused]] const TCHAR *string_value) noexcept
+    int datafield_index, [[maybe_unused]] const char *string_value) noexcept
 {
   current_selection.emplace_back(Path(file_datafield.GetItem(datafield_index).path));
 }
@@ -118,33 +117,39 @@ MultiFileDataField::ForceModify(Path path)
   current_selection.push_back(path);
 }
 
-const TCHAR *
+const char *
 MultiFileDataField::GetAsString() const noexcept
 {
-  return _T("");
+  return "";
 }
 
 void
 MultiFileDataField::UpdateDisplayString()
 {
-  display_string = _T("");
+  display_string = "";
 
   bool first = true;
   for (const auto &path : current_selection) {
     if (!first) {
-      display_string += _T(" ");
+      display_string += " ";
     }
     first = false;
 
     auto index = file_datafield.Find(path);
     if (index >= 0)
       display_string += file_datafield.GetItem(index).filename.c_str();
-    else
-      display_string += path.c_str();
+    else {
+      /* file configured in profile but not found on disk */
+      auto base = path.GetBase();
+      display_string += (base != nullptr) ? base.c_str() : path.c_str();
+      display_string += " [";
+      display_string += _("not found");
+      display_string += "]";
+    }
   }
 }
 
-const TCHAR *
+const char *
 MultiFileDataField::GetAsDisplayString() const noexcept
 {
   return display_string.c_str();
