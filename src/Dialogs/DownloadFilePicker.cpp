@@ -24,7 +24,6 @@
 #include "ui/event/PeriodicTimer.hpp"
 #include "thread/Mutex.hxx"
 #include "Operation/ThreadedOperationEnvironment.hpp"
-#include "util/ConvertString.hpp"
 
 #include <vector>
 
@@ -106,17 +105,17 @@ private:
  * Throws on error.
  */
 static AllocatedPath
-DownloadFile(const char *uri, const char *_base)
+DownloadFile(const char *uri, const char *base)
 {
   assert(Net::DownloadManager::IsAvailable());
 
-  const UTF8ToWideConverter base(_base);
-  if (!base.IsValid())
+  if (base == nullptr)
     return nullptr;
 
   ProgressDialog dialog(UIGlobals::GetMainWindow(), UIGlobals::GetDialogLook(),
                         _("Download"));
-  dialog.SetText(base);
+  const auto display_name = Path(base).GetBase();
+  dialog.SetText(display_name != nullptr ? display_name.c_str() : base);
 
   dialog.AddCancelButton();
 
@@ -253,7 +252,7 @@ try {
 
   FileRepository repository;
 
-  const auto path = LocalPath(_T("repository"));
+  const auto path = LocalPath("repository");
   FileLineReaderA reader(path);
   ParseFileRepository(repository, reader);
 
@@ -289,8 +288,7 @@ DownloadFilePickerWidget::OnPaintItem(Canvas &canvas, const PixelRect rc,
 {
   const auto &file = items[i];
 
-  const UTF8ToWideConverter name(file.GetName());
-  row_renderer.DrawTextRow(canvas, rc, name);
+  row_renderer.DrawTextRow(canvas, rc, file.GetName());
 }
 
 void
@@ -326,7 +324,7 @@ DownloadFilePickerWidget::OnDownloadComplete(Path path_relative) noexcept
   if (name == nullptr)
     return;
 
-  if (name == Path(_T("repository"))) {
+  if (name == Path("repository")) {
     const std::lock_guard lock{mutex};
     repository_failed = false;
     repository_modified = true;
@@ -343,7 +341,7 @@ DownloadFilePickerWidget::OnDownloadError(Path path_relative,
   if (name == nullptr)
     return;
 
-  if (name == Path(_T("repository"))) {
+  if (name == Path("repository")) {
     const std::lock_guard lock{mutex};
     repository_failed = true;
     repository_error = std::move(error);
@@ -379,7 +377,7 @@ AllocatedPath
 DownloadFilePicker(FileType file_type)
 {
   if (!Net::DownloadManager::IsAvailable()) {
-    const TCHAR *message =
+    const char *message =
       _("The file manager is not available on this device.");
     ShowMessageBox(message, _("File Manager"), MB_OK);
     return nullptr;
