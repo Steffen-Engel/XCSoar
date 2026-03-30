@@ -18,4 +18,6 @@ EnqueueRepositoryDownload(bool force)
 
   repository_downloaded = true;
   Net::DownloadManager::Enqueue(REPOSITORY_URI, Path("repository"));
+  Net::DownloadManager::Enqueue(REPOSITORY2_URI, Path("repository2"));
+
 }
