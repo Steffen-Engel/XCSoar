@@ -157,7 +157,7 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
     {
-      PlayResource(_T("IDR_WAV_BEEPCIVA"));
+      PlayResource("IDR_WAV_BEEPCIVA");
     }
   }
   else
@@ -230,8 +230,8 @@ GenericCreateOnPort([[maybe_unused]] const DeviceConfig &config, [[maybe_unused]
 }
 
 const struct DeviceRegister civahmd_driver = {
-  _T("civa_hmd"),
-  _T("CIVA HMD"),
+  "civa_hmd",
+  "CIVA HMD",
   0,
   GenericCreateOnPort,
 };

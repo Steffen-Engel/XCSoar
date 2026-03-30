@@ -13,7 +13,7 @@
 class CIVAOffsetButtons final : public OffsetButtonsWidget {
 public:
   CIVAOffsetButtons(bool active_freq) noexcept
-    :OffsetButtonsWidget(UIGlobals::GetDialogLook().button, _T("%.0f"), 1, 10), set_active_freq(active_freq) {}
+    :OffsetButtonsWidget(UIGlobals::GetDialogLook().button, "%.0f", 1, 10), set_active_freq(active_freq) {}
 
 protected:
   /* virtual methods from OffsetButtonsWidget */
