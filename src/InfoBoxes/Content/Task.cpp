@@ -987,9 +987,9 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc) noe
 
   // get the data to be displayed
   StaticString<32> text1, text2, text3;
-  text1 = _T("---");
-  text2 = _T("---");
-  text3 = _T("---");
+  text1 = "---";
+  text2 = "---";
+  text3 = "---";
 
   Color color1, color2, color3;
   color1 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);;
@@ -1038,7 +1038,7 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc) noe
 //            // the actual distance to the start line
 //            to_startline.distance = ProjectedDistance(state.location, to_startline.EndPoint(state.location), start.GetLocation());
 //
-//            LogDebug(_T("%f"), to_startline.distance);
+//            LogDebug("%f", to_startline.distance);
 
             const GlideState gs = GlideState::Remaining(start, state, startline_alt);
             GlideSettings settings;
@@ -1053,15 +1053,15 @@ InfoBoxStartlineDistance::OnCustomPaint(Canvas &canvas, const PixelRect &rc) noe
             // now fill the text for the fields
             StaticString<32> buffer, buffer2;
             FormatUserDistance(task_stats.current_leg.vector_remaining.distance, buffer.buffer(), true, 2);
-            text1.Format(_T("%s"), buffer.c_str());
+            text1.Format("%s", buffer.c_str());
 
             FormatUserAltitude(startline_alt+alt_MCact, buffer.buffer(), true);
             FormatUserSpeed(CommonInterface::Calculated().common_stats.V_block, buffer2.buffer(), !true);
-            text2.Format(_T("%s @ %s"), buffer.c_str(), buffer2.c_str());
+            text2.Format("%s @ %s", buffer.c_str(), buffer2.c_str());
 
             FormatUserAltitude(startline_alt+alt_vmax, buffer.buffer(), true);
             FormatUserSpeed(speed, buffer2.buffer(), !true);
-            text3.Format(_T("%s @ %s"), buffer.c_str(), buffer2.c_str());
+            text3.Format("%s @ %s", buffer.c_str(), buffer2.c_str());
 
             color1 = (look.info_box.inverse ? COLOR_BLACK : COLOR_WHITE);
 
