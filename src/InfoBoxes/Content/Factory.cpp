@@ -70,9 +70,9 @@ struct IBFHelperInt {
 using namespace InfoBoxFactory;
 
 struct MetaData {
-  const TCHAR *name;
-  const TCHAR *caption;
-  const TCHAR *description;
+  const char *name;
+  const char *caption;
+  const char *description;
   InfoBoxContent *(*create)() noexcept;
   void (*update)(InfoBoxData &data) noexcept;
   const InfoBoxPanel *panels;
@@ -84,23 +84,23 @@ struct MetaData {
    */
   MetaData() = delete;
 
-  constexpr MetaData(const TCHAR *_name,
-                     const TCHAR *_caption,
-                     const TCHAR *_description,
+  constexpr MetaData(const char *_name,
+                     const char *_caption,
+                     const char *_description,
                      InfoBoxContent *(*_create)() noexcept) noexcept
     :name(_name), caption(_caption), description(_description),
      create(_create), update(nullptr), panels(nullptr) {}
 
-  constexpr MetaData(const TCHAR *_name,
-                     const TCHAR *_caption,
-                     const TCHAR *_description,
+  constexpr MetaData(const char *_name,
+                     const char *_caption,
+                     const char *_description,
                      void (*_update)(InfoBoxData &data) noexcept) noexcept
     :name(_name), caption(_caption), description(_description),
      create(nullptr), update(_update), panels(nullptr) {}
 
-  constexpr MetaData(const TCHAR *_name,
-                     const TCHAR *_caption,
-                     const TCHAR *_description,
+  constexpr MetaData(const char *_name,
+                     const char *_caption,
+                     const char *_description,
                      void (*_update)(InfoBoxData &data) noexcept,
                      const InfoBoxPanel _panels[]) noexcept
     :name(_name), caption(_caption), description(_description),
@@ -142,8 +142,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next bearing"),
     N_("Bearing"),
     N_("True bearing of the next waypoint. For AAT tasks, this is the true bearing to the target within the AAT sector."),
-    UpdateInfoBoxBearing,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentBearing>::Create,
   },
 
   // e_GR_Instantaneous
@@ -207,8 +206,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next distance"),
     N_("WP Dist"),
     N_("Distance to the currently selected waypoint. For AAT tasks, this is the distance to the target within the AAT sector."),
-    UpdateInfoBoxNextDistance,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextDistance>::Create,
   },
 
   // e_WP_AltDiff
@@ -216,8 +214,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next altitude difference"),
     N_("WP AltD"),
     N_("Arrival altitude at the next waypoint relative to the safety arrival height. For AAT tasks, the target within the AAT sector is used."),
-    UpdateInfoBoxNextAltitudeDiff,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextAltitudeDiff>::Create,
   },
 
   // e_WP_AltReq
@@ -225,8 +222,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next altitude required"),
     N_("WP AltR"),
     N_("Additional altitude required to reach the next turn point. For AAT tasks, the target within the AAT sector is used."),
-    UpdateInfoBoxNextAltitudeRequire,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextAltitudeRequire>::Create,
   },
 
   // e_WP_Name
@@ -271,9 +267,9 @@ static constexpr MetaData meta_data[] = {
 
   // e_Fin_GR_TE
   {
-    _T("Final GR (TE) deprecated"),
-    _T("---"),
-    _T("Deprecated, there is no TE compensation on GR, you should switch to the \"Final GR\" info box."),
+    "Final GR (TE) deprecated",
+    "---",
+    "Deprecated, there is no TE compensation on GR, you should switch to the \"Final GR\" info box.",
     UpdateInfoBoxFinalGR,
   },
 
@@ -322,8 +318,7 @@ static constexpr MetaData meta_data[] = {
     N_("Wind speed"),
     N_("Wind"),
     N_("Wind speed estimated by XCSoar. Manual adjustment is possible with the connected InfoBox dialogue. Pressing the up/down cursor keys to cycle through settings, adjust the values with left/right cursor keys."),
-    UpdateInfoBoxWindSpeed,
-    wind_infobox_panels,
+    IBFHelper<InfoBoxContentWindSpeed>::Create,
   },
 
   // e_WindBearing_Est
@@ -331,8 +326,7 @@ static constexpr MetaData meta_data[] = {
     N_("Wind bearing"),
     N_("Wind"),
     N_("Wind bearing estimated by XCSoar. Manual adjustment is possible with the connected InfoBox dialogue. Pressing the up/down cursor keys to cycle through settings, adjust the values with left/right cursor keys."),
-    UpdateInfoBoxWindBearing,
-    wind_infobox_panels,
+    IBFHelper<InfoBoxContentWindBearing>::Create,
   },
 
   // e_AA_Time
@@ -405,7 +399,7 @@ static constexpr MetaData meta_data[] = {
     N_("Percentage climb"),
     N_("% Climb"),
     N_("Percentage of time spent in climb mode. These statistics are reset upon starting the task."),
-    UpdateInfoBoxThermalRatio,
+    IBFHelper<InfoBoxContentThermalRatio>::Create,
   },
 
   // e_TimeSinceTakeoff
@@ -413,13 +407,13 @@ static constexpr MetaData meta_data[] = {
     N_("Flight duration"),
     N_("Flt Duration"),
     N_("Time elapsed since takeoff was detected."),
-    UpdateInfoBoxTimeFlight,
+    IBFHelper<InfoBoxContentTimeFlight>::Create,
   },
 
   // e_Load_G
   {
     N_("G load"),
-    N_("G"),
+    "G",
     N_("Magnitude of G loading reported by a supported external intelligent vario. This value is negative for pitch-down manoeuvres."),
     UpdateInfoBoxGLoad,
   },
@@ -429,8 +423,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next GR"),
     N_("WP GR"),
     N_("Required glide ratio over ground to reach the next waypoint, given by the distance to the next waypoint divided by the height required to arrive at the safety arrival height."),
-    UpdateInfoBoxNextGR,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextGR>::Create,
   },
 
   // e_TimeLocal
@@ -438,7 +431,7 @@ static constexpr MetaData meta_data[] = {
     N_("Time local"),
     N_("Time loc"),
     N_("GPS time expressed in local time zone."),
-    UpdateInfoBoxTimeLocal,
+    IBFHelper<InfoBoxContentTimeLocal>::Create,
   },
 
   // e_TimeUTC
@@ -446,7 +439,7 @@ static constexpr MetaData meta_data[] = {
     N_("Time UTC"),
     N_("Time UTC"),
     N_("GPS time expressed in UTC."),
-    UpdateInfoBoxTimeUTC,
+    IBFHelper<InfoBoxContentTimeUTC>::Create,
   },
 
   // e_Fin_Time
@@ -462,8 +455,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next time to go"),
     N_("WP ETE"),
     N_("Estimated time required to reach next waypoint, assuming performance of ideal MacCready cruise/climb cycle."),
-    UpdateInfoBoxNextETE,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextETE>::Create,
   },
 
   // e_Act_Speed
@@ -495,8 +487,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next arrival time"),
     N_("WP ETA"),
     N_("Estimated arrival local time at next waypoint, assuming performance of ideal MacCready cruise/climb cycle."),
-    UpdateInfoBoxNextETA,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextETA>::Create,
   },
 
   // e_WP_BearingDiff
@@ -504,7 +495,7 @@ static constexpr MetaData meta_data[] = {
     N_("Bearing difference"),
     N_("Brng D"),
     N_("Difference between the glider's track (direction of motion across the ground) and the bearing to the next waypoint, or for AAT tasks, the bearing to the target within the AAT sector. GPS navigation is based on the track, and the track may differ from the glider's heading when there is wind. Chevrons point to the direction the glider needs to alter course to correct the bearing difference, that is, to make it so that the glider is tracking directly toward the next waypoint. This calculation accounts for the curvature of the Earth."),
-    UpdateInfoBoxBearingDiff,
+    IBFHelper<InfoBoxContentBearingDiff>::Create,
   },
 
   // e_Temperature
@@ -512,7 +503,7 @@ static constexpr MetaData meta_data[] = {
     N_("Outside air temperature"),
     N_("OAT"),
     N_("Outside air temperature measured by a probe if supported by a connected intelligent variometer."),
-    UpdateInfoBoxTemperature,
+    IBFHelper<InfoBoxContentTemperature>::Create,
   },
 
   // e_HumidityRel
@@ -520,7 +511,7 @@ static constexpr MetaData meta_data[] = {
     N_("Relative humidity"),
     N_("Rel Hum"),
     N_("Relative humidity of the air in percent as measured by a probe if supported by a connected intelligent variometer."),
-    UpdateInfoBoxHumidity,
+    IBFHelper<InfoBoxContentHumidity>::Create,
   },
 
   // e_Home_Temperature
@@ -576,7 +567,7 @@ static constexpr MetaData meta_data[] = {
     N_("Team bearing"),
     N_("Team Brng"),
     N_("Bearing to the team aircraft location at the last team code report."),
-    UpdateInfoBoxTeamBearing,
+    IBFHelper<InfoBoxContentTeamBearing>::Create,
   },
 
   // e_Team_BearingDiff
@@ -584,7 +575,7 @@ static constexpr MetaData meta_data[] = {
     N_("Team bearing difference"),
     N_("Team BrngD"),
     N_("Relative bearing to the team aircraft location at the last reported team code."),
-    UpdateInfoBoxTeamBearingDiff,
+    IBFHelper<InfoBoxContentTeamBearingDiff>::Create,
   },
 
   // e_Team_Range
@@ -592,7 +583,7 @@ static constexpr MetaData meta_data[] = {
     N_("Team range"),
     N_("Team Dist"),
     N_("Range to the team aircraft location at the last reported team code."),
-    UpdateInfoBoxTeamDistance,
+    IBFHelper<InfoBoxContentTeamDistance>::Create,
   },
 
   // e_CC_SpeedInst
@@ -737,8 +728,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next altitude arrival"),
     N_("WP AltA"),
     N_("Absolute arrival altitude at the next waypoint in final glide. For AAT tasks, the target within the AAT sector is used."),
-    UpdateInfoBoxNextAltitudeArrival,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextAltitudeArrival>::Create,
   },
 
   // e_Free_RAM
@@ -827,8 +817,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next time to go (ground speed)"),
     N_("WP ETE VMG"),
     N_("Estimated time required to reach next waypoint, assuming current ground speed is maintained."),
-    UpdateInfoBoxNextETEVMG,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextETEVMG>::Create,
   },
 
   // e_Horizon
@@ -844,7 +833,7 @@ static constexpr MetaData meta_data[] = {
     N_("Nearest airspace horizontal"),
     N_("Near AS H"),
     N_("Horizontal distance to the nearest airspace."),
-    UpdateInfoBoxNearestAirspaceHorizontal,
+    IBFHelper<InfoBoxNearestAirspaceHorizontal>::Create,
   },
 
   // e_NearestAirspaceVertical
@@ -852,7 +841,7 @@ static constexpr MetaData meta_data[] = {
     N_("Nearest airspace vertical"),
     N_("Near AS V"),
     N_("Vertical distance to the nearest airspace. A positive value means the airspace is above you; a negative value means the airspace is below you."),
-    UpdateInfoBoxNearestAirspaceVertical,
+    IBFHelper<InfoBoxNearestAirspaceVertical>::Create,
   },
 
   // e_WP_MC0AltDiff
@@ -860,8 +849,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next MC0 altitude difference"),
     N_("WP MC0 AltD"),
     N_("Arrival altitude at the next waypoint with MC 0 setting relative to the safety arrival height. For AAT tasks, the target within the AAT sector is used."),
-    UpdateInfoBoxNextMC0AltitudeDiff,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextMC0AltitudeDiff>::Create,
   },
 
   // e_HeadWind
@@ -869,8 +857,7 @@ static constexpr MetaData meta_data[] = {
     N_("Wind, head component"),
     N_("Head Wind"),
     N_("Current head wind component. Head wind is calculated from TAS and GPS ground speed if airspeed is available from an external device; otherwise, the estimated wind is used."),
-    UpdateInfoBoxHeadWind,
-    wind_infobox_panels,
+    IBFHelper<InfoBoxContentHeadWind>::Create,
   },
 
   // TerrainCollision
@@ -902,8 +889,7 @@ static constexpr MetaData meta_data[] = {
     N_("Wind, head component (simplified)"),
     N_("Head Wind *"),
     N_("Current head wind component. The simplified head wind is calculated by subtracting GPS ground speed from TAS if airspeed is available from an external device."),
-    UpdateInfoBoxHeadWindSimplified,
-    wind_infobox_panels,
+    IBFHelper<InfoBoxContentHeadWindSimplified>::Create,
   },
 
   {
@@ -912,7 +898,7 @@ static constexpr MetaData meta_data[] = {
     N_("Efficiency of cruise. 100 indicates perfect MacCready performance. "
        "This value estimates your cruise efficiency according to the current "
        "flight history with the set MC value. Calculation begins after task is started."),
-    UpdateInfoBoxCruiseEfficiency,
+    IBFHelper<InfoBoxContentCruiseEfficiency>::Create,
   },
 
   {
@@ -933,22 +919,21 @@ static constexpr MetaData meta_data[] = {
     N_("Start open/close countdown"),
     N_("Start open"),
     N_("Time left until the start point opens or closes."),
-    UpdateInfoBoxStartOpen,
+    IBFHelper<InfoBoxContentStartOpen>::Create,
   },
 
   {
     N_("Start open/close countdown at reaching"),
     N_("Start reach"),
     N_("Time left until the start point opens or closes, minus the calculated time to reach the start point."),
-    UpdateInfoBoxStartOpenArrival,
+    IBFHelper<InfoBoxContentStartOpenArrival>::Create,
   },
 
   {
     N_("Next radial"),
     N_("Radial"),
     N_("True bearing from the next waypoint to your position."),
-    UpdateInfoBoxRadial,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentRadial>::Create,
   },
 
   {
@@ -971,8 +956,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next distance (nominal)"),
     N_("WP Dist-N"),
     N_("Distance to the currently selected waypoint. For AAT tasks, this is the distance to the origin of the AAT sector."),
-    UpdateInfoBoxNextDistanceNominal,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextDistanceNominal>::Create,
   },
 
   {
@@ -1021,8 +1005,7 @@ static constexpr MetaData meta_data[] = {
     N_("Next waypoint arrival time (ground speed)"),
     N_("WP ETA VMG"),
     N_("Estimated arrival time at next waypoint, assuming current ground speed is maintained."),
-    UpdateInfoBoxNextETAVMG,
-    next_waypoint_infobox_panels,
+    IBFHelper<InfoBoxContentNextETAVMG>::Create,
   },
 
   // e_NonCircling_Climb_Perc
@@ -1056,7 +1039,7 @@ static constexpr MetaData meta_data[] = {
     N_("Number of used satellites"),
     N_("Satellites"),
     N_("Number of satellites currently used by the GPS module. If this information is unavailable, the displayed value is '---'."),
-    UpdateInfoBoxNbrSat,
+    IBFHelper<InfoBoxContentNbrSat>::Create,
   },
 
   // Radio
@@ -1178,12 +1161,20 @@ static constexpr MetaData meta_data[] = {
     IBFHelperInt<InfoBoxContentAlternateAltDiff, 1>::Create,
   },
 
+  // e_Home
+  {
+    N_("Home"),
+    N_("Home"),
+    N_("Home waypoint name, arrival altitude difference relative to the safety arrival height, and distance. Click to change the home waypoint."),
+    IBFHelper<InfoBoxContentHome>::Create,
+  },
+
 };
 
 static_assert(ARRAY_SIZE(meta_data) == NUM_TYPES,
               "Wrong InfoBox factory size");
 
-const TCHAR *
+const char *
 InfoBoxFactory::GetName(Type type) noexcept
 {
   assert(type < NUM_TYPES);
@@ -1191,10 +1182,13 @@ InfoBoxFactory::GetName(Type type) noexcept
   return meta_data[type].name;
 }
 
-const TCHAR *
+const char *
 InfoBoxFactory::GetCaption(Type type) noexcept
 {
   assert(type < NUM_TYPES);
+
+  if (type == e_Load_G)
+    return C_("InfoBox caption (gravity/load factor)", "G");
 
   return meta_data[type].caption;
 }
@@ -1202,7 +1196,7 @@ InfoBoxFactory::GetCaption(Type type) noexcept
 /**
  * Returns the long description (help text) of the info box type.
  */
-const TCHAR *
+const char *
 InfoBoxFactory::GetDescription(Type type) noexcept
 {
   assert(type < NUM_TYPES);
