@@ -6,6 +6,17 @@
 #include "InfoBoxes/Content/Base.hpp"
 
 
+class InfoBoxStartlineDistance : public InfoBoxContent
+{
+ public:
+  virtual void Update(InfoBoxData &data) noexcept override;
+  virtual void OnCustomPaint(Canvas &canvas, const PixelRect &rc) noexcept override;
+};
+
+
+
+
+
 bool
 NextWaypointClick() noexcept;
 
