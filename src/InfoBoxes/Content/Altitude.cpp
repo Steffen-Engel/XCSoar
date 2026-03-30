@@ -117,7 +117,7 @@ UpdateInfoBoxAltitudeBaro(InfoBoxData &data) noexcept
     data.SetTitleColor(0);
 
     // Set Value
-    data.FmtComment(_T("{}ft/FL{:02}"),
+    data.FmtComment("{}ft/FL{:02}",
                              iround(Altitude),
                              iround(FlightLevel / 100));
   } else if (basic.gps_altitude_available &&
@@ -129,12 +129,12 @@ UpdateInfoBoxAltitudeBaro(InfoBoxData &data) noexcept
      // Title color red
      data.SetTitleColor(1);
      // Set Value
-     data.FmtComment(_T("{}ft/FL{:02}"),
+     data.FmtComment("{}ft/FL{:02}",
                               iround(Altitude),
                               iround(FlightLevel / 100));
   } else {
     // Set Value
-    data.FmtComment(_T("{}ft/FL--"),
+    data.FmtComment({}ft/FL--",
                              iround(Altitude));
   }
 }
