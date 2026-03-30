@@ -54,9 +54,9 @@ FlightLogger::Reset()
   auto primary_path = GetPrimaryDataPath();
 #endif
   Directory::Create(primary_path);
-  auto out_path = AllocatedPath::Build(primary_path, _T("out"));
+  auto out_path = AllocatedPath::Build(primary_path, "out");
   Directory::Create(out_path);
-  auto old_path = AllocatedPath::Build(out_path, _T("old"));
+  auto old_path = AllocatedPath::Build(out_path, "old");
   Directory::Create(old_path);
 
   last_time = TimeStamp::Undefined();
@@ -163,7 +163,7 @@ void
 FlightLogger::LogEvent2(const BrokenDateTime &date_time, const char *type)
 try {
   assert(type != nullptr);
-  LogFormat(_T("logging event %s"), type);
+  LogFormat("logging event %s", type);
 
   static BrokenDateTime start_time;
 
@@ -176,7 +176,7 @@ try {
   Directory::Create(out_path);
 
   // open logbook for parsing flights
-  const auto logbookpath = AllocatedPath::Build(out_path, _T("flightlog.txt"));
+  const auto logbookpath = AllocatedPath::Build(out_path, "flightlog.txt");
 
   FileOutputStream file(logbookpath, FileOutputStream::Mode::APPEND_OR_CREATE);
   BufferedOutputStream writer(file);
@@ -236,7 +236,7 @@ try {
       }
 #endif
 
-      temp.Format(_T(" |  %s  --  %s"), TakeoffInfo.c_str(), LandingInfo.c_str());
+      temp.Format(" |  %s  --  %s", TakeoffInfo.c_str(), LandingInfo.c_str());
       writer.Write(temp.buffer());
 
       writer.Flush();
@@ -250,7 +250,7 @@ try {
   }
   else
   {
-    temp.Format(_T("%04u-%02u-%02uT%02u:%02u:%02u %s"),
+    temp.Format("%04u-%02u-%02uT%02u:%02u:%02u %s",
                     date_time.year, date_time.month, date_time.day,
                     date_time.hour, date_time.minute, date_time.second,
                     type);
@@ -287,7 +287,7 @@ FlightLogger::GetAirfield(bool takeoff)
 
   if (takeoff)
   {
-    LogFormat(_T("takeoff at Airport %s "),
+    LogFormat("takeoff at Airport %s ",
                alternate->waypoint->name.c_str());
     TakeoffInfo = alternate->waypoint->name.c_str();
   }
@@ -295,17 +295,17 @@ FlightLogger::GetAirfield(bool takeoff)
   {
     if (alternate->solution.vector.distance < 1500)
     {
-      LogFormat(_T("landing at Airport %s "),
+      LogFormat("landing at Airport %s ",
                  alternate->waypoint->name.c_str());
       LandingInfo = alternate->waypoint->name.c_str();
     }
     else
     {
-      LandingInfo.Format(_T("Airport %s bearing %.0f in %.1fkm"),
+      LandingInfo.Format("Airport %s bearing %.0f in %.1fkm",
                          alternate->waypoint->name.c_str(),
                          alternate->solution.vector.bearing.AbsoluteDegrees(),
                          alternate->solution.vector.distance/1000);
-      LogFormat(_T("%s"), LandingInfo.c_str());
+      LogFormat("%s", LandingInfo.c_str());
     }
   }
 
@@ -323,10 +323,10 @@ try{
 #endif
 
   // open logbook for parsing flights
-  const auto logbookpath = AllocatedPath::Build(primary_path, _T("flightlog.txt"));
+  const auto logbookpath = AllocatedPath::Build(primary_path, "flightlog.txt");
   FileLineReaderA FlightLog(logbookpath);
 
-  const auto out_path = AllocatedPath::Build(primary_path, _T("out"));
+  const auto out_path = AllocatedPath::Build(primary_path, "out");
   Directory::Create(out_path);
 
   StaticString<64> temp;
@@ -347,12 +347,12 @@ try{
   StaticString<32> type;
 
   if (plane.registration.empty())
-    registration = _T("D-0000");
+    registration = "D-0000";
   else
     registration = plane.registration.c_str();
 
   if (plane.type.empty())
-    type = _T("type");
+    type = "type";
   else
     type = plane.type.c_str();
 
@@ -363,16 +363,16 @@ try{
   flight.count = 0;
   flight.minutes = 0;
 
-  TCHAR *Line;
-  while ((Line = (TCHAR *)FlightLog.ReadLine()) != NULL)
+  char *Line;
+  while ((Line = (char *)FlightLog.ReadLine()) != NULL)
   {
                           //    09.04.2014  15:46   15:47    00:01
     int day, month, year, starthour, startminute, landhour, landminute, flighthours, flightminutes;
 #ifdef WIN32
-    int result = swscanf(Line, _T("%02d.%02d.%04d  %02d:%02d   %02d:%02d    %02d:%02d"),
+    int result = swscanf(Line, "%02d.%02d.%04d  %02d:%02d   %02d:%02d    %02d:%02d",
                         &day, &month, &year, &starthour, &startminute, &landhour, &landminute, &flighthours, &flightminutes);
 #else
-    int result = sscanf(Line, _T("%02d.%02d.%04d  %02d:%02d   %02d:%02d    %02d:%02d"),
+    int result = sscanf(Line, "%02d.%02d.%04d  %02d:%02d   %02d:%02d    %02d:%02d",
                         &day, &month, &year, &starthour, &startminute, &landhour, &landminute, &flighthours, &flightminutes);
 #endif
     if (result == 9) {
@@ -387,7 +387,7 @@ try{
         writer.NewLine();
 #else
         StaticString<128> temp;
-        temp.Format(_T("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d"),
+        temp.Format("%s %s %02d.%02d.%04d  %02d:%02d  %02d:%02d  %02d:%02d",
                             type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,
                             starthour, startminute, landhour, landminute, flighthours, flightminutes);
         writer.Write(temp.buffer());
@@ -400,7 +400,7 @@ try{
   {
     writer.NewLine();
     StaticString<128> temp;
-    temp.Format(_T("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours"),
+    temp.Format("%s %s flights on %02d.%02d.%04d: %d flights, %02d:%02d hours",
                       type.c_str(), registration.c_str(), date_time.day, date_time.month, date_time.year,
                       flight.count, flight.minutes/60, flight.minutes%60);
     writer.Write(temp.buffer());
