@@ -77,6 +77,7 @@ constexpr std::string_view WaypointFileList = "WPFileList";           // pL
 constexpr std::string_view WatchedWaypointFileList = "WatchedWPFileList"; // pL
 constexpr std::string_view LanguageFile = "LanguageFile"; // pL
 constexpr std::string_view InputFile = "InputFile"; // pL
+constexpr std::string_view ChecklistFile = "ChecklistFile"; // pL
 constexpr std::string_view PilotName = "PilotName";
 constexpr std::string_view WeGlideEnabled = "WeGlideEnabled";
 constexpr std::string_view WeGlidePilotID = "WeGlidePilotID";
@@ -121,6 +122,7 @@ constexpr std::string_view HapticFeedback = "HapticFeedback";
 constexpr std::string_view AppDialogTabStyle = "AppDialogTabStyle";
 constexpr std::string_view AppDialogStyle = "AppDialogStyle";
 constexpr std::string_view AppInfoBoxColors = "AppInfoBoxColors";
+constexpr std::string_view AppInfoBoxTheme = "AppInfoBoxTheme";
 constexpr std::string_view TeamcodeRefWaypoint = "TeamcodeRefWaypoint";
 constexpr std::string_view AppInfoBoxBorder = "AppInfoBoxBorder";
 constexpr std::string_view ShowMenuButton = "ShowMenuButton";
@@ -183,6 +185,13 @@ constexpr std::string_view EnableExternalTriggerCruise = "EnableExternalTriggerC
 constexpr std::string_view CruiseToCirclingModeSwitchThreshold = "CruiseToCirclingModeSwitchThreshold";
 constexpr std::string_view CirclingToCruiseModeSwitchThreshold = "CirclingToCruiseModeSwitchThreshold";
 constexpr std::string_view OLCRules = "OLCRules"; // legacy name, key contains contest rules
+/**
+ * Encoding version for #OLCRules numeric values (Contest enum).
+ * Value >= 2: matches current enum (NET_COUPE before NONE).  Missing or < 2:
+ * apply ContestProfile legacy migration for profiles from v7.44 without
+ * NET_COUPE in the enum.
+ */
+constexpr std::string_view ContestEnumLayout = "ContestEnumLayout";
 constexpr std::string_view PredictContest = "PredictContest";
 constexpr std::string_view Handicap = "Handicap";
 constexpr std::string_view SnailWidthScale = "SnailWidthScale";
@@ -291,4 +300,11 @@ constexpr std::string_view RaspFile = "RaspFile";
 
 constexpr std::string_view StratuxHorizontalRange = "StratuxHorizontalRange";
 constexpr std::string_view StratuxVerticalRange = "StratuxVerticalRange";
+
+constexpr std::string_view HideQuickGuideDialogOnStartup =
+  "HideQuickGuideDialogOnStartup";
+constexpr std::string_view DisclaimerAcknowledgedVersion =
+  "DisclaimerAcknowledgedVersion";
+constexpr std::string_view LastSeenNewsVersion =
+  "LastSeenNewsVersion";
 }

@@ -46,6 +46,46 @@ endif
 
 JAVA_PACKAGE = org.xcsoar
 
+# Use template manifest for all builds
+MANIFEST_TEMPLATE = android/AndroidManifest.xml.template
+
+# Determine package name for manifest based on build flags
+# Priority: FOSS > PLAY > TESTING > default
+ifeq ($(FOSS),y)
+MANIFEST_PACKAGE = org.xcsoar.foss
+MANIFEST_APP_LABEL = @string/app_name
+else ifeq ($(PLAY),y)
+MANIFEST_PACKAGE = org.xcsoar.play
+MANIFEST_APP_LABEL = @string/app_name
+else ifeq ($(TESTING),y)
+MANIFEST_PACKAGE = org.xcsoar.testing
+MANIFEST_APP_LABEL = @string/app_name_testing
+else
+MANIFEST_PACKAGE = org.xcsoar
+MANIFEST_APP_LABEL = @string/app_name
+endif
+
+# Set XCSOAR_TESTING based on package name (for red resources in testing builds)
+ifeq ($(MANIFEST_PACKAGE),org.xcsoar.testing)
+  TARGET_CPPFLAGS += -DXCSOAR_TESTING
+endif
+
+# Generate a processed manifest with the custom package name
+MANIFEST_PROCESSED = $(ANDROID_OUTPUT_DIR)/AndroidManifest.xml
+MANIFEST_PACKAGE_STAMP = $(ANDROID_OUTPUT_DIR)/.manifest_package.stamp
+MANIFEST = $(MANIFEST_PROCESSED)
+
+$(MANIFEST_PACKAGE_STAMP): FORCE | $(ANDROID_OUTPUT_DIR)/dirstamp
+	@if [ ! -f $@ ] || [ "$$(cat $@ 2>/dev/null)" != "$(MANIFEST_PACKAGE)" ]; then \
+		echo "$(MANIFEST_PACKAGE)" > $@.tmp && mv $@.tmp $@; \
+	fi
+
+$(MANIFEST_PROCESSED): $(MANIFEST_TEMPLATE) $(MANIFEST_PACKAGE_STAMP) | $(ANDROID_OUTPUT_DIR)/dirstamp
+	@$(NQ)echo "  PROCESS $@"
+	$(Q)sed -e 's/@PACKAGE_NAME@/$(MANIFEST_PACKAGE)/g' \
+		-e 's|@APP_LABEL@|$(MANIFEST_APP_LABEL)|g' \
+		$< > $@
+
 NATIVE_CLASSES := \
 	FileProvider \
 	TextEntryDialog \
@@ -162,7 +202,8 @@ ANDROID_XML_RES_COPIES := $(patsubst android/res/%,$(RES_DIR)/%,$(ANDROID_XML_RE
 ANDROID_XML_RES_NO_STRINGS := $(filter-out android/res/values/strings.xml,$(ANDROID_XML_RES))
 ANDROID_XML_RES_COPIES_NO_STRINGS := $(patsubst android/res/%,$(RES_DIR)/%,$(ANDROID_XML_RES_NO_STRINGS))
 
-ifeq ($(TESTING),y)
+# Use red icon only for testing package (check package name, not just TESTING flag)
+ifeq ($(MANIFEST_PACKAGE),org.xcsoar.testing)
 ICON_SVG = $(topdir)/Data/graphics/logo_red.svg
 else
 ICON_SVG = $(topdir)/Data/graphics/logo.svg
@@ -170,22 +211,28 @@ endif
 
 ICON_WHITE_SVG = $(topdir)/Data/graphics/logo_white.svg
 
-$(RES_DIR)/drawable-ldpi/icon.png: $(ICON_SVG) | $(RES_DIR)/drawable-ldpi/dirstamp
+ICON_PACKAGE_STAMP = $(RES_DIR)/.icon_package.stamp
+$(ICON_PACKAGE_STAMP): FORCE | $(RES_DIR)/dirstamp
+	@if [ ! -f $@ ] || [ "$$(cat $@ 2>/dev/null)" != "$(MANIFEST_PACKAGE)" ]; then \
+		echo "$(MANIFEST_PACKAGE)" > $@.tmp && mv $@.tmp $@; \
+	fi
+
+$(RES_DIR)/drawable-ldpi/icon.png: $(ICON_SVG) $(ICON_PACKAGE_STAMP) | $(RES_DIR)/drawable-ldpi/dirstamp
 	$(Q)rsvg-convert --width=36 $< -o $@
 
-$(RES_DIR)/drawable/icon.png: $(ICON_SVG) | $(RES_DIR)/drawable/dirstamp
+$(RES_DIR)/drawable/icon.png: $(ICON_SVG) $(ICON_PACKAGE_STAMP) | $(RES_DIR)/drawable/dirstamp
 	$(Q)rsvg-convert --width=48 $< -o $@
 
-$(RES_DIR)/drawable-hdpi/icon.png: $(ICON_SVG) | $(RES_DIR)/drawable-hdpi/dirstamp
+$(RES_DIR)/drawable-hdpi/icon.png: $(ICON_SVG) $(ICON_PACKAGE_STAMP) | $(RES_DIR)/drawable-hdpi/dirstamp
 	$(Q)rsvg-convert --width=72 $< -o $@
 
-$(RES_DIR)/drawable-xhdpi/icon.png: $(ICON_SVG) | $(RES_DIR)/drawable-xhdpi/dirstamp
+$(RES_DIR)/drawable-xhdpi/icon.png: $(ICON_SVG) $(ICON_PACKAGE_STAMP) | $(RES_DIR)/drawable-xhdpi/dirstamp
 	$(Q)rsvg-convert --width=96 $< -o $@
 
-$(RES_DIR)/drawable-xxhdpi/icon.png: $(ICON_SVG) | $(RES_DIR)/drawable-xxhdpi/dirstamp
+$(RES_DIR)/drawable-xxhdpi/icon.png: $(ICON_SVG) $(ICON_PACKAGE_STAMP) | $(RES_DIR)/drawable-xxhdpi/dirstamp
 	$(Q)rsvg-convert --width=144 $< -o $@
 
-$(RES_DIR)/drawable-xxxhdpi/icon.png: $(ICON_SVG) | $(RES_DIR)/drawable-xxxhdpi/dirstamp
+$(RES_DIR)/drawable-xxxhdpi/icon.png: $(ICON_SVG) $(ICON_PACKAGE_STAMP) | $(RES_DIR)/drawable-xxxhdpi/dirstamp
 	$(Q)rsvg-convert --width=192 $< -o $@
 
 $(RES_DIR)/drawable/notification_icon.png: $(ICON_WHITE_SVG) | $(RES_DIR)/drawable/dirstamp
@@ -221,9 +268,17 @@ PNG2 := $(patsubst $(DATA)/graphics/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_LAUNCH_ALL
 $(PNG2): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics/%.bmp | $(DRAWABLE_DIR)/dirstamp
 	$(Q)$(IM_CONVERT) $< $@
 
-PNG3 := $(patsubst $(DATA)/graphics/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_SPLASH_80) $(BMP_SPLASH_160) $(BMP_TITLE_110) $(BMP_TITLE_320))
-$(PNG3): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics/%.bmp | $(DRAWABLE_DIR)/dirstamp
-	$(Q)$(IM_CONVERT) $< $@
+# Copy splash/title PNGs directly from SVG-rendered PNGs (preserving alpha)
+# instead of going through BMP (which flattens onto white background)
+PNG3_SPLASH := $(patsubst $(DATA)/graphics/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_SPLASH_320) $(BMP_SPLASH_160) $(BMP_SPLASH_80))
+$(PNG3_SPLASH): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics/%.png | $(DRAWABLE_DIR)/dirstamp
+	$(Q)cp $< $@
+
+PNG3_TITLE := $(patsubst $(DATA)/graphics/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_TITLE_640) $(BMP_TITLE_320) $(BMP_TITLE_110))
+$(PNG3_TITLE): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics/%.png | $(DRAWABLE_DIR)/dirstamp
+	$(Q)cp $< $@
+
+PNG3 := $(PNG3_SPLASH) $(PNG3_TITLE)
 
 PNG4 := $(patsubst $(DATA)/icons/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_ICONS_ALL))
 $(PNG4): $(DRAWABLE_DIR)/%.png: $(DATA)/icons/%.png | $(DRAWABLE_DIR)/dirstamp
@@ -233,7 +288,33 @@ PNG5 := $(patsubst $(DATA)/graphics/%.bmp,$(DRAWABLE_DIR)/%.png,$(BMP_DIALOG_TIT
 $(PNG5): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics/%.bmp | $(DRAWABLE_DIR)/dirstamp
 	$(Q)$(IM_CONVERT) $< $@
 
-PNG_FILES = $(PNG1) $(PNG1b) $(PNG2) $(PNG3) $(PNG4) $(PNG5) \
+####### gesture icons from SVG sources
+GESTURES_ANDROID = down dl dr du left ldr ldrdl right rd rl up ud uldr urd urdl
+PNG6 := $(addprefix $(DRAWABLE_DIR)/gesture_,$(addsuffix .png,$(GESTURES_ANDROID)))
+$(PNG6): $(DRAWABLE_DIR)/gesture_%.png: doc/manual/figures/gesture_%.svg | $(DRAWABLE_DIR)/dirstamp
+	$(Q)rsvg-convert --width=82 --height=82 $< -o $@
+
+####### permission disclosure graphics from SVG sources
+PNG7 := $(DRAWABLE_DIR)/location_pin.png $(DRAWABLE_DIR)/notification_bell.png $(DRAWABLE_DIR)/bluetooth.png $(DRAWABLE_DIR)/warning_triangle.png $(DRAWABLE_DIR)/rotate.png
+$(PNG7): $(DRAWABLE_DIR)/%.png: Data/graphics/%.svg | $(DRAWABLE_DIR)/dirstamp
+	$(Q)rsvg-convert --width=80 --height=80 $< -o $@
+
+####### RGBA splash logos for dark mode (transparent background)
+PNG8a := $(patsubst $(DATA)/graphics2/%.png,$(DRAWABLE_DIR)/%.png,$(PNG_SPLASH_320_RGBA) $(PNG_SPLASH_160_RGBA) $(PNG_SPLASH_80_RGBA))
+$(PNG8a): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics2/%.png | $(DRAWABLE_DIR)/dirstamp
+	$(Q)cp $< $@
+
+####### title PNGs with alpha (normal + white)
+PNG8 := $(patsubst $(DATA)/graphics2/%.png,$(DRAWABLE_DIR)/%.png,$(PNG_TITLE_320_RGBA) $(PNG_TITLE_WHITE_320_RGBA) $(PNG_TITLE_WHITE_640_RGBA))
+$(PNG8): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics2/%.png | $(DRAWABLE_DIR)/dirstamp
+	$(Q)cp $< $@
+
+####### launcher RGBA halves (preserving alpha for dark mode)
+PNG9 := $(patsubst $(DATA)/graphics2/%.png,$(DRAWABLE_DIR)/%.png,$(PNG_LAUNCH_FLY_640_RGBA) $(PNG_LAUNCH_SIM_640_RGBA))
+$(PNG9): $(DRAWABLE_DIR)/%.png: $(DATA)/graphics2/%.png | $(DRAWABLE_DIR)/dirstamp
+	$(Q)cp $< $@
+
+PNG_FILES = $(PNG1) $(PNG1b) $(PNG2) $(PNG3) $(PNG4) $(PNG5) $(PNG6) $(PNG7) $(PNG8a) $(PNG8) $(PNG9) \
 	$(RES_DIR)/drawable-ldpi/icon.png \
 	$(RES_DIR)/drawable/icon.png \
 	$(RES_DIR)/drawable-hdpi/icon.png \
@@ -245,12 +326,6 @@ PNG_FILES = $(PNG1) $(PNG1b) $(PNG2) $(PNG3) $(PNG4) $(PNG5) \
 	$(RES_DIR)/drawable-xhdpi/notification_icon.png \
 	$(RES_DIR)/drawable-xxhdpi/notification_icon.png \
 	$(RES_DIR)/drawable-xxxhdpi/notification_icon.png
-
-ifeq ($(TESTING),y)
-MANIFEST = android/testing/AndroidManifest.xml
-else
-MANIFEST = android/AndroidManifest.xml
-endif
 
 $(ANDROID_XML_RES_COPIES_NO_STRINGS): $(RES_DIR)/%: android/res/%
 	$(Q)-$(MKDIR) -p $(dir $@)

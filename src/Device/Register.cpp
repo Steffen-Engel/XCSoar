@@ -43,6 +43,7 @@
 #include "Device/Driver/XCTracer.hpp"
 #include "Device/Driver/KRT2.hpp"
 #include "Device/Driver/Stratux.hpp"
+#include "Device/Driver/LoEFGREN.hpp"
 #include "util/Macros.hpp"
 #include "util/StringAPI.hxx"
 
@@ -92,6 +93,7 @@ static const struct DeviceRegister *const driver_list[] = {
   &condor3_driver,
   &lx_eos_driver,
   &stratux_driver,
+  &loe_fgren_driver,
   nullptr
 };
 
@@ -104,7 +106,7 @@ GetDriverByIndex(unsigned i)
 }
 
 const struct DeviceRegister *
-FindDriverByName(const TCHAR *name)
+FindDriverByName(const char *name)
 {
   for (auto i = driver_list; *i != nullptr; ++i) {
     const DeviceRegister &driver = **i;
@@ -115,8 +117,8 @@ FindDriverByName(const TCHAR *name)
   return driver_list[0];
 }
 
-const TCHAR *
-FindDriverDisplayName(const TCHAR *name)
+const char *
+FindDriverDisplayName(const char *name)
 {
   assert(name != nullptr);
 
