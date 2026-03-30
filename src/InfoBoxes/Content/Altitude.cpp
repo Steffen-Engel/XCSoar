@@ -134,7 +134,7 @@ UpdateInfoBoxAltitudeBaro(InfoBoxData &data) noexcept
                               iround(FlightLevel / 100));
   } else {
     // Set Value
-    data.FmtComment({}ft/FL--",
+    data.FmtComment("{}ft/FL--",
                              iround(Altitude));
   }
 }
