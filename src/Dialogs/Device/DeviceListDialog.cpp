@@ -681,6 +681,8 @@ DeviceListWidget::ManageCurrent()
 
   if (descriptor.IsDriver(_T("CAI 302")))
     ManageCAI302Dialog(UIGlobals::GetMainWindow(), look, *device);
+  else if (descriptor.IsDriver(_T("yAll")))
+    ManageyAllDialog(*device);
   else if (descriptor.IsDriver(_T("Stratux")))
     ManageStratuxDialog(*device);
   else if (descriptor.IsDriver(_T("FLARM"))) {
@@ -713,8 +715,6 @@ DeviceListWidget::ManageCurrent()
       ManageLX16xxDialog(lx_device, info);
   } else if (descriptor.IsDriver(_T("Vega")))
     dlgConfigurationVarioShowModal(*device);
-  else if (descriptor.IsDriver(_T("yAll")))
-    ManageyAllDialog(*device);
   else if (descriptor.IsDriver(_T("BlueFly")))
     dlgConfigurationBlueFlyVarioShowModal(*device);
 }
