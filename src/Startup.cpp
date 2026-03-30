@@ -318,7 +318,7 @@ Startup(UI::Display &display)
   // prompt for simulator if not set by command line argument "-simulator" or "-fly"
   if (!sim_set_in_cmd_line_flag) {
 #ifdef ANDROID
-    const auto startfile = LocalPath(_T("autostart.fly"));
+    const auto startfile = LocalPath("autostart.fly");
     if (access((const char*)startfile.c_str(), F_OK) != -1){
       global_simulator_flag = false;
     }
