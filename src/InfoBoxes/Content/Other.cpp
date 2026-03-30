@@ -20,7 +20,7 @@ void
 UpdateInfoBoxEmpty(InfoBoxData &data) noexcept
 {
   // Set Value
-  data.SetValue(_T(" "));
+  data.SetValue(" ");
 }
 
 void
