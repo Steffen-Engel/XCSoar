@@ -681,8 +681,6 @@ DeviceListWidget::ManageCurrent()
 
   if (descriptor.IsDriver(_T("CAI 302")))
     ManageCAI302Dialog(UIGlobals::GetMainWindow(), look, *device);
-  else if (descriptor.IsDriver(_T("yAll")))
-    ManageyAllDialog(*device);
   else if (descriptor.IsDriver(_T("Stratux")))
     ManageStratuxDialog(*device);
   else if (descriptor.IsDriver(_T("FLARM"))) {
