@@ -1040,7 +1040,7 @@ UpdateInfoBoxClimbAltitude(InfoBoxData &data) noexcept
   if (!basic.track_available || !task_stats.task_valid ||
       !vector_remaining.IsValid()) {
     data.SetValueInvalid();
-    LogFormat(_T("no track or no task"));
+    LogFormat("no track or no task");
     return;
   }
 
@@ -1050,7 +1050,7 @@ UpdateInfoBoxClimbAltitude(InfoBoxData &data) noexcept
 
   if (!task_stats.task_valid || !basic.location_available) {
     data.SetInvalid();
-    LogFormat(_T("location invalid"));
+    LogFormat("location invalid");
     return;
   }
 
@@ -1058,7 +1058,7 @@ UpdateInfoBoxClimbAltitude(InfoBoxData &data) noexcept
 
   if (!vector.IsValid()) {
     data.SetInvalid();
-    LogFormat(_T("vector invalid"));
+    LogFormat("vector invalid");
     return;
   }
 
@@ -1087,7 +1087,7 @@ UpdateInfoBoxClimbAltitude(InfoBoxData &data) noexcept
 
   timetogoal = vector.distance / (speed - headwindtogoal);
 
-  LogFormat(_T("headwind %2.0fkm/h headwindtogoal %2.0fkm/h speed %2.0fkm/h, time %3.0f"), headwind*3.6, headwindtogoal*3.6, speed*3.6, timetogoal);
+  LogFormat("headwind %2.0fkm/h headwindtogoal %2.0fkm/h speed %2.0fkm/h, time %3.0f", headwind*3.6, headwindtogoal*3.6, speed*3.6, timetogoal);
 
   // expected altitude
   float expectaltitude = actualaltitude + timetogoal * averageclimb;
