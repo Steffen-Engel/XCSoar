@@ -21,6 +21,8 @@
 #include "FLARM/List.hpp"
 #include "Geo/Math.hpp"
 
+#include "time/PeriodClock.hpp"
+
 using std::string_view_literals::operator""sv;
 
 class CivaHmdDevice : public AbstractDevice {
@@ -157,7 +159,11 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
     {
-      PlayResource("IDR_WAV_BEEPCIVA");
+      static PeriodClock last_beep_time;
+      if (last_beep_time.CheckUpdate(std::chrono::milliseconds(1000)))
+      {
+        PlayResource("IDR_WAV_BEEPCIVA");
+      }
     }
   }
   else
