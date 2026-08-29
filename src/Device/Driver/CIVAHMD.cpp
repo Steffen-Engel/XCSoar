@@ -165,10 +165,7 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
     {
-<<<<<<< HEAD
-=======
       static PeriodClock last_beep_time;
->>>>>>> b9fda5b01460c4f8ef1d2e0d8eee88f7429ef7c3
       if (last_beep_time.CheckUpdate(std::chrono::milliseconds(1000)))
       {
         PlayResource("IDR_WAV_BEEPCIVA");
