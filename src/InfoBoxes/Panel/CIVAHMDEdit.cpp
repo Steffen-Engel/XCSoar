@@ -33,6 +33,8 @@ CIVAOffsetButtons::OnOffset(double offset) noexcept
   if (CIVATargetId < 0)
     CIVATargetId = 0;
 
+	extern long int CIVA_Count;
+	CIVA_Count = 0;
 }
 
 std::unique_ptr<Widget>

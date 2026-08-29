@@ -20,6 +20,7 @@
 #include "FLARM/Status.hpp"
 #include "FLARM/List.hpp"
 #include "Geo/Math.hpp"
+#include "time/PeriodClock.hpp"
 
 using std::string_view_literals::operator""sv;
 
@@ -33,6 +34,10 @@ public:
 // global var declaration
 int CIVATargetId = 0;
 int CIVAIsBeeping = 0;
+PeriodClock last_beep_time;
+PeriodClock last_CIVA_Receive_time;
+long int CIVA_Count = 0;
+
 
 GeoPoint MyLocation;
 
@@ -134,7 +139,8 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
 
   if (HmdId == CIVATargetId)
   {
-
+//    last_CIVA_Receive_time.Reset();
+    CIVA_Count++;
     if (valid_location)
     {
       info.location_available.Update(info.clock);
@@ -157,7 +163,10 @@ cPHMD0(NMEAInputLine &line, [[maybe_unused]] NMEAInfo &info)
     CIVAIsBeeping = beeper;
     if (CIVAIsBeeping)
     {
-      PlayResource("IDR_WAV_BEEPCIVA");
+      if (last_beep_time.CheckUpdate(std::chrono::milliseconds(1000)))
+      {
+        PlayResource("IDR_WAV_BEEPCIVA");
+      }
     }
   }
   else

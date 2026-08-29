@@ -144,6 +144,7 @@ namespace InfoBoxFactory
     e_EngineEGT,  /* Engine Exhaust Gas Temperature */
     e_EngineRPM,  /* Engine Revolutions Per Minute */
     e_CIVAHMD,
+    e_CIVAHMDTime,
     e_AAT_dT_or_ETA, /* Delta time in AAT task and ETA in racing task */
     e_SpeedTaskEst, /* Estimated (predicted) whole-task average cross-country speed for current task. Affected by MC setting. */
     e_Home_AltDiff, /* Arrival altitude at the home waypoint (if defined) relative to the safety arrival height */

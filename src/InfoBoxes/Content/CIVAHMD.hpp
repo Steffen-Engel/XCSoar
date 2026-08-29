@@ -13,3 +13,8 @@ public:
   const InfoBoxPanel *GetDialogContent() noexcept override;
   void Update(InfoBoxData &data) noexcept override;
 };
+
+
+
+void
+UpdateInfoBoxCIVAHMDTime(InfoBoxData &data) noexcept;

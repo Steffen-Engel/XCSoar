@@ -1104,12 +1104,19 @@ static constexpr MetaData meta_data[] = {
     UpdateInfoBoxContentRPM,
   },
 
-  // e_civa_hmd
+  // e_CIVAHMD
   {
     N_("CIVA HMD"),
     N_("CIVA HMD Focus"),
     N_("Shows th actual Focus id of the CIVA HMD surveillance."),
     IBFHelper<InfoBoxContentCIVAHMD>::Create,
+  },
+  // e_CIVAHMDTime
+  {
+    N_("CIVA HMD Timer"),
+    N_("CIVA HMD Timer"),
+    N_("Shows the time after last CIVA HMD data."),
+	UpdateInfoBoxCIVAHMDTime,
   },
 
   // e_AAT_dT_or_ETA

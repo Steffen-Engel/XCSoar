@@ -10,7 +10,7 @@
 #include "Formatter/UserUnits.hpp"
 #include "Language/Language.hpp"
 
-
+#include "time/PeriodClock.hpp"
 
 #include "Device/Driver/CIVAHMD.hpp"
 
@@ -39,3 +39,29 @@ InfoBoxContentCIVAHMD::Update(InfoBoxData &data) noexcept
   data.FmtComment("Device {:02}", CIVATargetId);
 }
 
+extern PeriodClock last_CIVA_Receive_time;
+
+extern long int CIVA_Count;
+void
+UpdateInfoBoxCIVAHMDTime(InfoBoxData &data) noexcept
+{
+	  const NMEAInfo &basic = CommonInterface::Basic();
+
+	  if (!basic.time_available) {
+	    data.SetInvalid();
+	    return;
+	  }
+
+	  // Set Value
+	  const BrokenDateTime t = basic.date_time_utc;
+
+
+	  // Set Comment
+	  //long long int timer = last_CIVA_Receive_time.Elapsed();
+
+	  const auto dt = last_CIVA_Receive_time.Elapsed();
+	  long int timer = std::chrono::round<std::chrono::milliseconds>(dt).count();
+	  data.FmtValue("{:3}", CIVA_Count);
+
+	  //data.FmtComment("{:02}", timer);
+}
